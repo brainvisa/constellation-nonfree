@@ -1,7 +1,9 @@
-set( _headers "tildefs.h"
+set( _headers
+  "connectivities.h"
   "sparseMatrix.h"
   "sparseMatrixItemR.h"
   "sparseMatrixItemW.h"
+  "tildefs.h"
 )
 
 set( _sources "sparseMatrix.cc"
