@@ -1,4 +1,5 @@
 set( _headers
+  "bundleSet.h"
   "connectivities.h"
   "sparseMatrix.h"
   "sparseMatrixItemR.h"
