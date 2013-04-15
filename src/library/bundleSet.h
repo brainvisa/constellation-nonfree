@@ -3,7 +3,8 @@
 
 #include <connectomist/fibertracking/bundles.h>
 
-namespace constel {
+namespace constel
+{
   typedef std::vector< comist::FiberPoint > Fiber;
   typedef std::vector< Fiber > Fibers;
   typedef std::vector< Fibers > BundlesSet;

@@ -344,22 +344,7 @@ void aims::SparseMatrix::setZero()
 
   try
   {
-
-//     aims::SparseMatrix::iterator1 i1;
-//     aims::SparseMatrix::iterator2 i2;
-//     for ( i1 = _matrix.begin1(); i1 != _matrix.end1(); ++ i1 )
-//     {
-// 
-//       for ( i2 = i1.begin(); i2 != i1.end(); ++ i2 )
-//       {
-// 
-//         *i2 = 0.0;
-// 
-//       }
-// 
-//     }
     _matrix.clear();
-
   }
   catch( std::exception & e )
   {

@@ -11,7 +11,6 @@ namespace aims
 {
 
 
-  class SparseCMatrix;
 #if BOOST_VERSION >= 103300
   typedef boost::numeric::ublas::mapped_matrix< double > boost_sparse_matrix;
 #else
@@ -39,11 +38,9 @@ namespace aims
 
       SparseMatrix( int32_t size1 = 1, int32_t size2 = 1 );
       SparseMatrix( const SparseMatrix& other );
-//       SparseMatrix( const Matrix& other );
       virtual ~SparseMatrix();
 
       SparseMatrix& operator=( const SparseMatrix& other );
-//       SparseMatrix& operator=( const Matrix& other );
 
       void reallocate( int32_t size1, int32_t size2 );
 
@@ -85,11 +82,6 @@ namespace aims
                  const SparseMatrix& other,
                  int32_t size1 = 0,
                  int32_t size2 = 0 );
-//       void fill( int32_t offset1,
-//                  int32_t offset2,
-//                  const Matrix& other,
-//                  int32_t size1 = 0,
-//                  int32_t size2 = 0 );
       void setDiagonal( const double& value );
       void transpose();
 
@@ -97,11 +89,7 @@ namespace aims
       SparseMatrix getTransposition() const;
       SparseMatrix getComposition( const SparseMatrix& other ) const;
       std::vector<double> getComposition( const std::vector<double>& other ) const;
-//       SparseCMatrix getComposition( const SparseCMatrix& other ) const;
-//       Cstd::vector getComposition( const Cstd::vector& other ) const;
       std::vector<double> toVector() const;
-//       Cstd::vector toVector() const;
-//       Matrix toMatrix() const;
 
       std::vector<double> getRow( int32_t i ) const;
       std::vector<double> getColumn( int32_t j ) const;
@@ -155,11 +143,6 @@ aims::SparseMatrix
     operator + ( const aims::SparseMatrix& thing1,
                  const aims::SparseMatrix& thing2 );
 
-// SparseMatrix + SparseCMatrix
-// aims::SparseCMatrix
-//     operator + ( const aims::SparseMatrix& thing1,
-//                  const aims::SparseCMatrix& thing2 );
-
 
 //
 // binary operator -
@@ -169,11 +152,6 @@ aims::SparseMatrix
 aims::SparseMatrix
     operator - ( const aims::SparseMatrix& thing1,
                  const aims::SparseMatrix& thing2 );
-
-// SparseMatrix - SparseCMatrix
-// aims::SparseCMatrix
-//     operator - ( const aims::SparseMatrix& thing1,
-//                  const aims::SparseCMatrix& thing2 );
 
 
 //
@@ -185,30 +163,16 @@ aims::SparseMatrix
     operator * ( const aims::SparseMatrix& thing1,
                  const aims::SparseMatrix& thing2 );
 
-// SparseMatrix * SparseCMatrix
-// aims::SparseCMatrix
-//     operator * ( const aims::SparseMatrix& thing1,
-//                  const aims::SparseCMatrix& thing2 );
-
 // SparseMatrix * std::vector
 std::vector<double>
     operator * ( const aims::SparseMatrix& thing1,
                  const std::vector<double>& thing2 );
-
-// SparseMatrix * Cstd::vector
-// aims::Cstd::vector
-//     operator * ( const aims::SparseMatrix& thing1,
-//                  const aims::Cstd::vector& thing2 );
 
 // SparseMatrix * double
 aims::SparseMatrix
     operator * ( const aims::SparseMatrix& thing1,
                  const double& thing2 );
 
-// SparseMatrix * complex< double >
-// aims::SparseCMatrix
-//     operator * ( const aims::SparseMatrix& thing1,
-//                  const std::complex< double >& thing2 );
 
 //
 // binary operator /
@@ -218,11 +182,6 @@ aims::SparseMatrix
 aims::SparseMatrix
     operator / ( const aims::SparseMatrix& thing1,
                  const double& thing2 );
-
-// SparseMatrix / complex< double >
-// aims::SparseCMatrix
-//     operator / ( const aims::SparseMatrix& thing1,
-//                  const std::complex< double >& thing2 );
 
 
 namespace std
