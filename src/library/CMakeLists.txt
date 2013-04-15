@@ -1,6 +1,7 @@
 set( _headers
   "bundleSet.h"
   "connectivities.h"
+  "selectFiberListenerFromMesh.h"
   "sparseMatrix.h"
   "sparseMatrixItemR.h"
   "sparseMatrixItemW.h"
@@ -8,7 +9,9 @@ set( _headers
   "tildefs.h"
 )
 
-set( _sources "sparseMatrix.cc"
+set( _sources
+  "selectFiberListenerFromMesh.cc"
+  "sparseMatrix.cc"
   "sparseMatrixItemR.cc"
   "sparseMatrixItemW.cc"
   "sparseMatrixSmoothing.cc"
