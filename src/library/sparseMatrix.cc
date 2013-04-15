@@ -3,6 +3,8 @@
 #include <constellation/sparseMatrixItemW.h>
 #include <fstream>
 
+using namespace aims;
+
 
 aims::SparseMatrix::SparseMatrix( int32_t size1, int32_t size2 )
   : _matrix( size1, size2, 0 )
@@ -875,11 +877,11 @@ std::vector<double> aims::SparseMatrix::getRow( int32_t i ) const
   {
 
     std::vector<double> row( getSize2(), 0. );
-    boost::numeric::ublas::mapped_matrix< double >::const_iterator1
+    boost_sparse_matrix::const_iterator1
       ir = _matrix.find1( 0, i, 0 );
     if( ir != _matrix.end1() && ir.index1() == i )
     {
-      boost::numeric::ublas::mapped_matrix< double >::const_iterator2
+      boost_sparse_matrix::const_iterator2
         ic, ec = ir.end();
       long n = 0;
       for( ic=ir.begin(); ic!=ec; ++ic, ++n )
@@ -931,11 +933,11 @@ til::SparseVector<double> aims::SparseMatrix::getSparseRow( int32_t i ) const
   {
 
     til::SparseVector<double> row( getSize2() );
-    boost::numeric::ublas::mapped_matrix< double >::const_iterator1
+    boost_sparse_matrix::const_iterator1
       ir = _matrix.find1( 0, i, 0 );
     if( ir != _matrix.end1() && ir.index1() == i )
     {
-      boost::numeric::ublas::mapped_matrix< double >::const_iterator2
+      boost_sparse_matrix::const_iterator2
         ic, ec = ir.end();
       long n = 0;
       for( ic=ir.begin(); ic!=ec; ++ic, ++n )

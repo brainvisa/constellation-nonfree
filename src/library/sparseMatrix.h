@@ -3,6 +3,7 @@
 
 #include <boost/numeric/ublas/matrix_sparse.hpp>
 #include <boost/numeric/ublas/io.hpp>
+#include <boost/version.hpp>
 #include <string>
 
 #include "cathier/SparseVector.h"
@@ -11,6 +12,11 @@ namespace aims
 
 
   class SparseCMatrix;
+#if BOOST_VERSION >= 103300
+  typedef boost::numeric::ublas::mapped_matrix< double > boost_sparse_matrix;
+#else
+  typedef boost::numeric::ublas::sparse_matrix< double > boost_sparse_matrix;
+#endif
 
 
   class SparseMatrix
@@ -18,17 +24,17 @@ namespace aims
 
     public:
 
-      typedef boost::numeric::ublas::mapped_matrix< double >::reference
+      typedef boost_sparse_matrix::reference
           reference;
-      typedef boost::numeric::ublas::mapped_matrix< double >::const_reference
+      typedef boost_sparse_matrix::const_reference
           const_reference;
 
-      typedef boost::numeric::ublas::mapped_matrix< double >::iterator1 iterator1;
-      typedef boost::numeric::ublas::mapped_matrix< double >::iterator2 iterator2;
+      typedef boost_sparse_matrix::iterator1 iterator1;
+      typedef boost_sparse_matrix::iterator2 iterator2;
 
-      typedef boost::numeric::ublas::mapped_matrix< double >::const_iterator1
+      typedef boost_sparse_matrix::const_iterator1
           const_iterator1;
-      typedef boost::numeric::ublas::mapped_matrix< double >::const_iterator2
+      typedef boost_sparse_matrix::const_iterator2
           const_iterator2;
 
       SparseMatrix( int32_t size1 = 1, int32_t size2 = 1 );
@@ -120,7 +126,7 @@ namespace aims
 
     protected:
 
-      boost::numeric::ublas::mapped_matrix< double > _matrix;
+      boost_sparse_matrix _matrix;
 
   };
 
