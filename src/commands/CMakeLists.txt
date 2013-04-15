@@ -4,6 +4,7 @@
 
 set( _commands
   "AimsSparseMatrixSmoothing"
+  "constelSelectFibersFromMesh"
 )
 
 foreach( _command ${_commands} )
