@@ -6,7 +6,8 @@
 #include <boost/version.hpp>
 #include <string>
 
-#include "cathier/SparseVector.h"
+#include <cathier/SparseVector.h>
+
 namespace aims
 {
 
