@@ -3,10 +3,10 @@
 
 #include <connectomist/fibertracking/bundles.h>
 
-namespace comist {
+namespace constel {
   typedef std::vector< comist::FiberPoint > Fiber;
-  typedef std::vector< Fiber > Faisceaux;
-  typedef std::vector< Faisceaux > BundlesSet;
+  typedef std::vector< Fiber > Fibers;
+  typedef std::vector< Fibers > BundlesSet;
 }
 
 #endif
