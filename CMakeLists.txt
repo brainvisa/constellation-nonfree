@@ -14,7 +14,7 @@ endif()
 include( "${OLD_CONNECTOMIST-PRIVATE_USE_FILE}" )
 
 add_subdirectory( src/library )
-# add_subdirectory( src/commands )
+add_subdirectory( src/commands )
 # if( SIP_FOUND )
 #   add_subdirectory( src/sip )
 # endif()
