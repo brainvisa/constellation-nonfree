@@ -4,12 +4,14 @@ set( _headers
   "sparseMatrix.h"
   "sparseMatrixItemR.h"
   "sparseMatrixItemW.h"
+  "sparseMatrixSmoothing.h"
   "tildefs.h"
 )
 
 set( _sources "sparseMatrix.cc"
   "sparseMatrixItemR.cc"
   "sparseMatrixItemW.cc"
+  "sparseMatrixSmoothing.cc"
 )
 
 set(LIB_HEADERS ${_headers} PARENT_SCOPE)
