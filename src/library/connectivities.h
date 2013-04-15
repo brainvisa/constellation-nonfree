@@ -3,6 +3,7 @@
 
 #include <cathier/SparseVector.h>
 #include <vector>
+#include <set>
 
 namespace constel
 {
