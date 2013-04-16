@@ -25,7 +25,7 @@ def selectPatchBundles(patch_label, patchsMeshTexture_filename, subjectPatchsSha
   if verbose:
     print names
   names += ' '.join( [ str(x) for x in addlabel_list ] )
-  command_BundlesPatchSelection = "selectBundlesFromNames -i " + subjectPatchsShakeUpBundles_filename + " -o " + outputSubjectPatchBundles_filename + " -names " + names  + " \n\n"
+  command_BundlesPatchSelection = "constelSelectBundlesFromNames -i " + subjectPatchsShakeUpBundles_filename + " -o " + outputSubjectPatchBundles_filename + " -names " + names  + " \n\n"
 
   if verbose:
     print command_BundlesPatchSelection
