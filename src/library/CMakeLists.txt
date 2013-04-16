@@ -1,6 +1,7 @@
 set( _headers
   "bundleSet.h"
   "connectivities.h"
+  "lengthBundleListener.h"
   "selectBundlesFromNames.h"
   "selectFiberListenerFromMesh.h"
   "sparseMatrix.h"
@@ -11,6 +12,7 @@ set( _headers
 )
 
 set( _sources
+  "lengthBundleListener.cc"
   "selectBundlesFromNames.cc"
   "selectFiberListenerFromMesh.cc"
   "sparseMatrix.cc"
