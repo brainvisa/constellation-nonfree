@@ -4,6 +4,7 @@ set( _headers
   "bundleTools.h"
   "connectivities.h"
   "connMatrix.h"
+  "connMatrixTools.h"
   "lengthBundleListener.h"
   "selectBundlesFromNames.h"
   "selectFiberListenerFromMesh.h"
@@ -11,12 +12,15 @@ set( _headers
   "sparseMatrixItemR.h"
   "sparseMatrixItemW.h"
   "sparseMatrixSmoothing.h"
+  "textureAndMeshTools.h"
   "tildefs.h"
 )
 
 set( _sources
   "bundleTools.cc"
   "connMatrix.cc"
+  "connMatrixTools.cc"
+  "connMatrixTools2.cc"
   "lengthBundleListener.cc"
   "selectBundlesFromNames.cc"
   "selectFiberListenerFromMesh.cc"
@@ -24,6 +28,7 @@ set( _sources
   "sparseMatrixItemR.cc"
   "sparseMatrixItemW.cc"
   "sparseMatrixSmoothing.cc"
+  "textureAndMeshTools.cc"
 )
 
 set(LIB_HEADERS ${_headers} PARENT_SCOPE)
