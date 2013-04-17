@@ -10,6 +10,7 @@ if( PYTHON_FOUND )
   find_package( SIP )
   find_package( Numpy )
 endif()
+find_package( Doxygen )
 
 include( "${OLD_CONNECTOMIST-PRIVATE_USE_FILE}" )
 
@@ -18,6 +19,7 @@ add_subdirectory( src/commands )
 # if( SIP_FOUND )
 #   add_subdirectory( src/sip )
 # endif()
+add_subdirectory( doxygen )
 
 BRAINVISA_COPY_PYTHON_DIRECTORY( "${CMAKE_CURRENT_SOURCE_DIR}/python"
                                  ${PROJECT_NAME} )

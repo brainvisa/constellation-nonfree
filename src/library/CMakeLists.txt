@@ -18,6 +18,9 @@ set( _headers
 
 set( _sources
   "bundleTools.cc"
+  "bundleTools_meshConnectionBundleListener.cc"
+  "bundleTools_meshIntersectionNoSmoothingFasterBundleListener.cc"
+  "bundleTools_meshIntersectionNoSmoothingBundleListener.cc"
   "connMatrix.cc"
   "connMatrixTools.cc"
   "connMatrixTools2.cc"
