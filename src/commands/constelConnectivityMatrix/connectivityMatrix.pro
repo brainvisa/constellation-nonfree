@@ -1,3 +1,3 @@
 TEMPLATE = app
-TARGET = connectivityMatrix
+TARGET = constelConnectivityMatrix
 SOURCES = connectivityMatrix.cc
