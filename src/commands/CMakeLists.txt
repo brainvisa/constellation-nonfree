@@ -7,6 +7,7 @@ set( _commands
   "AimsSumSparseMatrix"
   "constelConnectivityMatrix"
   "constelFibersLengths"
+  "constelMeanConnectivityProfileFromMatrix"
   "constelSelectBundlesFromNames"
   "constelSelectFibersFromMesh"
 )
