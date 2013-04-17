@@ -455,7 +455,7 @@ int main( int argc, char* argv[] )
       if(verbose) std::cout << "reading seedRegionsTex: " << flush;
       seedRegionsTexR.read( seedRegionsTex );
       if(verbose) std::cout << "Texture dim : " << seedRegionsTex[0].nItem() << std::flush;
-      seedRegionsNb = textureMax(seedRegionsTex, inAimsMesh);
+      seedRegionsNb = textureMax(seedRegionsTex);
       if(verbose) std::cout << ", seedRegionsNb:" << seedRegionsNb << std::flush;
       if(verbose) std::cout << "...done." << std::endl;
     }
