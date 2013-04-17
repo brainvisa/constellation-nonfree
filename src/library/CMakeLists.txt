@@ -1,5 +1,7 @@
 set( _headers
+  "bundleLoader.h"
   "bundleSet.h"
+  "bundleTools.h"
   "connectivities.h"
   "lengthBundleListener.h"
   "selectBundlesFromNames.h"
@@ -12,6 +14,7 @@ set( _headers
 )
 
 set( _sources
+  "bundleTools.cc"
   "lengthBundleListener.cc"
   "selectBundlesFromNames.cc"
   "selectFiberListenerFromMesh.cc"
