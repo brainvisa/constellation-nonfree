@@ -12,9 +12,7 @@ int main( int argc, const char* argv[] )
 {
   try
   {
-    Reader<AimsSurfaceTriangle> inMeshAimsR;
     Reader< TimeTexture<short> > seedRegionsTexR;
-    AimsSurfaceTriangle inAimsMesh;
     TimeTexture<short> seedRegionsTex;
     size_t seedRegionLabel = 0;
 
@@ -41,7 +39,6 @@ int main( int argc, const char* argv[] )
 
     AimsApplication app( argc, argv,
       "This command computes and writes connection density texture(s). There are two modes: mesh_to_mesh, oneSeedRegion_to_mesh" );
-    app.addOption( inMeshAimsR, "-mesh", "input mesh" );
     app.addOption( connMatrixFormat, "-connfmt",
       "input conn matrix format, .ima or binar_sparse or ascii_sparse; default = binar_sparse",true );
     app.addOption( inConnMatrixFileName, "-connmatrixfile",
@@ -79,12 +76,7 @@ int main( int argc, const char* argv[] )
     //Reading inputs
     if(verbose) cout << "Reading inputs :" << endl;
 
-    inMeshAimsR.read( inAimsMesh );
-    if(verbose)
-      cout << "cortex mesh vertex nb: " << int(inAimsMesh.vertex().size())
-        << endl;
-
-    uint cortexMeshVertexNb = uint(inAimsMesh.vertex().size());
+    uint cortexMeshVertexNb = seedRegionsTex[0].nItem();
 
     if(verbose)
       cout << "reading seedRegionsTex: " << flush;
@@ -92,7 +84,7 @@ int main( int argc, const char* argv[] )
     if(verbose)
       cout << "Texture dim : " << seedRegionsTex[0].nItem()
         << flush;
-    seedRegionsNb = textureMax(seedRegionsTex, inAimsMesh);
+    seedRegionsNb = textureMax( seedRegionsTex );
     if(verbose)
     {
       cout << ", seedRegionsNb:" << seedRegionsNb << flush;
@@ -106,7 +98,7 @@ int main( int argc, const char* argv[] )
       seedRegionsTexR2.read( seedRegionsTex2 );
       if(verbose)
         cout << "Texture dim : " << seedRegionsTex2[0].nItem() << flush;
-      seedRegionsNb2 = textureMax(seedRegionsTex2, inAimsMesh);
+      seedRegionsNb2 = textureMax( seedRegionsTex2 );
       if(verbose)
         cout << ", seedRegionsNb2:" << seedRegionsNb2 << flush;
       if(verbose)
