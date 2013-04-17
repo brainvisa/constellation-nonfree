@@ -57,9 +57,9 @@ namespace constel
 
 //   void ListenedFiberInfo::savingFiberMeshIntersectionPoints(std::fstream file)
 //   {
-//     for (uint intersectionPoint = 0; intersectionPoint < _fiberMeshIntersectionCurvilinearAbscissaVector.size(); ++intersectionPoint)
+//     for (unsigned intersectionPoint = 0; intersectionPoint < _fiberMeshIntersectionCurvilinearAbscissaVector.size(); ++intersectionPoint)
 //     {
-//       for (uint polygon_neigh = 0; polygon_neigh< _fiberIntersectionNeighDistMapVector[intersectionPoint].size(); ++ polygon_neigh)
+//       for (unsigned polygon_neigh = 0; polygon_neigh< _fiberIntersectionNeighDistMapVector[intersectionPoint].size(); ++ polygon_neigh)
 //       {
 //         file << _fiberMeshIntersectionMeshNameVector[intersectionPoint] << " : " << _fiberIntersectionNeighDistMapVector[intersectionPoint][polygon_neigh].first << endl;
 //       }

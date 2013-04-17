@@ -7,11 +7,11 @@
 namespace constel
 {
 
-  template<int D, class T> std::vector<std::set<uint> > surfacePolygonsIndex( const AimsTimeSurface<D,T> & surf );
+  template<int D, class T> std::vector<std::set<unsigned> > surfacePolygonsIndex( const AimsTimeSurface<D,T> & surf );
 
-  std::set<uint> surfacePolygonsIndexByVerticesGroup(const std::vector<std::set<uint> > & polygonsByVertex_Index, std::vector<uint> & vertexIndex);
+  std::set<unsigned> surfacePolygonsIndexByVerticesGroup(const std::vector<std::set<unsigned> > & polygonsByVertex_Index, std::vector<unsigned> & vertexIndex);
 
-  bool hasVertexLabel(const TimeTexture<short> & labeled_tex, std::set<uint> vertexIndex_set, int label);
+  bool hasVertexLabel(const TimeTexture<short> & labeled_tex, std::set<unsigned> vertexIndex_set, int label);
 
   bool connectedCommponent_isInside(const AimsSurfaceTriangle & aimsMesh,const TimeTexture<short> & region_tex, std::vector< std::size_t > connectedCommponent_vertexIndex);
 

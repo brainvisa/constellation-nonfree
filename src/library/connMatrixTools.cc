@@ -14,7 +14,7 @@ using namespace constel;
 namespace constel
 {
 
-  void fillconnMatrix(Connectivities * conn_ptr, QuickMap & fiberExtremity1NeighMeshVertex, QuickMap & fiberExtremity2NeighMeshVertex, double connectivityThreshold, double distanceThreshold, uint connectionLength)
+  void fillconnMatrix(Connectivities * conn_ptr, QuickMap & fiberExtremity1NeighMeshVertex, QuickMap & fiberExtremity2NeighMeshVertex, double connectivityThreshold, double distanceThreshold, unsigned connectionLength)
   {
     double two_pi = 2*3.1415926535897931;
     /*
@@ -99,7 +99,7 @@ namespace constel
   }//fillconnMatrixNoSmoothing
 
 
-  void fillconnMatrix(aims::SparseMatrix * conn_ptr, QuickMap & fiberExtremity1NeighMeshVertex, QuickMap & fiberExtremity2NeighMeshVertex, double connectivityThreshold, double distanceThreshold, uint connectionLength)
+  void fillconnMatrix(aims::SparseMatrix * conn_ptr, QuickMap & fiberExtremity1NeighMeshVertex, QuickMap & fiberExtremity2NeighMeshVertex, double connectivityThreshold, double distanceThreshold, unsigned connectionLength)
     {
       double two_pi = 2*3.1415926535897931;
       /*
@@ -136,7 +136,7 @@ namespace constel
       }
     }//fillconnMatrixSparse
 
-  void fillconnMatrix(aims::SparseMatrix * conn_ptr, aims::SparseMatrix * conn_ptr2, QuickMap & fiberExtremity1NeighMeshVertex, QuickMap & fiberExtremity2NeighMeshVertex, double connectivityThreshold, double distanceThreshold, std::size_t rowIndex_min, std::size_t rowIndex_max, uint connectionLength)
+  void fillconnMatrix(aims::SparseMatrix * conn_ptr, aims::SparseMatrix * conn_ptr2, QuickMap & fiberExtremity1NeighMeshVertex, QuickMap & fiberExtremity2NeighMeshVertex, double connectivityThreshold, double distanceThreshold, std::size_t rowIndex_min, std::size_t rowIndex_max, unsigned connectionLength)
     {
       double two_pi = 2*3.1415926535897931;
       /*
@@ -199,7 +199,7 @@ namespace constel
       }
     }//fillconnTwoMatrixSparse
 
-//   void fillconnMatrixWithoutSmoothing(Connectivities * conn_ptr, QuickMap & fiberExtremity1NeighMeshVertex, QuickMap & fiberExtremity2NeighMeshVertex, double connectivityThreshold, uint connectionLength)
+//   void fillconnMatrixWithoutSmoothing(Connectivities * conn_ptr, QuickMap & fiberExtremity1NeighMeshVertex, QuickMap & fiberExtremity2NeighMeshVertex, double connectivityThreshold, unsigned connectionLength)
 //   {
 //     /*
 //     inputs:
@@ -307,32 +307,32 @@ namespace constel
   }//fillNonSymetricConnMatrix
 
   template<int D, class T>
-      bool computeIntersectionPointFiberSegmentAndMesh(const AimsTimeSurface<D,T> & aimsMesh, const std::vector<std::set<uint> > & polygonsByVertex_Index, Point3df fiberPoint1, Point3df fiberPoint2, uint meshClosestPoint, QuickMap ** polygonVerticesDistMap)
+      bool computeIntersectionPointFiberSegmentAndMesh(const AimsTimeSurface<D,T> & aimsMesh, const std::vector<std::set<unsigned> > & polygonsByVertex_Index, Point3df fiberPoint1, Point3df fiberPoint2, unsigned meshClosestPoint, QuickMap ** polygonVerticesDistMap)
   {
     //fill polygonVerticesDistMap with the D vertex of the intersection polygon (if there is an intersection)
     const std::vector<Point3df>  & meshVertices  = aimsMesh.vertex();
-    const std::vector< AimsVector<uint,D> > & meshPolygons = aimsMesh.polygon();
-    std::set<uint> closest_polygons = polygonsByVertex_Index[meshClosestPoint];
-    std::set<uint>::const_iterator set_it;
-    AimsVector<uint,D> currentAims_polygon;
+    const std::vector< AimsVector<unsigned,D> > & meshPolygons = aimsMesh.polygon();
+    std::set<unsigned> closest_polygons = polygonsByVertex_Index[meshClosestPoint];
+    std::set<unsigned>::const_iterator set_it;
+    AimsVector<unsigned,D> currentAims_polygon;
     std::vector< Point3df > current_polygon(D);
     Point3df * intersection_point = 0;
     bool inter = false;
     for (set_it = closest_polygons.begin(); set_it != closest_polygons.end(); set_it++)
     {
       currentAims_polygon = meshPolygons[*set_it];
-      for ( uint i = 0; i < D; ++i)
+      for ( unsigned i = 0; i < D; ++i)
       {
         current_polygon[i] = meshVertices[currentAims_polygon[i]];
       }
       inter = computeIntersectionSegmentPolygon( fiberPoint1, fiberPoint2, current_polygon, & intersection_point );
       if (inter)
       {
-        uint currentPolygonVerticeIndex;
+        unsigned currentPolygonVerticeIndex;
         Point3df currentPolygonVertice;
         * polygonVerticesDistMap = new QuickMap(D);
         til::numeric_array<float, 3> intersection_point_na((*intersection_point)[0], (*intersection_point)[1], (*intersection_point)[2]);
-        for  ( uint j = 0; j < D; ++j)
+        for  ( unsigned j = 0; j < D; ++j)
         {
           currentPolygonVerticeIndex = currentAims_polygon[j];
           currentPolygonVertice = meshVertices[currentPolygonVerticeIndex];
@@ -348,37 +348,37 @@ namespace constel
   }//computeIntersectionPointFiberSegmentAndMesh
   
   template<int D, class T>
-      bool computeIntersectionPointFiberSegmentAndMesh2(const AimsTimeSurface<D,T> & aimsMesh, const std::vector<std::set<uint> > & polygonsByVertex_Index, Point3df fiberPoint1, Point3df fiberPoint2, uint meshClosestPoint, QuickMap ** closestPointsTointersectionWeightMap)
+      bool computeIntersectionPointFiberSegmentAndMesh2(const AimsTimeSurface<D,T> & aimsMesh, const std::vector<std::set<unsigned> > & polygonsByVertex_Index, Point3df fiberPoint1, Point3df fiberPoint2, unsigned meshClosestPoint, QuickMap ** closestPointsTointersectionWeightMap)
   {
     //fill closestPointsTointersectionWeightMap with the polygon vertice closest to the intersection point, and the weight value = 1.0
     const std::vector<Point3df>  & meshVertices  = aimsMesh.vertex();
-    const std::vector< AimsVector<uint,D> > & meshPolygons = aimsMesh.polygon();
-    std::set<uint> closest_polygons = polygonsByVertex_Index[meshClosestPoint];
-    std::set<uint>::const_iterator set_it;
-    AimsVector<uint,D> currentAims_polygon;
+    const std::vector< AimsVector<unsigned,D> > & meshPolygons = aimsMesh.polygon();
+    std::set<unsigned> closest_polygons = polygonsByVertex_Index[meshClosestPoint];
+    std::set<unsigned>::const_iterator set_it;
+    AimsVector<unsigned,D> currentAims_polygon;
     std::vector< Point3df > current_polygon(D);
     Point3df * intersection_point = 0;
     bool inter = false;
     for (set_it = closest_polygons.begin(); set_it != closest_polygons.end(); set_it++)
     {
       currentAims_polygon = meshPolygons[*set_it];
-      for ( uint i = 0; i < D; ++i)
+      for ( unsigned i = 0; i < D; ++i)
       {
         current_polygon[i] = meshVertices[currentAims_polygon[i]];
       }
       inter = computeIntersectionSegmentPolygon( fiberPoint1, fiberPoint2, current_polygon, & intersection_point );
       if (inter)
       {
-        uint currentPolygonVerticeIndex;
+        unsigned currentPolygonVerticeIndex;
         Point3df currentPolygonVertice;
         * closestPointsTointersectionWeightMap = new QuickMap(1);
         til::numeric_array<float, 3> intersection_point_na((*intersection_point)[0], (*intersection_point)[1], (*intersection_point)[2]);
         
         std::vector <float> polygonVerticesIntersection_distances(D);
         float polygonVerticesIntersection_minDistance = 1000;//mm
-        uint closestVerticeNb_On_D;
+        unsigned closestVerticeNb_On_D;
         std::size_t closestVerticeIndex_On_mesh;
-        for  ( uint j = 0; j < D; ++j)
+        for  ( unsigned j = 0; j < D; ++j)
         {
           currentPolygonVerticeIndex = currentAims_polygon[j];
           currentPolygonVertice = meshVertices[currentPolygonVerticeIndex];
@@ -402,28 +402,28 @@ namespace constel
   }//computeIntersectionPointFiberSegmentAndMesh2
   
   template<int D, class T>
-      bool computeIntersectionPointNeighborhoodFiberSegmentAndMesh(const AimsTimeSurface<D,T> & aimsMesh, const std::vector<std::set<uint> > & polygonsByVertex_Index, Point3df fiberPoint1, Point3df fiberPoint2, uint meshClosestPoint, std::vector<QuickMap> & distanceThresholdNeighborhoodByVertex, QuickMap ** polygonVerticesDistMap_2ptr)
+      bool computeIntersectionPointNeighborhoodFiberSegmentAndMesh(const AimsTimeSurface<D,T> & aimsMesh, const std::vector<std::set<unsigned> > & polygonsByVertex_Index, Point3df fiberPoint1, Point3df fiberPoint2, unsigned meshClosestPoint, std::vector<QuickMap> & distanceThresholdNeighborhoodByVertex, QuickMap ** polygonVerticesDistMap_2ptr)
   {
     //fill polygonVerticesDistMap with the vertex closest to the intersection point and its neighborhood according to distanceThreshold value, if there is an intersection (a changer: fastmarching a partir des sommets du polygone mieux pour construire le voisinage)
     const std::vector<Point3df>  & meshVertices  = aimsMesh.vertex();
-    const std::vector< AimsVector<uint,D> > & meshPolygons = aimsMesh.polygon();
-    std::set<uint> closest_polygons = polygonsByVertex_Index[meshClosestPoint];
-    std::set<uint>::const_iterator set_it;
-    AimsVector<uint,D> currentAims_polygon;
+    const std::vector< AimsVector<unsigned,D> > & meshPolygons = aimsMesh.polygon();
+    std::set<unsigned> closest_polygons = polygonsByVertex_Index[meshClosestPoint];
+    std::set<unsigned>::const_iterator set_it;
+    AimsVector<unsigned,D> currentAims_polygon;
     std::vector< Point3df > current_polygon(D);
     Point3df * intersection_point = 0;
     bool inter = false;
     for (set_it = closest_polygons.begin(); set_it != closest_polygons.end(); set_it++)
     {
       currentAims_polygon = meshPolygons[*set_it];
-      for ( uint i = 0; i < D; ++i)
+      for ( unsigned i = 0; i < D; ++i)
       {
         current_polygon[i] = meshVertices[currentAims_polygon[i]];
       }
       inter = computeIntersectionSegmentPolygon( fiberPoint1, fiberPoint2, current_polygon, & intersection_point );
       if (inter)
       {
-        uint currentPolygonVerticeIndex;
+        unsigned currentPolygonVerticeIndex;
         Point3df currentPolygonVertice;
         * polygonVerticesDistMap_2ptr = new QuickMap(D);
         til::numeric_array<float, 3> intersection_point_na((*intersection_point)[0], (*intersection_point)[1], (*intersection_point)[2]);
@@ -431,8 +431,8 @@ namespace constel
         constel::QuickMap & polygonVerticesDistMap = **polygonVerticesDistMap_2ptr;
         std::vector <float> polygonVerticesIntersection_distances(D);
         float polygonVerticesIntersection_minDistance = 1000;//mm
-        uint closestVerticeNb_On_D;
-        for  ( uint j = 0; j < D; ++j)
+        unsigned closestVerticeNb_On_D;
+        for  ( unsigned j = 0; j < D; ++j)
         {
           currentPolygonVerticeIndex = currentAims_polygon[j];
           currentPolygonVertice = meshVertices[currentPolygonVerticeIndex];
@@ -506,13 +506,13 @@ namespace constel
 
 
 
-  void fillconnMatrixWithConnectionsPlusLength(Connectivities * conn_ptr, const BundleConnections & connections, double connectivityThreshold, double distanceThreshold, uint length_min, uint length_max, ConnectionsLength & connectionsLength)
+  void fillconnMatrixWithConnectionsPlusLength(Connectivities * conn_ptr, const BundleConnections & connections, double connectivityThreshold, double distanceThreshold, unsigned length_min, unsigned length_max, ConnectionsLength & connectionsLength)
   {
     size_t connectionsCount = 0;
     size_t chosenConnectionsCount = 0;
     for (BundleConnections::const_iterator iConnection = connections.begin(); iConnection != connections.end(); ++iConnection, ++connectionsCount)
     {
-      uint connection_length = connectionsLength[connectionsCount];
+      unsigned connection_length = connectionsLength[connectionsCount];
       if ( connection_length < length_max and connection_length >= length_min )
       {
         constel::QuickMap ConnectionMapFront = iConnection->front();
@@ -525,13 +525,13 @@ namespace constel
     std::cout << "chosen connectionsCount:" << chosenConnectionsCount << std::endl;
   }//fillconnMatrixWithConnectionsPlusLength
 
-  void fillconnMatrixWithConnectionsPlusLengthWeight(Connectivities * conn_ptr, const BundleConnections & connections, double connectivityThreshold, double distanceThreshold, uint length_min, uint length_max, ConnectionsLength & connectionsLength)
+  void fillconnMatrixWithConnectionsPlusLengthWeight(Connectivities * conn_ptr, const BundleConnections & connections, double connectivityThreshold, double distanceThreshold, unsigned length_min, unsigned length_max, ConnectionsLength & connectionsLength)
   {
     size_t connectionsCount = 0;
     size_t chosenConnectionsCount = 0;
     for (BundleConnections::const_iterator iConnection = connections.begin(); iConnection != connections.end(); ++iConnection, ++connectionsCount)
     {
-      uint connection_length = connectionsLength[connectionsCount];
+      unsigned connection_length = connectionsLength[connectionsCount];
       if ( connection_length < length_max and connection_length >= length_min )
       {
         constel::QuickMap ConnectionMapFront = iConnection->front();
@@ -575,13 +575,13 @@ namespace constel
     std::cout << "connectionsCount:" << connectionsCount << std::endl;
   }//fillNonSymetricConnMatrixWithConnections
   template bool
-      computeIntersectionPointFiberSegmentAndMesh(const AimsSurfaceTriangle & aimsMesh, const std::vector<std::set<uint> > & polygonsByVertex_Index, Point3df fiberPoint1, Point3df fiberPoint2, uint meshClosestPoint, QuickMap ** polygonVerticesDistMap);
+      computeIntersectionPointFiberSegmentAndMesh(const AimsSurfaceTriangle & aimsMesh, const std::vector<std::set<unsigned> > & polygonsByVertex_Index, Point3df fiberPoint1, Point3df fiberPoint2, unsigned meshClosestPoint, QuickMap ** polygonVerticesDistMap);
   
   template bool
-      computeIntersectionPointFiberSegmentAndMesh2(const AimsSurfaceTriangle & aimsMesh, const std::vector<std::set<uint> > & polygonsByVertex_Index, Point3df fiberPoint1, Point3df fiberPoint2, uint meshClosestPoint, QuickMap ** polygonVerticesDistMap);
+      computeIntersectionPointFiberSegmentAndMesh2(const AimsSurfaceTriangle & aimsMesh, const std::vector<std::set<unsigned> > & polygonsByVertex_Index, Point3df fiberPoint1, Point3df fiberPoint2, unsigned meshClosestPoint, QuickMap ** polygonVerticesDistMap);
 
   template bool
-      computeIntersectionPointNeighborhoodFiberSegmentAndMesh(const AimsSurfaceTriangle & aimsMesh, const std::vector<std::set<uint> > & polygonsByVertex_Index, Point3df fiberPoint1, Point3df fiberPoint2, uint meshClosestPoint, std::vector<QuickMap> & distanceThresholdNeighborhoodByVertex, QuickMap ** polygonVerticesDistMap_2ptr);
+      computeIntersectionPointNeighborhoodFiberSegmentAndMesh(const AimsSurfaceTriangle & aimsMesh, const std::vector<std::set<unsigned> > & polygonsByVertex_Index, Point3df fiberPoint1, Point3df fiberPoint2, unsigned meshClosestPoint, std::vector<QuickMap> & distanceThresholdNeighborhoodByVertex, QuickMap ** polygonVerticesDistMap_2ptr);
 
 
   aims::SparseMatrix* connectivitiesToSparseMatrix(

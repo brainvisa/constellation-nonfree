@@ -15,10 +15,10 @@ namespace constel
   typedef std::vector<QuickMap> Connection;
   typedef std::vector<Connection> BundleConnections;
   typedef boost::shared_ptr<BundleConnections> BundleConnections_shared_ptr;
-  typedef std::vector<uint> ConnectionsLength;
+  typedef std::vector<unsigned> ConnectionsLength;
   typedef std::vector<float> ConnectionsFloatLength;
   typedef boost::shared_ptr<ConnectionsLength> ConnectionsLength_shared_ptr;
-  typedef std::vector<std::set<uint> > PolygonsByVertexIndex;
+  typedef std::vector<std::set<unsigned> > PolygonsByVertexIndex;
   typedef std::vector<PolygonsByVertexIndex> PolygonsByVertexIndex_collection;
 
 }

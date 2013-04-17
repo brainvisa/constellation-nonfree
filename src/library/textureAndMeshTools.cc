@@ -9,19 +9,19 @@ using namespace aims;
 namespace constel
 {
 
-  template<int D, class T> std::vector<std::set<uint> >
+  template<int D, class T> std::vector<std::set<unsigned> >
   surfacePolygonsIndex( const AimsTimeSurface<D,T> & surf )
   {
     /*
-    output:       out_vector : std::vector<std::set<uint> > of size vertex nb: out_vector[i] = index of polygons associated to vertex i in surf.polygon()
+    output:       out_vector : std::vector<std::set<unsigned> > of size vertex nb: out_vector[i] = index of polygons associated to vertex i in surf.polygon()
     */
-    const std::vector< AimsVector<uint,D> > & poly = surf.polygon();
-    uint n = poly.size();
-    std::vector<std::set<uint> > polygons_index( surf.vertex().size() );
+    const std::vector< AimsVector<unsigned,D> > & poly = surf.polygon();
+    unsigned n = poly.size();
+    std::vector<std::set<unsigned> > polygons_index( surf.vertex().size() );
 
-    for ( uint i=0; i<n; ++i )
+    for ( unsigned i=0; i<n; ++i )
     {
-      for ( uint j=0; j<D; ++j )
+      for ( unsigned j=0; j<D; ++j )
       {
         polygons_index[poly[i][j]].insert( i );
       }
@@ -30,15 +30,15 @@ namespace constel
   }//surfacePolygonsIndex
 
 
-  std::set<uint> surfacePolygonsIndexByVerticesGroup(const std::vector<std::set<uint> > & polygonsByVertex_Index, std::vector<uint> & vertexIndex)
+  std::set<unsigned> surfacePolygonsIndexByVerticesGroup(const std::vector<std::set<unsigned> > & polygonsByVertex_Index, std::vector<unsigned> & vertexIndex)
   {
     // a tester
-    uint n = vertexIndex.size();
-    std::set<uint> polygonsByVerticesGroup_Index;
-    std::set<uint>::const_iterator set_it;
-    for ( uint i=0; i<n; ++i )
+    unsigned n = vertexIndex.size();
+    std::set<unsigned> polygonsByVerticesGroup_Index;
+    std::set<unsigned>::const_iterator set_it;
+    for ( unsigned i=0; i<n; ++i )
     {
-      uint currentVertex_index = vertexIndex[i];
+      unsigned currentVertex_index = vertexIndex[i];
       for (set_it = polygonsByVertex_Index[currentVertex_index].begin(); set_it != polygonsByVertex_Index[currentVertex_index].end(); set_it++)
       {
         polygonsByVerticesGroup_Index.insert(*set_it);
@@ -48,11 +48,11 @@ namespace constel
   }//surfacePolygonsIndexBySetOfVertex
 
 
-  bool hasVertexLabel(const TimeTexture<short> & labeled_tex, std::set<uint> vertexIndex_set, int label)
+  bool hasVertexLabel(const TimeTexture<short> & labeled_tex, std::set<unsigned> vertexIndex_set, int label)
   {
 //     std::cout << "Computing hasVertexLabel method..."<< std::endl;
     const Texture<short> & labeled_tex0 = labeled_tex.begin()->second;
-    std::set<uint>::const_iterator set_it, set_it_begin = vertexIndex_set.begin(), set_it_end = vertexIndex_set.end();
+    std::set<unsigned>::const_iterator set_it, set_it_begin = vertexIndex_set.begin(), set_it_end = vertexIndex_set.end();
 //     std::cout << "labeled_tex0[*set_it]:" << std::flush;
     for(set_it = set_it_begin; set_it!= set_it_end; set_it++)
     {
@@ -69,7 +69,7 @@ namespace constel
 
   bool connectedCommponent_isInside(const AimsSurfaceTriangle & aimsMesh,const TimeTexture<short> & region_tex, std::vector< std::size_t > connectedCommponent_vertexIndex)
   {
-    std::vector<std::set<uint> > aimsMeshNeighbours = SurfaceManip::surfaceNeighbours( aimsMesh );
+    std::vector<std::set<unsigned> > aimsMeshNeighbours = SurfaceManip::surfaceNeighbours( aimsMesh );
     std::size_t connectedCommponent_size = connectedCommponent_vertexIndex.size();
 //     std::cout << "connectedCommponent_vertexIndex size:" << connectedCommponent_size << "." << std::endl;
     std::size_t vertex_index;
@@ -94,7 +94,7 @@ namespace constel
 
   std::size_t firstBoundaryVertex(const AimsSurfaceTriangle & aimsMesh,const TimeTexture<short> & region_tex, std::vector< std::size_t > connectedCommponent_vertexIndex)
   {
-    std::vector<std::set<uint> > aimsMeshNeighbours = SurfaceManip::surfaceNeighbours( aimsMesh );
+    std::vector<std::set<unsigned> > aimsMeshNeighbours = SurfaceManip::surfaceNeighbours( aimsMesh );
     std::size_t connectedCommponent_size = connectedCommponent_vertexIndex.size();
 //     std::cout << "connectedCommponent_vertexIndex size:" << connectedCommponent_size << "." << std::endl;
     std::size_t vertex_index;
@@ -119,7 +119,7 @@ namespace constel
       std::size_t boundaryVertexBiggestValue(const AimsSurfaceTriangle & aimsMesh,const TimeTexture<short> & region_tex, std::vector< std::size_t > connectedCommponent_vertexIndex, const TimeTexture<T> & values_tex)
   {
     const Texture<T> & values_tex0 = values_tex.begin()->second;
-    std::vector<std::set<uint> > aimsMeshNeighbours = SurfaceManip::surfaceNeighbours( aimsMesh );
+    std::vector<std::set<unsigned> > aimsMeshNeighbours = SurfaceManip::surfaceNeighbours( aimsMesh );
     std::size_t connectedCommponent_size = connectedCommponent_vertexIndex.size();
 //     std::cout << "connectedCommponent_vertexIndex size:" << connectedCommponent_size << "." << std::endl;
     std::size_t vertex_index;
@@ -207,7 +207,7 @@ namespace constel
     u0 = P[i1] - polygon[0][i1];
     v0 = P[i2] - polygon[0][i2];
     bool inter = false;
-    uint i = 2;
+    unsigned i = 2;
     do
     {
       //The polygon is viewed as (n-2) triangles.
@@ -251,11 +251,11 @@ namespace constel
   }//computeIntersectionSegmentPolygon
 
 
-  template std::vector<std::set<uint> >
+  template std::vector<std::set<unsigned> >
       surfacePolygonsIndex( const AimsTimeSurface<2, Void> & surf );
-  template std::vector<std::set<uint> >
+  template std::vector<std::set<unsigned> >
       surfacePolygonsIndex( const AimsSurfaceTriangle & surf );
-  template std::vector<std::set<uint> >
+  template std::vector<std::set<unsigned> >
       surfacePolygonsIndex( const AimsSurfaceFacet & surf );
 
   template

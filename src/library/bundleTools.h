@@ -153,7 +153,7 @@ class CurvilinearAbscissaBundleListener : public comist::BundleListener
     BundleInteractionReader * _bundleInteractionReader;
 
    protected:
-    uint _fiberPointCount;
+    unsigned _fiberPointCount;
     float _fiberLength;
     
 
@@ -302,7 +302,7 @@ class MeshIntersectionMatrixBundleListener : public comist::BundleListener
 {
    public:
 
-      MeshIntersectionMatrixBundleListener(BundleInteractionReader &bundleInteractionReader, int meshIdentity, uint meshVertexNb, std::string file_name = "", std::string matrixRowsBundleNames_file_name = "", int bundlesNb = 1 );
+      MeshIntersectionMatrixBundleListener(BundleInteractionReader &bundleInteractionReader, int meshIdentity, unsigned meshVertexNb, std::string file_name = "", std::string matrixRowsBundleNames_file_name = "", int bundlesNb = 1 );
 
       virtual void bundleStarted( const comist::BundleProducer &, const comist::BundleInfo & );
       virtual void fiberTerminated( const comist::BundleProducer &, const comist::BundleInfo &, const comist::FiberInfo & );
@@ -314,7 +314,7 @@ class MeshIntersectionMatrixBundleListener : public comist::BundleListener
    private:
     BundleInteractionReader * _bundleInteractionReader;
     int _meshIdentity;
-    uint _meshVertexNb;
+    unsigned _meshVertexNb;
     aims::SparseMatrix _meshIntersectionsMatrix;
     std::string _file_name;
     std::string _matrixRowsBundleNames_file_name;
@@ -333,7 +333,7 @@ class MeshIntersectionMatrixWithLengthBundleListener : public comist::BundleList
 {
    public:
 
-      MeshIntersectionMatrixWithLengthBundleListener(BundleInteractionReader &bundleInteractionReader, int meshIdentity, uint meshVertexNb, std::string file_name = "", std::string matrixRowsBundleNames_file_name = "", int bundlesNb = 1 );
+      MeshIntersectionMatrixWithLengthBundleListener(BundleInteractionReader &bundleInteractionReader, int meshIdentity, unsigned meshVertexNb, std::string file_name = "", std::string matrixRowsBundleNames_file_name = "", int bundlesNb = 1 );
 
       virtual void bundleStarted( const comist::BundleProducer &, const comist::BundleInfo & );
       virtual void fiberTerminated( const comist::BundleProducer &, const comist::BundleInfo &, const comist::FiberInfo & );
@@ -345,7 +345,7 @@ class MeshIntersectionMatrixWithLengthBundleListener : public comist::BundleList
    private:
     BundleInteractionReader * _bundleInteractionReader;
     int _meshIdentity;
-    uint _meshVertexNb;
+    unsigned _meshVertexNb;
     aims::SparseMatrix _meshIntersectionsMatrix;
     std::string _file_name;
     std::string _matrixRowsBundleNames_file_name;
@@ -379,7 +379,7 @@ class MeshConnectionBundleListener : public comist::BundleListener
     bool _verbose;
     boost::shared_ptr<constel::BundleConnections> _bundleMeshConnections;
     boost::shared_ptr<constel::ConnectionsLength> _bundleMeshConnectionsLength;
-    uint _bundleMeshConnectionsCount;
+    unsigned _bundleMeshConnectionsCount;
 
 };
 
@@ -391,7 +391,7 @@ class MeshHistoLengthConnectionBundleListener : public comist::BundleListener
 {
    public:
 
-      MeshHistoLengthConnectionBundleListener(BundleInteractionReader &bundleInteractionReader, int meshIdentity, uint meshVertexNb, int connectionLengthMin, int connectionLengthMax, double meshDistanceThreshold = 0. );
+      MeshHistoLengthConnectionBundleListener(BundleInteractionReader &bundleInteractionReader, int meshIdentity, unsigned meshVertexNb, int connectionLengthMin, int connectionLengthMax, double meshDistanceThreshold = 0. );
 
       virtual void fiberTerminated( const comist::BundleProducer &, const comist::BundleInfo &, const comist::FiberInfo & );
 
@@ -403,8 +403,8 @@ class MeshHistoLengthConnectionBundleListener : public comist::BundleListener
    private:
     BundleInteractionReader * _bundleInteractionReader;
     int _meshIdentity;
-    uint _bundleMeshConnectionsCount;
-    uint _meshVertexNb;
+    unsigned _bundleMeshConnectionsCount;
+    unsigned _meshVertexNb;
 
     //For histogram creation:
     boost::shared_ptr<AimsData< float > > _meshConnectionsHistoLength_ptr;
