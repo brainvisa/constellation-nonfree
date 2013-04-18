@@ -8,6 +8,7 @@ using namespace aims;
 using namespace carto;
 using namespace std;
 using namespace constel;
+using namespace boost;
 
 namespace constel
 {
