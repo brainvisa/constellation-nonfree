@@ -3,6 +3,7 @@
 #include <constellation/connMatrix.h>
 #include <constellation/connMatrixTools.h>
 #include <constellation/sparseMatrixSmoothing.h>
+#include <constellation/connConversion.h>
 #include <aims/mesh/texturetools.h>
 #include <aims/getopt/getopt2.h>
 

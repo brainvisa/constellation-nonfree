@@ -1,5 +1,6 @@
 #include <constellation/sparseMatrixSmoothing.h>
 #include <constellation/tildefs.h>
+#include <constellation/connConversion.h>
 #include <aims/mesh/curv.h>
 #include <cathier/triangle_mesh_geodesic_map.h>
 #include <boost/numeric/ublas/matrix.hpp> // zero_matrix is needed in operation
@@ -12,14 +13,6 @@ using namespace carto;
 using namespace std;
 using namespace constel;
 using namespace boost;
-
-
-namespace constel
-{
-  // currently in sparseMatrixTools
-  aims::SparseMatrix* connectivitiesToSparseMatrix(
-    const Connectivities & conn );
-}
 
 
 namespace
@@ -74,7 +67,9 @@ namespace
     static columniterator colend( const iterator & );
     void assign( size_t line, size_t col, double value, iterator & it );
     SparseMatrix* toSparseMatrix();
+    void fromSparseMatrix( SparseMatrix *matrix );
 
+  private:
     Matrix & _matrix;
   };
 
@@ -175,6 +170,17 @@ namespace
   }
 
 
+  template <>
+  inline
+  void MatrixProxy<SparseMatrix>::fromSparseMatrix( SparseMatrix *matrix )
+  {
+    if( matrix != &_matrix )
+    {
+      _matrix = *matrix;
+      delete matrix; // Note the deletion
+    }
+  }
+
   // Connectivities
 
 
@@ -264,31 +270,38 @@ namespace
     return connectivitiesToSparseMatrix( _matrix );
   }
 
+
+  template <>
+  inline
+  void MatrixProxy<Connectivities>::fromSparseMatrix( SparseMatrix *matrix )
+  {
+    sparseMatrixToConnectivities( *matrix, _matrix );
+    delete matrix; // Note the deletion
+  }
+
   //
 
-  size_t countElements( const SparseMatrix & matrix )
+  size_t countElements( const boost_sparse_matrix & matrix )
   {
-    const boost_sparse_matrix & bmat = matrix.boostMatrix();
     size_t count = 0;
-    boost_sparse_matrix::const_iterator1 il, el = bmat.end1();
+    boost_sparse_matrix::const_iterator1 il, el = matrix.end1();
     boost_sparse_matrix::const_iterator2 ic, ec;
-    for( il=bmat.begin1(); il!=el; ++il )
-    {
+    for( il=matrix.begin1(); il!=el; ++il )
       for( ic=il.begin(), ec=il.end(); ic!=ec; ++ic )
       {
         ++count;
       }
-    }
-    cout << "countElements in mat " << bmat.size1() << " x " << bmat.size2() << ": " << count << endl;
+    cout << "countElements in mat " << matrix.size1() << " x " << matrix.size2() << ": " << count << endl;
     return count;
   }
 
 
-  SparseMatrix* subMatrix(
+  boost_sparse_matrix* subMatrix(
     const LaplacianWeights & matrix, const vector<size_t> & items )
   {
-    SparseMatrix * res = new SparseMatrix( items.size(), items.size() );
-    boost_sparse_matrix & rmat = res->boostMatrix();
+    boost_sparse_matrix * res
+      = new boost_sparse_matrix( items.size(), items.size() );
+    boost_sparse_matrix & rmat = *res;
     LaplacianWeights::const_iterator il, el = matrix.end();
     size_t i, j, n = items.size();
     size_t line;
@@ -320,10 +333,12 @@ namespace
   }
 
 
-  SparseMatrix* toSparseMatrix( LaplacianWeights & matrix )
+  boost_sparse_matrix* toTransposedBoostSparseMatrix(
+    LaplacianWeights & matrix )
   {
-    SparseMatrix * res = new SparseMatrix( matrix.size(), matrix.size() );
-    boost_sparse_matrix & rmat = res->boostMatrix();
+    boost_sparse_matrix * res
+      = new boost_sparse_matrix( matrix.size(), matrix.size() );
+    boost_sparse_matrix & rmat = *res;
     LaplacianWeights::const_iterator il, el = matrix.end();
     size_t line;
     size_t count = 0;
@@ -334,28 +349,11 @@ namespace
         ic, ec = il->second.end();
       for( ic=il->second.begin(); ic!=ec; ++ic )
       {
-        rmat( line, ic->first ) = ic->second;
+        rmat( ic->first, line ) = ic->second;
         ++count;
       }
     }
-    cout << "SparseMatrix items: " << count << endl;
-    return res;
-  }
-
-
-  SparseMatrix* trans( const SparseMatrix & matrix )
-  {
-    SparseMatrix * res = new SparseMatrix( matrix.getSize2(),
-                                           matrix.getSize1() );
-    const boost_sparse_matrix & bmat = matrix.boostMatrix();
-    boost_sparse_matrix & omat = res->boostMatrix();
-    boost_sparse_matrix::const_iterator1 il, el = bmat.end1();
-    boost_sparse_matrix::const_iterator2 ic, ec;
-    for( il=bmat.begin1(); il!=el; ++il )
-    {
-      for( ic=il.begin(), ec=il.end(); ic!=ec; ++ic )
-        omat( ic.index2(), ic.index1() ) = *ic;
-    }
+    cout << "boost_sparse_matrix items: " << count << endl;
     return res;
   }
 
@@ -390,38 +388,60 @@ namespace
       = makeLaplacianSmoothingCoefficients( weightLapl, niter, dt, wthresh );
 
     cout << "Laplacian coefs done.\n";
-    SparseMatrix *submat = subMatrix( *laplmat, indices );
+
+    /* Smoothing along lines is done using the coefs in laplmat.
+       More precisely, the transposed of laplmat should be applied to the
+       input matrix ( matrix * tr( laplmat ) ) as matricial operation.
+
+       Now we also want to smooth along columns, inside the starting points
+       region.
+       Normally we have to recalculate the laplacian coefficients because on
+       the region boundaries there are coefs taking values from outside of the
+       region.
+       For now we just get a sub-matrix of laplmat corresponding to the region
+       vertices. But the missing coefs would amount to considering the outside
+       vertices as cold sources with constant value 0.
+       To do so, we take the sub-matrix submat, and apply it to the columns
+       of martrix: submat * matrix.
+
+       Combining the two operations, we have:
+       submat * martrix * tr( laplmat )
+    */
+
+    boost_sparse_matrix *submat = subMatrix( *laplmat, indices );
     countElements( *submat );
     cout << "Submatrix done. Getting SparseMatrix\n";
     SparseMatrix *smat = matp.toSparseMatrix();
     cout << "OK, applying for columns\n";
-    countElements( *smat );
+    countElements( smat->boostMatrix() );
 
-    SparseMatrix ax( nl, nc );
-    sparse_prod( submat->boostMatrix(), smat->boostMatrix(), ax.boostMatrix() ); // smooth along cols
-    cout << "ax:\n";
-    countElements( ax );
+    boost_sparse_matrix colsmoothed( nl, nc );
+    // smooth along cols
+    sparse_prod( *submat, smat->boostMatrix(), colsmoothed );
+    cout << "colsmoothed:\n";
+    countElements( colsmoothed );
     delete submat;
     cout << "getting SparseMatrix for coefs\n";
-    SparseMatrix* lmat = toSparseMatrix( *laplmat );
+    boost_sparse_matrix* tlapl = toTransposedBoostSparseMatrix( *laplmat );
     delete laplmat;
-    cout << "OK, transposing coefs\n";
-    SparseMatrix *tlapl = trans( *lmat ); // transpose A
-    delete lmat;
     cout << "tlapl:\n";
     countElements( *tlapl );
     cout << "OK, applying for lines\n";
     smat->boostMatrix().clear();
-    sparse_prod( ax.boostMatrix(), tlapl->boostMatrix(), smat->boostMatrix()  ); // smooth along lines
+    // smooth along lines
+    sparse_prod( colsmoothed, *tlapl, smat->boostMatrix()  );
     cout << "done.\n";
-    countElements( *smat );
+    countElements( smat->boostMatrix() );
     delete tlapl;
-    ax.boostMatrix().clear();
+    colsmoothed.clear();
+    // back to input matrix, if needed
+    matp.fromSparseMatrix( smat );
 
-    // delete smat;
     return;
 
-#endif
+#else
+    /* Note: this version does not perform columns smoothing
+    */
 
     double tminglob = FLT_MAX, tmaxglob = -FLT_MAX,
       otmin=FLT_MAX, otmax=-FLT_MAX;
@@ -505,6 +525,7 @@ namespace
     cout << endl;
     cout << "input matrix bounds: " << tminglob << " / " << tmaxglob << endl;
     cout << "output matrix bounds: " << otmin << " / " << otmax << endl;
+#endif
   }
 
 }

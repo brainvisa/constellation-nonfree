@@ -34,13 +34,6 @@ namespace constel
   template<int D, class T> bool computeIntersectionPointFiberSegmentAndMesh2(const AimsTimeSurface<D,T> & aimsMesh, const std::vector<std::set<unsigned> > & polygonsByVertex_Index, Point3df fiberPoint1, Point3df fiberPoint2, unsigned meshClosestPoint, QuickMap ** polygonVerticesDistMap = 0 );
   template<int D, class T> bool computeIntersectionPointNeighborhoodFiberSegmentAndMesh(const AimsTimeSurface<D,T> & aimsMesh, const std::vector<std::set<unsigned> > & polygonsByVertex_Index, Point3df fiberPoint1, Point3df fiberPoint2, unsigned meshClosestPoint, std::vector<QuickMap> & distanceThresholdNeighborhoodByVertex, QuickMap ** polygonVerticesDistMap_2ptr);
 
-  aims::SparseMatrix* connectivitiesToSparseMatrix(
-    const Connectivities & conn );
-  Connectivities* sparseMatrixToConnectivities(
-    const aims::SparseMatrix & mat );
-  void writeConnectivities( const Connectivities & conn,
-                            const std::string & filename, bool ascii=false );
-
   void connMatrixTargetsToTargets(const Fibers & fibers, const AimsSurfaceTriangle & inAimsMesh, Motion motion, const TimeTexture<short> & targetRegionsTex, std::string filename);
 
   void connMatrixSeedRegion(const Fibers & fibers, const AimsSurfaceTriangle & inAimsMesh, Motion motion, const TimeTexture<short> & seedRegionsTex, std::size_t seedRegionLabel, std::string connmatrix_filename, std::string connTexture_filename);
