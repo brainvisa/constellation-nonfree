@@ -2,12 +2,24 @@
 #include <constellation/tildefs.h>
 #include <aims/mesh/curv.h>
 #include <cathier/triangle_mesh_geodesic_map.h>
+#include <boost/numeric/ublas/matrix.hpp> // zero_matrix is needed in operation
+#include <boost/numeric/ublas/operation.hpp>
+#include <boost/numeric/ublas/operation_sparse.hpp>
 #include <float.h>
 
 using namespace aims;
 using namespace carto;
 using namespace std;
 using namespace constel;
+using namespace boost;
+
+
+namespace constel
+{
+  // currently in sparseMatrixTools
+  aims::SparseMatrix* connectivitiesToSparseMatrix(
+    const Connectivities & conn );
+}
 
 
 namespace
@@ -61,6 +73,7 @@ namespace
     static columniterator colbegin( const iterator & );
     static columniterator colend( const iterator & );
     void assign( size_t line, size_t col, double value, iterator & it );
+    SparseMatrix* toSparseMatrix();
 
     Matrix & _matrix;
   };
@@ -154,6 +167,14 @@ namespace
   }
 
 
+  template <>
+  inline
+  SparseMatrix* MatrixProxy<SparseMatrix>::toSparseMatrix()
+  {
+    return &_matrix;
+  }
+
+
   // Connectivities
 
 
@@ -235,11 +256,116 @@ namespace
     (*iter)[ col ] = value;
   }
 
+
+  template <>
+  inline
+  SparseMatrix* MatrixProxy<Connectivities>::toSparseMatrix()
+  {
+    return connectivitiesToSparseMatrix( _matrix );
+  }
+
+  //
+
+  size_t countElements( const SparseMatrix & matrix )
+  {
+    const boost_sparse_matrix & bmat = matrix.boostMatrix();
+    size_t count = 0;
+    boost_sparse_matrix::const_iterator1 il, el = bmat.end1();
+    boost_sparse_matrix::const_iterator2 ic, ec;
+    for( il=bmat.begin1(); il!=el; ++il )
+    {
+      for( ic=il.begin(), ec=il.end(); ic!=ec; ++ic )
+      {
+        ++count;
+      }
+    }
+    cout << "countElements in mat " << bmat.size1() << " x " << bmat.size2() << ": " << count << endl;
+    return count;
+  }
+
+
+  SparseMatrix* subMatrix(
+    const LaplacianWeights & matrix, const vector<size_t> & items )
+  {
+    SparseMatrix * res = new SparseMatrix( items.size(), items.size() );
+    boost_sparse_matrix & rmat = res->boostMatrix();
+    LaplacianWeights::const_iterator il, el = matrix.end();
+    size_t i, j, n = items.size();
+    size_t line;
+    size_t count = 0;
+    for( i=0; i<n; ++i )
+    {
+      line = items[i];
+      il = matrix.find( line );
+      if( il != el )
+      {
+        set<pair<unsigned,float> >::const_iterator
+          ic = il->second.begin(), ec = il->second.end();
+        size_t col;
+        for( j=0; j!=n; ++j )
+        {
+          col = items[j];
+          while( ic != ec && ic->first < col )
+            ++ic;
+          if( ic != ec && ic->first == col )
+          {
+            rmat.insert_element( i, j, ic->second );
+            ++count;
+          }
+        }
+      }
+    }
+    cout << "subMatrix items: " << count << endl;
+    return res;
+  }
+
+
+  SparseMatrix* toSparseMatrix( LaplacianWeights & matrix )
+  {
+    SparseMatrix * res = new SparseMatrix( matrix.size(), matrix.size() );
+    boost_sparse_matrix & rmat = res->boostMatrix();
+    LaplacianWeights::const_iterator il, el = matrix.end();
+    size_t line;
+    size_t count = 0;
+    for( il=matrix.begin(); il!=el; ++il )
+    {
+      line = il->first;
+      set<pair<unsigned,float> >::const_iterator
+        ic, ec = il->second.end();
+      for( ic=il->second.begin(); ic!=ec; ++ic )
+      {
+        rmat( line, ic->first ) = ic->second;
+        ++count;
+      }
+    }
+    cout << "SparseMatrix items: " << count << endl;
+    return res;
+  }
+
+
+  SparseMatrix* trans( const SparseMatrix & matrix )
+  {
+    SparseMatrix * res = new SparseMatrix( matrix.getSize2(),
+                                           matrix.getSize1() );
+    const boost_sparse_matrix & bmat = matrix.boostMatrix();
+    boost_sparse_matrix & omat = res->boostMatrix();
+    boost_sparse_matrix::const_iterator1 il, el = bmat.end1();
+    boost_sparse_matrix::const_iterator2 ic, ec;
+    for( il=bmat.begin1(); il!=el; ++il )
+    {
+      for( ic=il.begin(), ec=il.end(); ic!=ec; ++ic )
+        omat( ic.index2(), ic.index1() ) = *ic;
+    }
+    return res;
+  }
+
+
   //
 
   template <typename Matrix>
   void _sparseMatrixDiffusionSmoothing( Matrix & matrix,
-    const AimsTimeSurface<3,Void> & mesh, double wthresh, double sigma )
+    const AimsTimeSurface<3,Void> & mesh, double wthresh, double sigma,
+    const vector<size_t> & indices )
   {
     cout << "sparseMatrixDiffusionSmoothing. Weights calculation...\n";
     MatrixProxy<Matrix> matp( matrix );
@@ -262,6 +388,39 @@ namespace
 #ifdef use_matpow
     LaplacianWeights* laplmat
       = makeLaplacianSmoothingCoefficients( weightLapl, niter, dt, wthresh );
+
+    cout << "Laplacian coefs done.\n";
+    SparseMatrix *submat = subMatrix( *laplmat, indices );
+    countElements( *submat );
+    cout << "Submatrix done. Getting SparseMatrix\n";
+    SparseMatrix *smat = matp.toSparseMatrix();
+    cout << "OK, applying for columns\n";
+    countElements( *smat );
+
+    SparseMatrix ax( nl, nc );
+    sparse_prod( submat->boostMatrix(), smat->boostMatrix(), ax.boostMatrix() ); // smooth along cols
+    cout << "ax:\n";
+    countElements( ax );
+    delete submat;
+    cout << "getting SparseMatrix for coefs\n";
+    SparseMatrix* lmat = toSparseMatrix( *laplmat );
+    delete laplmat;
+    cout << "OK, transposing coefs\n";
+    SparseMatrix *tlapl = trans( *lmat ); // transpose A
+    delete lmat;
+    cout << "tlapl:\n";
+    countElements( *tlapl );
+    cout << "OK, applying for lines\n";
+    smat->boostMatrix().clear();
+    sparse_prod( ax.boostMatrix(), tlapl->boostMatrix(), smat->boostMatrix()  ); // smooth along lines
+    cout << "done.\n";
+    countElements( *smat );
+    delete tlapl;
+    ax.boostMatrix().clear();
+
+    // delete smat;
+    return;
+
 #endif
 
     double tminglob = FLT_MAX, tmaxglob = -FLT_MAX,
@@ -304,6 +463,7 @@ namespace
 
 #ifdef use_matpow
       applyLaplacianMatrix( row, outrow, *laplmat );
+      delete laplmat;
 #else
 
 //       otex =  AimsMeshLaplacian(itex,weightLapl);
@@ -354,20 +514,24 @@ namespace constel
 {
 
   void sparseMatrixDiffusionSmoothing( SparseMatrix & matrix,
-    const AimsTimeSurface<3,Void> & mesh, double wthresh, double sigma )
+    const AimsTimeSurface<3,Void> & mesh, double wthresh, double sigma,
+    const vector<size_t> & indices )
   {
-    _sparseMatrixDiffusionSmoothing( matrix, mesh, wthresh, sigma );
+    _sparseMatrixDiffusionSmoothing( matrix, mesh, wthresh, sigma, indices );
   }
 
 
   void sparseMatrixDiffusionSmoothing( Connectivities * conn_ptr,
-    const AimsTimeSurface<3,Void> & mesh, double wthresh, double sigma )
+    const AimsTimeSurface<3,Void> & mesh, double wthresh, double sigma,
+    const vector<size_t> & indices )
   {
-    _sparseMatrixDiffusionSmoothing( *conn_ptr, mesh, wthresh, sigma );
+    _sparseMatrixDiffusionSmoothing( *conn_ptr, mesh, wthresh, sigma,
+                                     indices );
   }
 
 
-  void sparseMatrixGaussianSmoothing(SparseMatrix & matrix, const AimsSurfaceTriangle & inAimsMesh, float distthresh, float wthresh)
+  void sparseMatrixGaussianSmoothing(SparseMatrix & matrix,
+    const AimsSurfaceTriangle & inAimsMesh, float distthresh, float wthresh )
   {
     /*
     Smoothing of a connectivity matrix according to the aims mesh and to the neighbourhood distance (distthresh), threshold of the resulting matrix by wthresh

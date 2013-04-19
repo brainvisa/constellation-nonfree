@@ -10,11 +10,11 @@ namespace constel
 
   void sparseMatrixDiffusionSmoothing( aims::SparseMatrix & matrix,
     const AimsTimeSurface<3,Void> & mesh, double connectivityThreshold,
-    double distanceThreshold );
+    double distanceThreshold, const std::vector<size_t> & indices );
 
   void sparseMatrixDiffusionSmoothing( Connectivities * conn_ptr,
     const AimsTimeSurface<3,Void> & mesh, double connectivityThreshold,
-    double distanceThreshold );
+    double distanceThreshold, const std::vector<size_t> & indices );
 
   void sparseMatrixGaussianSmoothing( aims::SparseMatrix & matrix,
     const AimsSurfaceTriangle & aimsMesh, float distthresh,

@@ -113,6 +113,10 @@ namespace aims
       aims::SparseMatrix &
         operator /= ( double x );
 
+      /// for low-level boost operations
+      boost_sparse_matrix & boostMatrix() { return _matrix; }
+      const boost_sparse_matrix & boostMatrix() const { return _matrix; }
+
     protected:
 
       boost_sparse_matrix _matrix;
