@@ -35,7 +35,7 @@ namespace constel
     if (distthresh!=0)
     {
       til::ghost::GMapStop_AboveThreshold<double> stopGhost(distthresh);
-      shared_ptr<CNeighborhoods> pneighc = til::circular_neighborhoods(getVertices(mesh), getFaceIndices(mesh));
+      boost::shared_ptr<CNeighborhoods> pneighc = til::circular_neighborhoods(getVertices(mesh), getFaceIndices(mesh));
       til::Triangle_mesh_geodesic_map<Mesh::VertexCollection, CNeighborhoods, double, til::ghost::GMapStop_AboveThreshold<double>, til::policy::GMap_DefaultStorage_sparse_vect_dbl >
           geomap(getVertices(mesh), *pneighc, stopGhost);
       std::vector<std::size_t> startPoints(1);
@@ -49,7 +49,7 @@ namespace constel
           startPoints[0] = i;
           geomap.init(startPoints, dist);
           geomap.process();
-          shared_ptr<til::sparse_vector<double> > tmp = geomap.distanceMap();
+          boost::shared_ptr<til::sparse_vector<double> > tmp = geomap.distanceMap();
           res[i].resize(tmp->getMap().size());
           {
             using namespace til::expr;
@@ -228,7 +228,7 @@ namespace constel
     if (distthresh!=0)
     {
       til::ghost::GMapStop_AboveThreshold<double> stopGhost(distthresh);
-      shared_ptr<CNeighborhoods> pneighc_seedMesh = til::circular_neighborhoods(getVertices(seedMesh), getFaceIndices(seedMesh));
+      boost::shared_ptr<CNeighborhoods> pneighc_seedMesh = til::circular_neighborhoods(getVertices(seedMesh), getFaceIndices(seedMesh));
       til::Triangle_mesh_geodesic_map<Mesh::VertexCollection, CNeighborhoods, double, til::ghost::GMapStop_AboveThreshold<double>, til::policy::GMap_DefaultStorage_sparse_vect_dbl >
           geomap_seedMesh(getVertices(seedMesh), *pneighc_seedMesh, stopGhost);
       std::vector<std::size_t> startPoints(1);
@@ -242,7 +242,7 @@ namespace constel
           startPoints[0] = i;
           geomap_seedMesh.init(startPoints, dist);
           geomap_seedMesh.process();
-          shared_ptr<til::sparse_vector<double> > tmp = geomap_seedMesh.distanceMap();
+          boost::shared_ptr<til::sparse_vector<double> > tmp = geomap_seedMesh.distanceMap();
           res_seedMesh[i].resize(tmp->getMap().size());
           {
             using namespace til::expr;
@@ -262,7 +262,7 @@ namespace constel
     if (distthresh!=0)
     {
       til::ghost::GMapStop_AboveThreshold<double> stopGhost(distthresh);
-      shared_ptr<CNeighborhoods> pneighc_targetMesh = til::circular_neighborhoods(getVertices(targetMesh), getFaceIndices(targetMesh));
+      boost::shared_ptr<CNeighborhoods> pneighc_targetMesh = til::circular_neighborhoods(getVertices(targetMesh), getFaceIndices(targetMesh));
       til::Triangle_mesh_geodesic_map<Mesh::VertexCollection, CNeighborhoods, double, til::ghost::GMapStop_AboveThreshold<double>, til::policy::GMap_DefaultStorage_sparse_vect_dbl >
           geomap_targetMesh(getVertices(targetMesh), *pneighc_targetMesh, stopGhost);
       std::vector<std::size_t> startPoints(1);
@@ -276,7 +276,7 @@ namespace constel
           startPoints[0] = i;
           geomap_targetMesh.init(startPoints, dist);
           geomap_targetMesh.process();
-          shared_ptr<til::sparse_vector<double> > tmp = geomap_targetMesh.distanceMap();
+          boost::shared_ptr<til::sparse_vector<double> > tmp = geomap_targetMesh.distanceMap();
           res_targetMesh[i].resize(tmp->getMap().size());
           {
             using namespace til::expr;
@@ -469,7 +469,7 @@ namespace constel
     // Comuting geomap : neighborhood map
     if (verbose) std::cout << "Computing geomap..." << std::flush;
     til::ghost::GMapStop_AboveThreshold<double> stopGhost(distthresh);
-    shared_ptr<CNeighborhoods> pneighc = til::circular_neighborhoods(getVertices(mesh), getFaceIndices(mesh));
+    boost::shared_ptr<CNeighborhoods> pneighc = til::circular_neighborhoods(getVertices(mesh), getFaceIndices(mesh));
     til::Triangle_mesh_geodesic_map<Mesh::VertexCollection, CNeighborhoods, double, til::ghost::GMapStop_AboveThreshold<double>, til::policy::GMap_DefaultStorage_sparse_vect_dbl >
         geomap(getVertices(mesh), *pneighc, stopGhost);
     std::vector<std::size_t> startPoints(1);
@@ -482,7 +482,7 @@ namespace constel
         startPoints[0] = i;
         geomap.init(startPoints, dist);
         geomap.process();
-        shared_ptr<til::sparse_vector<double> > tmp = geomap.distanceMap();
+        boost::shared_ptr<til::sparse_vector<double> > tmp = geomap.distanceMap();
         res[i].resize(tmp->getMap().size());
         {
           using namespace til::expr;
