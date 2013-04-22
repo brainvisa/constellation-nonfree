@@ -577,7 +577,7 @@ namespace constel
     std::cout << "Computing geomap..." << std::flush;
     std::vector<QuickMap> res(getVertices(mesh).size());
     til::ghost::GMapStop_AboveThreshold<double> stopGhost(distthresh);
-    shared_ptr<CNeighborhoods> pneighc = til::circular_neighborhoods(getVertices(mesh), getFaceIndices(mesh));
+    boost::shared_ptr<CNeighborhoods> pneighc = til::circular_neighborhoods(getVertices(mesh), getFaceIndices(mesh));
     til::Triangle_mesh_geodesic_map<Mesh::VertexCollection, CNeighborhoods, double, til::ghost::GMapStop_AboveThreshold<double>, til::policy::GMap_DefaultStorage_sparse_vect_dbl >
         geomap(getVertices(mesh), *pneighc, stopGhost);
     std::vector<std::size_t> startPoints(1);
@@ -589,7 +589,7 @@ namespace constel
         startPoints[0] = i;
         geomap.init(startPoints, dist);
         geomap.process();
-        shared_ptr<til::sparse_vector<double> > tmp = geomap.distanceMap();
+        boost::shared_ptr<til::sparse_vector<double> > tmp = geomap.distanceMap();
         res[i].resize(tmp->getMap().size());
         {
           using namespace til::expr;
@@ -692,7 +692,7 @@ namespace constel
     std::cout << "Computing geomap..." << std::flush;
     std::vector<QuickMap> res(getVertices(mesh).size());
     til::ghost::GMapStop_AboveThreshold<double> stopGhost(distthresh);
-    shared_ptr<CNeighborhoods> pneighc = til::circular_neighborhoods(getVertices(mesh), getFaceIndices(mesh));
+    boost::shared_ptr<CNeighborhoods> pneighc = til::circular_neighborhoods(getVertices(mesh), getFaceIndices(mesh));
     til::Triangle_mesh_geodesic_map<Mesh::VertexCollection, CNeighborhoods, double, til::ghost::GMapStop_AboveThreshold<double>, til::policy::GMap_DefaultStorage_sparse_vect_dbl >
         geomap(getVertices(mesh), *pneighc, stopGhost);
     std::vector<std::size_t> startPoints(1);
@@ -704,7 +704,7 @@ namespace constel
         startPoints[0] = i;
         geomap.init(startPoints, dist);
         geomap.process();
-        shared_ptr<til::sparse_vector<double> > tmp = geomap.distanceMap();
+        boost::shared_ptr<til::sparse_vector<double> > tmp = geomap.distanceMap();
         res[i].resize(tmp->getMap().size());
         {
           using namespace til::expr;
