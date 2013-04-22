@@ -227,18 +227,8 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
   std::size_t seedRegionLabelVertexNb = labels[seedRegionLabel];
   Connectivities * extractConnMatrix_ptr = connMatrixReducedFromRegion(connMatrixToAllMesh_ptr, seedRegionsTex, seedRegionLabel, seedRegionLabelVertexNb, & seedVertexIndex);
   if( distthresh != 0 )
-  {
-    vector<size_t> pindices;
-    const vector<int16_t> & labelst = seedRegionsTex.begin()->second.data();
-    pindices.reserve( labelst.size() ); // arbitrary, should be smaller
-    size_t i, n = labelst.size();
-    for( i=0; i!=n; ++i )
-      if( labelst[i] == seedRegionLabel )
-        pindices.push_back( i );
-
     sparseMatrixDiffusionSmoothing( extractConnMatrix_ptr, inAimsMesh,
-      wthresh, distthresh, pindices );
-  }
+      wthresh, distthresh, seedRegionsTex, seedRegionLabel );
 
   Connectivities & extractConnMatrix = *extractConnMatrix_ptr;
   if (normalize)

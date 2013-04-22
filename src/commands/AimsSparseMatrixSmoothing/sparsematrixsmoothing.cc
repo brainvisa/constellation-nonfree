@@ -46,16 +46,16 @@ int main( int argc, const char** argv )
     {
       TimeTexture<int32_t> ptex;
       labeltexR.read( ptex );
-      vector<size_t> pindices;
-      const vector<int32_t> & labels = ptex[0].data();
-      pindices.reserve( labels.size() ); // arbitrary, should be smaller
-      size_t i, n = labels.size();
-      for( i=0; i!=n; ++i )
-        if( labels[i] == patch )
-          pindices.push_back( i );
+//       vector<size_t> pindices;
+//       const vector<int32_t> & labels = ptex[0].data();
+//       pindices.reserve( labels.size() ); // arbitrary, should be smaller
+//       size_t i, n = labels.size();
+//       for( i=0; i!=n; ++i )
+//         if( labels[i] == patch )
+//           pindices.push_back( i );
 
       sparseMatrixDiffusionSmoothing( matrix, mesh, threshold, sigma,
-                                      pindices );
+                                      ptex, patch );
     }
 
     matrix.write( outmatFilename );

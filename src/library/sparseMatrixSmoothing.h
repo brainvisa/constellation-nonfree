@@ -4,17 +4,30 @@
 #include <constellation/sparseMatrix.h>
 #include <constellation/connectivities.h>
 #include <aims/mesh/surface.h>
+#include <aims/mesh/texture.h>
 
 namespace constel
 {
 
   void sparseMatrixDiffusionSmoothing( aims::SparseMatrix & matrix,
     const AimsTimeSurface<3,Void> & mesh, double connectivityThreshold,
-    double distanceThreshold, const std::vector<size_t> & indices );
+    double distanceThreshold, const TimeTexture<int32_t> & patches,
+    int32_t patch );
+
+  void sparseMatrixDiffusionSmoothing( aims::SparseMatrix & matrix,
+    const AimsTimeSurface<3,Void> & mesh, double connectivityThreshold,
+    double distanceThreshold, const TimeTexture<int16_t> & patches,
+    int32_t patch );
 
   void sparseMatrixDiffusionSmoothing( Connectivities * conn_ptr,
     const AimsTimeSurface<3,Void> & mesh, double connectivityThreshold,
-    double distanceThreshold, const std::vector<size_t> & indices );
+    double distanceThreshold, const TimeTexture<int32_t> & patches,
+    int32_t patch );
+
+  void sparseMatrixDiffusionSmoothing( Connectivities * conn_ptr,
+    const AimsTimeSurface<3,Void> & mesh, double connectivityThreshold,
+    double distanceThreshold, const TimeTexture<int16_t> & patches,
+    int32_t patch );
 
   void sparseMatrixGaussianSmoothing( aims::SparseMatrix & matrix,
     const AimsSurfaceTriangle & aimsMesh, float distthresh,
