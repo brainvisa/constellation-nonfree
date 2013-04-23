@@ -371,7 +371,7 @@ namespace
             ++ic;
           if( ic != ec && ic->first == col )
           {
-            rmat.insert_element( i, j, ic->second );
+            rmat( i, j ) = ic->second;
             ++count;
           }
         }
@@ -423,7 +423,7 @@ namespace
     double dur = sigma * sigma / ( 8. * ::log(2) );
     cout << "dur: " << dur << endl;
     float dt = 0.001; // FIXME
-    unsigned it, niter = rint(dur/dt);
+    unsigned it, niter = unsigned( rint(dur/dt) );
     vector<double> outrow;
     cout << "laplacian smoothing... niter: " << niter << ", dt: " << dt
       << endl;

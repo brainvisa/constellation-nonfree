@@ -250,7 +250,17 @@ int32_t aims::SparseMatrix::getNonZeroElementCount() const
   try
   {
 
+#if BOOST_VERSION < 103300
+    boost_sparse_matrix::size_type filled = 0;
+    boost_sparse_matrix::const_iterator2 itv2, etv2;
+    for (boost_sparse_matrix::const_iterator1 itv = _matrix.begin1 (); itv != _matrix.end1 (); ++ itv)
+      for( itv2=itv.begin(), etv2=itv.end(); itv2!=etv2; ++itv2 )
+        ++filled;
+    return filled;
+
+#else
     return ( int32_t )_matrix.nnz();
+#endif
 
   }
   catch( std::exception & e )
@@ -268,7 +278,11 @@ bool aims::SparseMatrix::hasElement( int32_t i, int32_t j ) const
   try
   {
 
+#if BOOST_VERSION < 103300
+    return _matrix.at_element( i, j ) != 0;
+#else
     return _matrix.find_element( i, j );
+#endif
 
   }
   catch( std::exception & e )
@@ -973,7 +987,11 @@ void aims::SparseMatrix::erase_element( int32_t i, int32_t j )
   try
   {
 
+#if BOOST_VERSION < 103300
+    _matrix.erase( i, j );
+#else
     _matrix.erase_element( i, j );
+#endif
 
   }
   catch (std::exception & e )
