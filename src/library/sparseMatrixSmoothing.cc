@@ -816,10 +816,10 @@ namespace constel
     {
       for ( s2 = matrix.begin2(); s2 != matrix.end2(); s2++ )
       {
-        std::size_t A = s2.index2();
-        float a = res[A].size();
+        size_t A = s2.index2();
+        size_t a = res[A].size();
         std::vector<float> weightsVector(a);
-        for (std::size_t i = 0; i <a; i++)
+        for (size_t i = 0; i <a; i++)
         {
           weightsVector[i]=0;
         }
