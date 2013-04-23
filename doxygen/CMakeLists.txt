@@ -11,6 +11,5 @@ IF ( DOXYGEN_FOUND )
     _doxygenInput  head_${component_name}.html ${component_name}.png ${component_name}.png
     INPUT_PREFIX "${CMAKE_BINARY_DIR}/include/${component_name}"
     COMPONENT "${component_name}" )
-  message( "*** constel headers: ${_doxygenInput}" )
   add_dependencies( ${component_name}-doxygen connectomist-doxygen aimsalgo-doxygen aimsdata-doxygen graph-doxygen cartobase-doxygen cartodata-doxygen )
 ENDIF ( DOXYGEN_FOUND )
