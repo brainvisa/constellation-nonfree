@@ -36,7 +36,7 @@ set( _sources
   "textureAndMeshTools.cc"
 )
 
-set(LIB_HEADERS ${_headers} PARENT_SCOPE)
+set(CONSTELLATION_HEADERS ${_headers} PARENT_SCOPE)
 BRAINVISA_COPY_AND_INSTALL_HEADERS( _headers "constellation" headersTarget )
 add_library( constellation SHARED ${_sources} )
 add_dependencies( constellation ${headersTarget} )
