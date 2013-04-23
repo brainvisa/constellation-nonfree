@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 from soma import aims, aimsalgo
 import numpy as N
-import roca.lib.hroi as HROI
 
 
 def _clean_after_merge( labels, parents, valid ):
