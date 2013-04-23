@@ -331,7 +331,7 @@ namespace
             weight += ic->second;
           else
           {
-            rmat.insert_element( i, index[col], ic->second );
+            rmat( i, index[col] ) = ic->second;
             // ++count;
           }
         }
