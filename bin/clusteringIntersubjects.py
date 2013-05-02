@@ -3,7 +3,6 @@ from optparse import OptionParser
 from soma import aims
 import numpy as N
 import roca.lib.interMeshParcellation.processes_lib as T
-import roca.lib.textureTools as TT
 import roca.lib.clustering.K_optimization as CK
 import sys
 import time
@@ -92,10 +91,9 @@ def main():
 
     countProcessedVertex += subjectPatchVertex_nb
     kopt_tex = aims.TimeTexture_S16()
-    TT.initTex(kopt_tex, WhiteMeshVertexNb, 0, 0)
     k_opt_Time = k_opt - kmin
     print 'k_opt_Time = ', k_opt_Time
-    TT.fillTexWithTex(kopt_tex, clustersTime_tex, 0, k_opt_Time)
+    kopt_tex[0].assign( clustersTime_tex[k_opt_Time] )
 
     texTime = aims.write(clustersTime_tex, str( options.clustering_time[n] ) )
     texSilhouette = aims.write(clus_avg_width_Time_tex, str( options.clustering_silhouette[n] ) )

@@ -15,9 +15,8 @@ def removeLabelsFromTexture(tex, labels_list):
   """
   out_tex = aims.TimeTexture_S16()
   vertex_nb = int(tex.nItem())
-  initTex(out_tex, vertex_nb, 0, 0)
   tex_ar = tex[0].arraydata()
-  fillTex(out_tex, tex_ar, 0)
+  out_tex[0].assign( tex_ar )
   labels_nb = tex_ar.max()
   removedLabels_nb = len(labels_list)
   outtex_ar = out_tex[0].arraydata()
