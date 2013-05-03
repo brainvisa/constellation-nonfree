@@ -22,7 +22,7 @@ int main( int argc, const char* argv[] )
     app.initialize();
 
     //Reading inputs
-    if(verbose) std::cout << "Reading input matrices..." << std::endl;
+    if(verbose) std::cout << "Reading 1st input matrix..." << std::flush;
     if(sparseMatrixFileNames.empty())
     {
       throw std::runtime_error( "Not input matrices...");
@@ -30,16 +30,23 @@ int main( int argc, const char* argv[] )
     aims::SparseMatrix sumSparseMatrix;
     sumSparseMatrix.read( sparseMatrixFileNames[0], matrixFormat );
 
+    if( verbose ) cout << " done.\n";
+
     int32_t size1 = sumSparseMatrix.getSize1();
     int32_t size2 = sumSparseMatrix.getSize2();
-    for (uint mat = 1; mat < sparseMatrixFileNames.size(); ++mat)
+    uint n = sparseMatrixFileNames.size();
+    for (uint mat = 1; mat < n; ++mat)
     {
       aims::SparseMatrix currentSparseMatrix;
+      if( verbose )
+        cout << "reading matrix " << mat+1 << " / " << n << "..." << flush;
       currentSparseMatrix.read( sparseMatrixFileNames[mat], matrixFormat );
+      if( verbose ) cout << " done.\n";
       if( currentSparseMatrix.getSize1()==size1
           and currentSparseMatrix.getSize2() == size2 )
       {
         sumSparseMatrix += currentSparseMatrix;
+        if( verbose ) cout << "Added.\n";
       }
       else
       {
