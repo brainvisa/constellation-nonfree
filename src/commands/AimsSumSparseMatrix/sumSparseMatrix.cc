@@ -1,5 +1,5 @@
 #include <aims/getopt/getopt2.h>
-#include <constellation/sparseMatrix.h>
+#include <aims/sparsematrix/sparseMatrix.h>
 
 using namespace aims;
 using namespace carto;

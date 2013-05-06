@@ -1,7 +1,7 @@
 #ifndef CONSTELLATION_CONNCONVERSION_H
 #define CONSTELLATION_CONNCONVERSION_H
 
-#include <constellation/sparseMatrix.h>
+#include <aims/sparsematrix/sparseMatrix.h>
 #include <constellation/connectivities.h>
 
 namespace constel

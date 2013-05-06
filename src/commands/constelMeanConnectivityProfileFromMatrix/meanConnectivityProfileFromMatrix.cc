@@ -156,7 +156,8 @@ int main( int argc, const char* argv[] )
             << endl;
         for (size_t i = 0; i < labels[seedRegionLabel]; ++i)
         {
-          connMatrixToAllMesh[i] = AllMeshConnMatrix.getSparseRow((int32_t)i);
+          connMatrixToAllMesh[i] = AllMeshConnMatrix.getSparseRow
+            <til::SparseVector<double> >((int32_t)i);
         }
       }
       else
@@ -167,7 +168,8 @@ int main( int argc, const char* argv[] )
         for (size_t i = 0; i < seedVertexIndex.size(); ++i)
         {
           connMatrixToAllMesh[i]
-            = AllMeshConnMatrix.getSparseRow((int32_t)seedVertexIndex[i]);
+            = AllMeshConnMatrix.getSparseRow
+              <til::SparseVector<double> >((int32_t)seedVertexIndex[i]);
         }
       }
     }
@@ -182,7 +184,8 @@ int main( int argc, const char* argv[] )
         for (size_t i = 0; i < labels[seedRegionLabel]; ++i)
         {
           connMatrixToAllMesh[seedVertexIndex[i]]
-            = AllMeshConnMatrix.getSparseRow((int32_t)i);
+            = AllMeshConnMatrix.getSparseRow
+              <til::SparseVector<double> >((int32_t)i);
         }
       }
       else
@@ -193,7 +196,8 @@ int main( int argc, const char* argv[] )
         for (size_t i = 0; i < seedVertexIndex.size(); ++i)
         {
           connMatrixToAllMesh[seedVertexIndex[i]]
-            = AllMeshConnMatrix.getSparseRow((int32_t)seedVertexIndex[i]);
+            = AllMeshConnMatrix.getSparseRow
+              <til::SparseVector<double> >((int32_t)seedVertexIndex[i]);
         }
       }
     }

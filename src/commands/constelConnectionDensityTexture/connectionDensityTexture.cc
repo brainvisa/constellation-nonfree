@@ -1,5 +1,5 @@
 #include <constellation/connMatrix.h>
-#include <constellation/sparseMatrix.h>
+#include <aims/sparsematrix/sparseMatrix.h>
 #include <aims/mesh/texturetools.h>
 #include <aims/getopt/getopt2.h>
 
@@ -158,7 +158,8 @@ int main( int argc, const char** argv )
         if (verbose)  std::cout << "input connectivity matrix correspond to seed region" << std::endl;
         for (size_t i = 0; i < labels[seedRegionLabel]; ++i)
         {
-          connMatrixToAllMesh[i] = AllMeshConnMatrix.getSparseRow((int32_t)i);
+          connMatrixToAllMesh[i] = AllMeshConnMatrix.getSparseRow
+            <til::SparseVector<double> >((int32_t)i);
         }
 
       }
@@ -168,7 +169,8 @@ int main( int argc, const char** argv )
         for (size_t i = 0; i < seedVertexIndex.size(); ++i)
         {
 //           std::cout << "i:" << i << std::endl;
-          connMatrixToAllMesh[i] = AllMeshConnMatrix.getSparseRow((int32_t)seedVertexIndex[i]);
+          connMatrixToAllMesh[i] = AllMeshConnMatrix.getSparseRow
+            <til::SparseVector<double> >((int32_t)seedVertexIndex[i]);
         }
       }
     }

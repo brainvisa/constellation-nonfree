@@ -1,7 +1,7 @@
 #ifndef CONSTELLATION_CONNMATRIXTOOLS_H
 #define CONSTELLATION_CONNMATRIXTOOLS_H
 
-#include <constellation/sparseMatrix.h>
+#include <aims/sparsematrix/sparseMatrix.h>
 #include <constellation/connectivities.h>
 #include <constellation/bundleSet.h>
 #include <aims/mesh/surface.h>

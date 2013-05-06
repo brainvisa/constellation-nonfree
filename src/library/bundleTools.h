@@ -2,7 +2,7 @@
 #define CONSTELLATION_BUNDLETOOLS_H
 
 #include <constellation/bundleSet.h>
-#include <constellation/sparseMatrix.h>
+#include <aims/sparsematrix/sparseMatrix.h>
 #include <constellation/tildefs.h>
 #include <constellation/connectivities.h>
 

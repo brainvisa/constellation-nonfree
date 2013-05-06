@@ -1,7 +1,7 @@
 #ifndef CONSTELLATION_SPARSEMATRIXSMOOTHING_H
 #define CONSTELLATION_SPARSEMATRIXSMOOTHING_H
 
-#include <constellation/sparseMatrix.h>
+#include <aims/sparsematrix/sparseMatrix.h>
 #include <constellation/connectivities.h>
 #include <aims/mesh/surface.h>
 #include <aims/mesh/texture.h>

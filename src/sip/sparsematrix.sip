@@ -5,7 +5,7 @@ namespace aims
   {
 
 %TypeHeaderCode
-#include <constellation/sparseMatrix.h>
+#include <aims/sparsematrix/sparseMatrix.h>
 %End
 
     public:
