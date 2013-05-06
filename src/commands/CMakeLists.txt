@@ -4,7 +4,6 @@
 
 set( _commands
   "AimsSparseMatrixSmoothing"
-  "AimsSumSparseMatrix"
   "constelConnectionDensityTexture"
   "constelConnectivityMatrix"
   "constelFibersLengths"

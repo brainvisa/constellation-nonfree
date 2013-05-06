@@ -2,5 +2,4 @@
 
 %Import aims.sip
 
-%Include sparsematrix.sip
 

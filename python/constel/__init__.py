@@ -31,19 +31,19 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 
-from soma.importer import ExtendedImporter
+#from soma.importer import ExtendedImporter
 
-ExtendedImporter().importInModule( '', globals(), locals(), 'constelsip' )
-#ExtendedImporter().importInModule( '', globals(), locals(), 'conselsip', ['constelsip.constel'] )
+#ExtendedImporter().importInModule( '', globals(), locals(), 'constelsip' )
+##ExtendedImporter().importInModule( '', globals(), locals(), 'conselsip', ['constelsip.constel'] )
 
-# TODO: try to fix this using ExtendedImporter
-from soma import aims
-# some classes are in the aims (C++) namespace and are imported in aimssip.aims
-for k, v in aims.__dict__.iteritems():
-  if hasattr( v, '__module__' ) and v.__module__ == constelsip.__name__:
-    try:
-      v.__module__ = 'soma.aims'
-    except:
-      pass
-del aims, ExtendedImporter, k, v
+## TODO: try to fix this using ExtendedImporter
+#from soma import aims
+## some classes are in the aims (C++) namespace and are imported in aimssip.aims
+#for k, v in aims.__dict__.iteritems():
+  #if hasattr( v, '__module__' ) and v.__module__ == constelsip.__name__:
+    #try:
+      #v.__module__ = 'soma.aims'
+    #except:
+      #pass
+#del aims, ExtendedImporter, k, v
 
