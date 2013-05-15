@@ -5,12 +5,10 @@ from soma import aims
 import numpy
 import sys
 import os
-
-import roca.lib.interMeshParcellation.processes_lib as T
-import roca.lib.textureTools_stats as TTS
+import constel.connmatrix.connmatrixtools as TTS
 
 def parseOpts(argv):
-  desc = """Calculate Matrix Group: average or concatenate."""
+  desc = """Calculate Group Matrix: average or concatenated."""
   
   parser = optparse.OptionParser(desc)
 
@@ -27,16 +25,15 @@ def main():
   
   count = 0
   for matrixf in files:
-    subject_reducedConnMatrix = T.readMatrixImaAsNumpyArray( str(matrixf), True )
+    subject_reducedConnMatrix = numpy.asarray( aims.read( str(matrixf) ) )
+    subject_reducedConnMatrix = subject_reducedConnMatrix.reshape(
+      subject_reducedConnMatrix.shape[0], subject_reducedConnMatrix.shape[1] )
     print 'averaging', matrixf, ', min/max:', numpy.min( subject_reducedConnMatrix ), numpy.max( subject_reducedConnMatrix )
     if options.study == 'Concatenate':
       if count == 0:
         subjectsReducedConnMatrix = subject_reducedConnMatrix
-        #subjectsReducedConnMatrix = TTS.writeConnMatrixAsIma(subjectsReducedConnMatrix, options.matrix )
       else:
-        #subjectsReducedConnMatrix = T.readMatrixImaAsNumpyArray(options.matrix, True)
         subjectsReducedConnMatrix = numpy.concatenate( ( subjectsReducedConnMatrix, subject_reducedConnMatrix ) )
-        #subjectsReducedConnMatrix = TTS.writeConnMatrixAsIma(subjectsReducedConnMatrix, options.matrix )
       count += 1
       TTS.writeConnMatrixAsIma(subjectsReducedConnMatrix, options.matrix )
     if options.study == 'Average':
