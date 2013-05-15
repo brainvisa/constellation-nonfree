@@ -4,9 +4,7 @@ from brainvisa.processes import *
 from soma import aims
 import optparse
 import numpy
-
-import constel.lib.clustering.K_optimization as CCK
-import roca.lib.clustering.K_optimization as CK
+import constel.lib.clustering.K_optimization as CK
 
 def parseOpts(argv):
   desc="""The connectivity profiles of a given region cortex are clustered using k-medoids approach."""
@@ -46,7 +44,7 @@ def main():
   kmin = 2
   kmax = round( current_patch_area / ( 2*int(options.areaMin_threshold) ) ) + 1
 
-  subject_PatchCl_dict, k_ordering = CCK.clusteringResults( subject_reducedConnMatrix, kmin, kmax, Rclustering_filename )
+  subject_PatchCl_dict, k_ordering = CK.clusteringResults( subject_reducedConnMatrix, kmin, kmax, Rclustering_filename )
 
   subjectPatch_vertexIndex =  numpy.loadtxt( options.vertex_index )
   subjectPatch_vertexIndex = subjectPatch_vertexIndex.tolist()
