@@ -4,7 +4,6 @@ from soma import aims
 import numpy as N
 import roca.lib.interMeshParcellation.processes_lib as T
 import constel.lib.clustering.K_optimization as CK
-import roca.lib.clustering.K_optimization as CCK
 import sys
 import time
 
@@ -54,12 +53,9 @@ def main():
     #print 'areaMin_threshold = ', areaMin_threshold
     print 'areaMin_threshold = ', options.areaMin_threshold
 
-  if options.study == 'Concatenate':
-    matrix = T.readMatrixImaAsNumpyArray( options.avg_matrix, True )
-    all_subjects_PatchCl_dict, k_ordering_def = CK.clusteringsResults(matrix, kmin, kmax, Rclustering_filename )
-  elif options.study == 'Average':
-    matrix = T.readMatrixImaAsNumpyArray( options.avg_matrix, True )
-    all_subjects_PatchCl_dict, k_ordering_def = CK.clusteringsResults(matrix, kmin, kmax, Rclustering_filename )
+  matrix = numpy.asarray( aims.read( options.avg_matrix ) )
+  matrix = matrix.reshape( matrix.shape[0], matrix.shape[1] )
+  all_subjects_PatchCl_dict, k_ordering_def = CK.clusteringsResults(matrix, kmin, kmax, Rclustering_filename )
   k_opt = k_ordering_def[0]
   print 'k_opt = ', k_opt
 
@@ -86,7 +82,7 @@ def main():
     all_subjects_labels_list_index_max = countProcessedVertex + subjectPatchVertex_nb
 
     if options.study == 'Concatenate':
-      clustersTime_tex, clus_avg_width_Time_tex = CCK.texturesCreationMultiSubjects(all_subjects_PatchCl_dict, WhiteMeshVertexNb, subjectPatch_vertexIndex, all_subjects_labels_list_index_min, all_subjects_labels_list_index_max)
+      clustersTime_tex, clus_avg_width_Time_tex = CK.texturesCreationMultiSubjects(all_subjects_PatchCl_dict, WhiteMeshVertexNb, subjectPatch_vertexIndex, all_subjects_labels_list_index_min, all_subjects_labels_list_index_max)
     elif options.study == 'Average':
       clustersTime_tex, clus_avg_width_Time_tex = CK.texturesCreation(all_subjects_PatchCl_dict, WhiteMeshVertexNb, subjectPatch_vertexIndex)
 

@@ -70,10 +70,42 @@ def texturesCreation(clusterings_dict, meshVertex_nb, seedVertex_index):
   clus_avg_width_Time_tex = aims.TimeTexture_FLOAT()
   for k in clusterings_dict.keys():
     clustersTime_tex[stepCount].resize( meshVertex_nb, 0 )
-    clus_avg_width_Time_tex[stepCount].resize( meshVertex_nb, 0 )
     clustersTime_tex[stepCount].arraydata()[ seedVertex_index ] \
       = clusterings_dict[k]['labels_list']
     current_clust_avg_width_tex = constel.oneTargetDensityTargetsRegroupTexture(N.asarray(clusterings_dict[k]['clus.avg.widths']), clustersTime_tex, stepCount)
+    clus_avg_width_Time_tex[stepCount].assign( current_clust_avg_width_tex[0] )
+    stepCount += 1
+
+  return clustersTime_tex, clus_avg_width_Time_tex
+
+
+def texturesCreationMultiSubjects( clusterings_dict, meshVertex_nb, 
+                                   seedVertex_index, labels_list_min_index, 
+                                   labels_list_max_index ):
+  """
+  inputs:
+            clusterings_dict: result of clusteringResults(X, k_min, k_max, Rclustering_filename) method
+            meshVertex_nb: vertex number for output textures
+            seedVertex_index: vertex index of the seed region (observation in the matrix X
+            labels_list_min_index
+            labels_list_max_index
+
+  outputs:
+            clustersTime_tex: for each time step: results of the k th clustering
+            clus_avg_width_Time_tex: for each time step, clus.avg.width associated to each cluster
+  """
+  stepCount = 0
+  clustersTime_tex = aims.TimeTexture_S16()
+  clus_avg_width_Time_tex = aims.TimeTexture_FLOAT()
+  for k in clusterings_dict.keys():
+    clustersTime_tex[stepCount].resize( meshVertex_nb, 0 )
+    clustersTime_tex[stepCount].arraydata()[ seedVertex_index ] \
+      = clusterings_dict[k]['labels_list'][
+        labels_list_min_index:labels_list_max_index]
+    current_clust_avg_width_tex \
+      = constel.oneTargetDensityTargetsRegroupTexture(
+        N.asarray(clusterings_dict[k]['clus.avg.widths']), clustersTime_tex, 
+        stepCount )
     clus_avg_width_Time_tex[stepCount].assign( current_clust_avg_width_tex[0] )
     stepCount += 1
 
