@@ -50,7 +50,7 @@ def main():
     t.push_back( int(final_valid_vertex_sum[i]) )
   # tex[0].assign( final_valid_vertex_sum )
   #context.write( 'tex min/max:', texsum[0].arraydata().min(), texsum[0].arraydata().max() )
-  aims.write(texsum, '/tmp/final_valid_vertex_sum.gii')
+  # aims.write(texsum, '/tmp/final_valid_vertex_sum.gii')
 
   final_valid_vertex_sum[ numpy.where( final_valid_vertex_sum < nbOfSubjects_threshold ) ]= 0
   final_valid_vertex_sum[ numpy.where( final_valid_vertex_sum >= nbOfSubjects_threshold ) ]= 1
