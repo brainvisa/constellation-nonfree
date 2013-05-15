@@ -2,7 +2,6 @@
 from optparse import OptionParser
 from soma import aims
 import numpy as N
-import roca.lib.interMeshParcellation.processes_lib as T
 import constel.lib.clustering.K_optimization as CK
 import sys
 import time
