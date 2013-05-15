@@ -2,4 +2,6 @@
 
 %Import aims.sip
 
+%Include connmatrix.sip
+
 

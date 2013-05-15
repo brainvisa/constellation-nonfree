@@ -5,7 +5,7 @@ from soma import aims
 import optparse
 import numpy
 
-import roca.lib.interMeshParcellation.processes_lib as T
+import constel.lib.clustering.K_optimization as CCK
 import roca.lib.clustering.K_optimization as CK
 
 def parseOpts(argv):
@@ -33,7 +33,10 @@ def main():
 
   patchsLabeled_tex = aims.read( options.gyri_segmentation )
   Rclustering_filename = os.path.join( os.path.dirname( mainPath ), 'R', 'clustering', 'kmedoids.R' )
-  subject_reducedConnMatrix = T.readMatrixImaAsNumpyArray( options.connectivity_matrix_reduced, True )
+  subject_reducedConnMatrix = numpy.asarray( aims.read(
+    options.connectivity_matrix_reduced ) )
+  subject_reducedConnMatrix = subject_reducedConnMatrix.reshape(
+    subject_reducedConnMatrix.shape[0], subject_reducedConnMatrix.shape[1] )
 
   subject_white_mesh = aims.read( options.white_mesh )
   subjectWhiteMesh_vertexNb = subject_white_mesh.vertex().size()
@@ -43,9 +46,9 @@ def main():
   kmin = 2
   kmax = round( current_patch_area / ( 2*int(options.areaMin_threshold) ) ) + 1
 
-  subject_PatchCl_dict, k_ordering = CK.clusteringsResults( subject_reducedConnMatrix, kmin, kmax, Rclustering_filename )
+  subject_PatchCl_dict, k_ordering = CCK.clusteringResults( subject_reducedConnMatrix, kmin, kmax, Rclustering_filename )
 
-  subjectPatch_vertexIndex =  numpy.loadtxt( T.correctFilename( options.vertex_index ) )
+  subjectPatch_vertexIndex =  numpy.loadtxt( options.vertex_index )
   subjectPatch_vertexIndex = subjectPatch_vertexIndex.tolist()
   clustersTime_tex, clus_avg_width_Time_tex = CK.texturesCreation( subject_PatchCl_dict, subjectWhiteMesh_vertexNb, subjectPatch_vertexIndex )
   kmedoidsTime_tex, vertex_silhouette_width_Time_tex = CK.textureKmedoidsCreation( subject_PatchCl_dict,subjectWhiteMesh_vertexNb, subjectPatch_vertexIndex )

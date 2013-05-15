@@ -50,8 +50,11 @@ namespace constel
   TimeTexture<float> meshDensityTexture(
     Connectivities * connMatrixToAllMesh_ptr,bool verbose = false );
   TimeTexture<float> * oneTargetDensityTargetsRegroupTexture(
-    Connectivity * lineMatrixToTargetRegions_ptr,
-    const TimeTexture<short> & targetRegionsTex );
+    const Connectivity * lineMatrixToTargetRegions_ptr,
+    const TimeTexture<short> & targetRegionsTex, int timestep );
+  TimeTexture<float> * oneTargetDensityTargetsRegroupTexture(
+    const std::vector<double> * lineMatrixToTargetRegions_ptr,
+    const TimeTexture<short> & targetRegionsTex, int timestep );
   TimeTexture<float> * connMatrixRow_TO_TimeTexture_FLOAT(
     Connectivity * conn_ptr );
   Connectivity * connMatrixToRois(

@@ -1098,9 +1098,10 @@ output: extractConn_ptr: a connectivity matrix of shape (seedRegionVertexNb, oth
   }//meshDensityTexture
 
 
-  TimeTexture<float> * oneTargetDensityTargetsRegroupTexture(
-    Connectivity * lineMatrixToTargetRegions_ptr,
-    const TimeTexture<short> & targetRegionsTex )
+  template <typename T>
+  TimeTexture<float> * oneTargetDensityTargetsRegroupTexture_T(
+    const T * lineMatrixToTargetRegions_ptr,
+    const TimeTexture<short> & targetRegionsTex, int timestep )
   {
     /*
     Compute density texture (associated to a mesh) of a targetRegion towards all the target regions
@@ -1108,9 +1109,12 @@ output: extractConn_ptr: a connectivity matrix of shape (seedRegionVertexNb, oth
                 targetRegionsTex : labeled texture, between 0 and targetRegionsNb, 0 = background, 1 to targetRegionsNb = target regions
     output:     TimeTexture<float> * outputDensityTex : pointer on output density texture
     */
-    const Texture<short> & targetTex0 = targetRegionsTex.begin()->second;
+    TimeTexture<short>::const_iterator it = targetRegionsTex.find( timestep );
+    if( it == targetRegionsTex.end() )
+      it = targetRegionsTex.begin();
+    const Texture<short> & targetTex0 = it->second;
     std::size_t meshVertexNb = targetTex0.nItem();
-    Connectivity & lineMatrixToTargetRegions = *lineMatrixToTargetRegions_ptr;
+    const T & lineMatrixToTargetRegions = *lineMatrixToTargetRegions_ptr;
     std::size_t targetRegionsNb = lineMatrixToTargetRegions.size();
     TimeTexture<float> * outputDensityTex_ptr = new TimeTexture<float>;
     TimeTexture<float> & outputDensityTex = *outputDensityTex_ptr;
@@ -1122,11 +1126,29 @@ output: extractConn_ptr: a connectivity matrix of shape (seedRegionVertexNb, oth
       int label = targetTex0[i];//equivalent to targetRegionsTex[0].item(i)
       if (1 <= label && label <= targetRegionsNb)
       {
-        outputDensityTex[0][i] = lineMatrixToTargetRegions[label-1];
+        outputDensityTex[0][i] = (float) lineMatrixToTargetRegions[label-1];
       }
       else outputDensityTex[0][i] = -1;
     }
     return outputDensityTex_ptr;
   }//oneTargetDensityTargetsRegroupTexture
-  
+
+
+  TimeTexture<float> * oneTargetDensityTargetsRegroupTexture(
+    const Connectivity * lineMatrixToTargetRegions_ptr,
+    const TimeTexture<short> & targetRegionsTex, int timestep )
+  {
+    return oneTargetDensityTargetsRegroupTexture_T(
+      lineMatrixToTargetRegions_ptr, targetRegionsTex, timestep );
+  }
+
+
+  TimeTexture<float> * oneTargetDensityTargetsRegroupTexture(
+    const vector<double> * lineMatrixToTargetRegions_ptr,
+    const TimeTexture<short> & targetRegionsTex, int timestep )
+  {
+    return oneTargetDensityTargetsRegroupTexture_T(
+      lineMatrixToTargetRegions_ptr, targetRegionsTex, timestep );
+  }
+
 } // namespace constel

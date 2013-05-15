@@ -256,7 +256,7 @@ int main( int argc, const char** argv )
           }
         }
         constel::Connectivity & totalConnSeedRegionToTargets = *totalConnSeedRegionToTargets_ptr;
-        TimeTexture<float> * outputTargetDensityTex_ptr = oneTargetDensityTargetsRegroupTexture(totalConnSeedRegionToTargets_ptr, targetRegionsTex);
+        TimeTexture<float> * outputTargetDensityTex_ptr = oneTargetDensityTargetsRegroupTexture(totalConnSeedRegionToTargets_ptr, targetRegionsTex, 0);
         TimeTexture<float> & outputTargetDensityTex = *outputTargetDensityTex_ptr;
         if (verbose) std::cout << "Writing Density texture, shape (1, meshVertexNb):" << connTextureFileName << std::endl;
         Writer<TimeTexture<float> > wt( connTextureFileName );
