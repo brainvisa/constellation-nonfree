@@ -48,22 +48,28 @@ protected:
                               const comist::FiberPoint & );
   virtual void noMoreBundle( const comist::BundleProducer & );
 
-private:
+  std::string fiberName( const Point3df & p1, const Point3df & p2 );
 
-  Fiber _fiber;
-  Fibers _fibers;
-  BundlesSet _bundlesSet;
-  std::vector<std::string> _bundles_name;
+private:
+  struct Private;
+  Private *d;
+
+//   Fiber _fiber;
+//   Fibers _fibers;
+//   BundlesSet _bundlesSet;
   std::string _file_name;
   std::ofstream _file_internal;
   std::ostream *_file;
-  std::string _new_bundle_name;
 
   constel::Mesh _mesh;
   TimeTexture<short> _tex;
   std::string _namesMode;
   int _addInt;
   Motion _motion;
+
+  bool _fiberstarted;
+  Point3df _p1;
+  Point3df _p2;
 };
 
 } // namespace constel
