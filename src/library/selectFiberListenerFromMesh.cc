@@ -87,6 +87,8 @@ void SelectFiberListenerFromMesh::noMoreBundle( const BundleProducer & )
 //   output file writing
   for (BundlesSet::iterator bun = _bundlesSet.begin(); bun!=_bundlesSet.end(); ++bun)
   {
+    BundleInfo bundle_tmp;
+    startBundle( bundle_tmp );
     for (Fibers::iterator fib=(*bun).begin(); fib!=(*bun).end(); ++fib)
     {
       Point3df p1T2, p2T2, p1, p2;
@@ -99,18 +101,17 @@ void SelectFiberListenerFromMesh::noMoreBundle( const BundleProducer & )
       p2 = _motion.transform(p2T2[0], p2T2[1], p2T2[2]);
       til::numeric_array<float, 3> p2na(p2[0], p2[1], p2[2]);
       B = fc(p2na);
+      stringstream fibername;
       if(_namesMode=="NameFront_NameEnd")
       {
         if (til::dist2(p1na, getVertices(_mesh)[A], til::prec<float>()) <= 25.0 &&  // fiber point is close to the mesh
                     til::dist2(p2na, getVertices(_mesh)[B], til::prec<float>()) <= 25.0)
         {
-          if( _file )
-            *_file << int(_tex[0].item(A)) + _addInt << "_" << int(_tex[0].item(B)) + _addInt << endl;
+          fibername << int(_tex[0].item(A)) + _addInt << "_" << int(_tex[0].item(B)) + _addInt;
         }
         else
         {
-          if( _file )
-            *_file << "trash" << endl;
+          fibername << "trash";
         }
       }
       if(_namesMode=="Name1_Name2")
@@ -122,20 +123,16 @@ void SelectFiberListenerFromMesh::noMoreBundle( const BundleProducer & )
         {
           int nameA = int(_tex[0].item(A));
           int nameB = int(_tex[0].item(B));
-          if( _file )
+          if (nameA < nameB)
+            fibername << nameA + _addInt << "_" << nameB + _addInt;
+          else
           {
-            if (nameA < nameB)
-              *_file << nameA + _addInt << "_" << nameB + _addInt << endl;
-            else
-            {
-              *_file << nameB + _addInt << "_" << nameA + _addInt << endl;
-            }
+            fibername << nameB + _addInt << "_" << nameA + _addInt;
           }
         }
         else
         {
-          if( _file )
-            *_file << "trash" << endl;
+          fibername << "trash";
         }
       }
       else if (_namesMode=="Name1_Name2orNotInMesh")
@@ -149,21 +146,16 @@ void SelectFiberListenerFromMesh::noMoreBundle( const BundleProducer & )
           if (til::dist2(p2na, getVertices(_mesh)[B], til::prec<float>()) <= meshClosestPointMaxDistance2)
           {
             int nameB = int(_tex[0].item(B));
-//             std::cout << nameB << endl;
-            if( _file )
+            if (nameA < nameB)
+              fibername << nameA + _addInt << "_" << nameB + _addInt;
+            else
             {
-              if (nameA < nameB)
-              *_file << nameA + _addInt << "_" << nameB + _addInt << endl;
-              else
-              {
-                *_file << nameB + _addInt << "_" << nameA + _addInt << endl;
-              }
+              fibername << nameB + _addInt << "_" << nameA + _addInt;
             }
           }
           else
           {
-            if( _file )
-              *_file << nameA + _addInt << "_notInMesh" << endl;
+            fibername << nameA + _addInt << "_notInMesh";
           }
         }
         else
@@ -171,13 +163,11 @@ void SelectFiberListenerFromMesh::noMoreBundle( const BundleProducer & )
           if (til::dist2(p2na, getVertices(_mesh)[B], til::prec<float>()) <= meshClosestPointMaxDistance2)
           {
             int nameB = int(_tex[0].item(B));
-            if( _file )
-              *_file << nameB + _addInt << "_notInMesh" << endl;
+            fibername << nameB + _addInt << "_notInMesh";
           }
           else
           {
-            if( _file )
-              *_file << "trash" << endl;
+            fibername << "trash";
           }
         }
       }
@@ -186,13 +176,11 @@ void SelectFiberListenerFromMesh::noMoreBundle( const BundleProducer & )
         if (til::dist2(p1na, getVertices(_mesh)[A], til::prec<float>()) <= 25.0 &&  // fiber point is close to the mesh
                     til::dist2(p2na, getVertices(_mesh)[B], til::prec<float>()) <= 25.0)
         {
-          if( _file )
-            *_file << int(_tex[0].item(A)) + _addInt << endl;
+          fibername << int(_tex[0].item(A)) + _addInt;
         }
         else
         {
-          if( _file )
-            *_file << "trash" << endl;
+          fibername << "trash";
         }
       }
       else if(_namesMode=="NameEnd")
@@ -200,18 +188,28 @@ void SelectFiberListenerFromMesh::noMoreBundle( const BundleProducer & )
         if (til::dist2(p1na, getVertices(_mesh)[A], til::prec<float>()) <= 25.0 &&  // fiber point is close to the mesh
                     til::dist2(p2na, getVertices(_mesh)[B], til::prec<float>()) <= 25.0)
         {
-          if( _file )
-            *_file << int(_tex[0].item(B)) + _addInt << endl;
+          fibername << int(_tex[0].item(B)) + _addInt;
         }
         else
         {
-          if( _file )
-            *_file << "trash" << endl;
+          fibername << "trash";
         }
       }
+
+      if( _file )
+        *_file << fibername.str() << endl;
+      // produce new fiber
+      FiberInfo fiber_tmp(1);
+      startFiber( bundle_tmp, fiber_tmp );
+      for (Fiber::iterator pt=(*fib).begin(); pt!=(*fib).end(); ++pt)
+      {
+        addFiberPoint( bundle_tmp, fiber_tmp, *pt);
+      }
+      terminateFiber( bundle_tmp, fiber_tmp);
     }
+    terminateBundle( bundle_tmp );
   }
-//   cout<<endl<<"fin de l'écriture!!"<<endl<<flush;
+  BundleProducer::noMoreBundle();
 }
 
 
