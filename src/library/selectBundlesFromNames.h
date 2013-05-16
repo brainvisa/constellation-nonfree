@@ -8,8 +8,6 @@
 namespace constel
 {
 
-  typedef std::vector< comist::FiberPoint > Fiber;
-
   //------------------//
   // SelectBundlesFromNames //
   //------------------//
@@ -42,7 +40,6 @@ namespace constel
                                 const comist::FiberPoint & );
     virtual void noMoreBundle( const comist::BundleProducer & );
 
-    Fiber _fiber;
     std::set<std::string> _select_bundles_name;
     std::set<regex_t *> _regex;
     bool _bundle_selected;

@@ -17,7 +17,6 @@ namespace constel
 SelectBundlesFromNames::SelectBundlesFromNames() :
     _verbose( false ), _as_regex( false )
 {
-
 }
 
 //-----------------------------------------------------------------------------
@@ -30,7 +29,6 @@ SelectBundlesFromNames::SelectBundlesFromNames( vector< string > &select_bundles
     for (set<string>::iterator i=_select_bundles_name.begin(),
          e=_select_bundles_name.end(); i!=e; i++)
       cout << *i << endl;
-
 }
 
 
@@ -103,18 +101,17 @@ void SelectBundlesFromNames::bundleTerminated( const BundleProducer &,
                                       const BundleInfo &bundleInfo )
 {
   if ( _bundle_selected )
-  {
     terminateBundle(bundleInfo);
-  }
 }
 
 
 //-----------------------------------------------------------------------------
 void SelectBundlesFromNames::fiberStarted( const BundleProducer &,
-                                  const BundleInfo &,
-                                  const FiberInfo & )
+                                  const BundleInfo & bundleInfo,
+                                  const FiberInfo & fiberInfo )
 {
-  _fiber.clear();
+  if ( _bundle_selected )
+    startFiber(bundleInfo, fiberInfo);
 }
 
 
@@ -124,25 +121,18 @@ void SelectBundlesFromNames::fiberTerminated( const BundleProducer &,
                                      const FiberInfo &fiberInfo )
 {
   if ( _bundle_selected )
-  {
-    startFiber(bundleInfo, fiberInfo);
-    for (size_t i = 0; i< _fiber.size(); i++)
-    {
-      addFiberPoint( bundleInfo, fiberInfo, _fiber[i]);
-    }
-
     terminateFiber(bundleInfo, fiberInfo);
-  }
 }
 
 
 //-----------------------------------------------------------------------------
 void SelectBundlesFromNames::newFiberPoint( const BundleProducer &, 
-                                   const BundleInfo &,
-                                   const FiberInfo &,
+                                   const BundleInfo & bundleInfo,
+                                   const FiberInfo & fiberInfo,
                                    const FiberPoint &point )
 {
-  _fiber.push_back(point);
+  if ( _bundle_selected )
+    addFiberPoint( bundleInfo, fiberInfo, point );
 }
 
 

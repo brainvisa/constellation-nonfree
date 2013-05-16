@@ -13,7 +13,10 @@
 namespace constel
 {
 
-/** Fibers selection by regions on a mesh (plus a label texture)
+/** Fibers selection by regions on a mesh (plus a label texture).
+    This filter just outputs regions names in an external file (or stream).
+    Regions are named after their intersections with a WM mesh labelled 
+    with a label texture.
 */
 class SelectFiberListenerFromMesh
   : public comist::BundleProducer, public comist::BundleListener
@@ -54,9 +57,6 @@ private:
   struct Private;
   Private *d;
 
-//   Fiber _fiber;
-//   Fibers _fibers;
-//   BundlesSet _bundlesSet;
   std::string _file_name;
   std::ofstream _file_internal;
   std::ostream *_file;

@@ -12,6 +12,9 @@ using namespace constel;
 
 namespace
 {
+  /* this function is a trick to be usable in the constructor of the private
+     data while assigning Private.fc constructor: it should return a KDTree. 
+  */
   KDTree & _makeKDTree(
     const std::vector<til::numeric_array<float, 3> > & v,
     KDTree & res )
@@ -68,7 +71,6 @@ SelectFiberListenerFromMesh::~SelectFiberListenerFromMesh()
 void SelectFiberListenerFromMesh::bundleStarted( const BundleProducer &,
                                    const BundleInfo & bundleInfo )
 {
-//   _fibers.clear();
   startBundle(bundleInfo);
 }
 
@@ -76,7 +78,6 @@ void SelectFiberListenerFromMesh::bundleStarted( const BundleProducer &,
 void SelectFiberListenerFromMesh::bundleTerminated( const BundleProducer &,
                                       const BundleInfo & bundleInfo )
 {
-//   _bundlesSet.push_back(_fibers);
   terminateBundle(bundleInfo);
 }
 
@@ -86,7 +87,6 @@ void SelectFiberListenerFromMesh::fiberStarted( const BundleProducer &,
                                   const BundleInfo & bundleInfo,
                                   const FiberInfo & fiberInfo )
 {
-//   _fiber.clear();
   _fiberstarted = false;
   startFiber(bundleInfo, fiberInfo);
 }
@@ -97,7 +97,6 @@ void SelectFiberListenerFromMesh::fiberTerminated( const BundleProducer &,
                                      const BundleInfo & bundleInfo,
                                      const FiberInfo & fiberInfo )
 {
-//   _fibers.push_back(_fiber);
   string name = fiberName( _p1, _p2 );
   if( _file )
     *_file << name << endl;
@@ -111,7 +110,6 @@ void SelectFiberListenerFromMesh::newFiberPoint( const BundleProducer &,
                                    const FiberInfo & fiberInfo,
                                    const FiberPoint &point )
 {
-//   _fiber.push_back(point);
   if( _fiberstarted )
     _p2 = point;
   else
@@ -128,12 +126,10 @@ string SelectFiberListenerFromMesh::fiberName( const Point3df & p1T2,
                                                const Point3df & p2T2 )
 {
   Point3df p1, p2;
-//       p1T2 = (*fib)[0]; // fiber front
   p1 = _motion.transform(p1T2[0], p1T2[1], p1T2[2]);
   til::numeric_array<float, 3> p1na(p1[0], p1[1], p1[2]);
   std::size_t A = d->fc(p1na);
   std::size_t B;
-//       p2T2 = (*fib)[(*fib).size()-1];  // fiber end
   p2 = _motion.transform(p2T2[0], p2T2[1], p2T2[2]);
   til::numeric_array<float, 3> p2na(p2[0], p2[1], p2[2]);
   B = d->fc(p2na);
@@ -249,3 +245,4 @@ void SelectFiberListenerFromMesh::setStream( ostream & stm )
 }
 
 } //namespace constel
+
