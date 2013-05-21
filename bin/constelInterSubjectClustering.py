@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from optparse import OptionParser
 from soma import aims
-import numpy as N
+import numpy
 import constel.lib.clustering.K_optimization as CK
 import sys
 import time
@@ -54,7 +54,7 @@ def main():
 
   matrix = numpy.asarray( aims.read( options.avg_matrix ) )
   matrix = matrix.reshape( matrix.shape[0], matrix.shape[1] )
-  all_subjects_PatchCl_dict, k_ordering_def = CK.clusteringsResults(matrix, kmin, kmax, Rclustering_filename )
+  all_subjects_PatchCl_dict, k_ordering_def = CK.clusteringResults(matrix, kmin, kmax, Rclustering_filename )
   k_opt = k_ordering_def[0]
   print 'k_opt = ', k_opt
 
@@ -74,7 +74,7 @@ def main():
       vertex_filename = split_ima_filename[0]
       for i in xrange(1,len_split):
         vertex_filename += split_ima_filename[i]
-    subjectPatch_vertexIndex = N.loadtxt(vertex_filename)
+    subjectPatch_vertexIndex = numpy.loadtxt(vertex_filename)
     subjectPatch_vertexIndex = subjectPatch_vertexIndex.tolist()
     subjectPatchVertex_nb = len(subjectPatch_vertexIndex)
     all_subjects_labels_list_index_min = countProcessedVertex
