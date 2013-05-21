@@ -5,7 +5,7 @@ from soma import aims
 import numpy
 import sys
 import os
-import constel.connmatrix.connmatrixtools as TTS
+import constel.lib.connmatrix.connmatrixtools as TTS
 
 def parseOpts(argv):
   desc = """Calculate Group Matrix: average or concatenated."""
