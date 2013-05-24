@@ -1,4 +1,4 @@
-set( _mainSipFile "${CMAKE_CURRENT_SOURCE_DIR}/constellation.sip" )
+set( _mainSipFile "${CMAKE_BINARY_DIR}/${CONSTELLATION-PRIVATE_RELATIVE_SIP_DIRECTORY}/constellation.sip" )
 
 file( GLOB _sipSources "${CMAKE_CURRENT_SOURCE_DIR}/*.sip" )
 
@@ -14,6 +14,6 @@ BRAINVISA_ADD_SIP_PYTHON_MODULE( constelsip
 target_link_libraries( constelsip "${PYTHON_LIBRARY}" constellation pyaims )
 
 BRAINVISA_INSTALL( TARGETS constelsip
-                   DESTINATION python
+                   DESTINATION python/constel
                    COMPONENT ${PROJECT_NAME} )
 
