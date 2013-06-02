@@ -1,33 +1,24 @@
-#ifndef CONSTELLATION_SELECTBUNDLESFROMNAMES_H
-#define CONSTELLATION_SELECTBUNDLESFROMNAMES_H
+#ifndef CONSTELLATION_SELECTBUNDLESFROMLENGTH_H
+#define CONSTELLATION_SELECTBUNDLESFROMLENGTH_H
 
 #include <connectomist/fibertracking/bundles.h>
-#include <regex.h>
 
 
 namespace constel
 {
 
   //------------------//
-  // SelectBundlesFromNames //
+  // SelectBundlesFromLength //
   //------------------//
-  class SelectBundlesFromNames
+  class SelectBundlesFromLength
     : public comist::BundleProducer, public comist::BundleListener
   {
   public:
     typedef std::vector< comist::FiberPoint > Fiber;
 
-    /** If use_fiber_names is not set, filtering is performed (as normal)
-        using BundleInfo names, at bundleStarted() time.
-        If use_fiber_names is set, filtering is performed at fiberTerminated()
-        time. This is a bit unexpected, but name info is sometimes set when
-        a fiber is entirely parsed (see SelectFiberListenerFromMesh)
-    */
-    SelectBundlesFromNames( std::vector< std::string > &select_bundles_name,
-                            bool verbose = true, bool as_regex=false,
-                            bool use_fiber_names = false );
-    SelectBundlesFromNames();
-    virtual ~SelectBundlesFromNames();
+    SelectBundlesFromLength( float lmin, float lmax, bool verbose = true );
+    SelectBundlesFromLength();
+    virtual ~SelectBundlesFromLength();
 
   protected:
 
@@ -48,16 +39,16 @@ namespace constel
                                 const comist::FiberPoint & );
     virtual void noMoreBundle( const comist::BundleProducer & );
 
-    std::set<std::string> _select_bundles_name;
-    std::set<regex_t *> _regex;
-    bool _bundle_selected;
+    float _lmin;
+    float _lmax;
+    bool _fiber_selected;
     bool _verbose;
-    bool _as_regex;
-    bool _use_fiber_names;
+    float _fiberLength;//in mm
     Fiber _fiber;
+    comist::FiberPoint _antFiberPoint;
   };
 
 } // namespace constel
 
-#endif // ifndef CONSTELLATION_SELECTBUNDLESFROMNAMES_H
+#endif // ifndef CONSTELLATION_SELECTBUNDLESFROMLENGTH_H
 

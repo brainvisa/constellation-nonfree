@@ -100,7 +100,9 @@ void SelectFiberListenerFromMesh::fiberTerminated( const BundleProducer &,
   string name = fiberName( _p1, _p2 );
   if( _file )
     *_file << name << endl;
-  terminateFiber(bundleInfo, fiberInfo);
+  // trick BundleInfo to set fiber name in
+  BundleInfo bundleInfo2( bundleInfo.id(), name );
+  terminateFiber(bundleInfo2, fiberInfo);
 }
 
 
