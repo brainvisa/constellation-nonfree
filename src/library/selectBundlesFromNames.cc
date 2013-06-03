@@ -22,7 +22,7 @@ SelectBundlesFromNames::SelectBundlesFromNames() :
 //-----------------------------------------------------------------------------
 SelectBundlesFromNames::SelectBundlesFromNames( vector< string > &select_bundles_name, bool verbose, bool as_regex, bool use_fiber_names ) :
     _verbose(verbose), _as_regex( as_regex ), 
-    _use_fiber_names( use_fiber_names )
+    _use_fiber_names( use_fiber_names ), _new_bundle( true )
 {
   _select_bundles_name.insert( select_bundles_name.begin(),
                                select_bundles_name.end() );
@@ -103,9 +103,9 @@ void SelectBundlesFromNames::bundleStarted( const BundleProducer &,
 {
   if( _use_fiber_names )
   {
-    // filter later
+    // filter later, and also report startBundle()
     _bundle_selected = true;
-    startBundle( bundleInfo );
+    _new_bundle = true;
     return;
   }
 
@@ -164,14 +164,32 @@ void SelectBundlesFromNames::fiberTerminated( const BundleProducer &,
         _select_bundles_name, _as_regex, _regex );
       if( selected )
       {
+        if( _new_bundle )
+        {
+          startBundle( bundleInfo );
+          _new_bundle = false;
+          _last_name = bundleInfo.name();
+          _last_id = bundleInfo.id();
+        }
+        else if( bundleInfo.name() != _last_name )
+        {
+          // change/split bundle
+          BundleInfo binfo( _last_id, _last_name );
+          terminateBundle( binfo );
+          startBundle( bundleInfo );
+          _last_name = bundleInfo.name();
+          _last_id = bundleInfo.id();
+        }
+
         startFiber( bundleInfo, fiberInfo );
         Fiber::const_iterator ip, ep = _fiber.end();
         for( ip=_fiber.begin(); ip!=ep; ++ip )
           addFiberPoint( bundleInfo, fiberInfo, *ip );
+        terminateFiber(bundleInfo, fiberInfo);
       }
     }
-
-    terminateFiber(bundleInfo, fiberInfo);
+    else
+      terminateFiber(bundleInfo, fiberInfo);
     _fiber.clear();
   }
 }

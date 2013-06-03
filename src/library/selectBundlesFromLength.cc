@@ -77,10 +77,11 @@ void SelectBundlesFromLength::fiberTerminated( const BundleProducer &,
     for( ip=_fiber.begin(); ip!=ep; ++ip )
       addFiberPoint( bundleInfo, fiberInfo, *ip );
     terminateFiber( bundleInfo, fiberInfo );
-    _fiber.clear();
   }
 //   else if( _verbose )
 //     cout << "fiber rejected, length: " << _fiberLength << endl;
+  _fiber.clear();
+  _fiberLength = 0;
 }
 
 

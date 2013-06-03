@@ -54,6 +54,9 @@ namespace constel
     bool _verbose;
     bool _as_regex;
     bool _use_fiber_names;
+    bool _new_bundle;
+    std::string _last_name;
+    int _last_id;
     Fiber _fiber;
   };
 

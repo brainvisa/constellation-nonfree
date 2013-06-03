@@ -143,13 +143,13 @@ int main( int argc, const char* argv[] )
     {
       //     Bundles reader creation
       string fileName = fileNameIn[i];
+      if (verbose) cout << "read bundle" << fileName << endl;
       bundle[i].reset( new BundleReader( fileName ) );
 
       // Set names from mesh/label texture
       gyriFilter[i].reset(
         new SelectFiberListenerFromMesh( mesh, tex, mode, addInt, motion,
                                          "" ) );
-      if (verbose) cout << "read bundle" << fileName << endl;
       bundle[i]->addBundleListener( *gyriFilter[i] );
 
       // -- 1st branch: near cortex
@@ -172,7 +172,7 @@ int main( int argc, const char* argv[] )
       vector<string> notinmesh_names;
       notinmesh_names.push_back( gyrus + "_notInMesh" );
       selectNimBundles[i].reset( 
-        new SelectBundlesFromNames( notinmesh_names, verbose, true ) );
+        new SelectBundlesFromNames( notinmesh_names, verbose, false, true ) );
       gyriFilter[i]->addBundleListener( *selectNimBundles[i] );
 
       // filter from length
