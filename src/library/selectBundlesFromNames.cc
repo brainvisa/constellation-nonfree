@@ -160,7 +160,7 @@ void SelectBundlesFromNames::fiberTerminated( const BundleProducer &,
     if( _use_fiber_names )
     {
       // select now
-      bool selected = filterBundleName( bundleInfo.name(), 
+      bool selected = filterBundleName( bundleInfo.name(),
         _select_bundles_name, _as_regex, _regex );
       if( selected )
       {
