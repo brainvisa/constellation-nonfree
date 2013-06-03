@@ -164,20 +164,15 @@ void SelectBundlesFromNames::fiberTerminated( const BundleProducer &,
         _select_bundles_name, _as_regex, _regex );
       if( selected )
       {
-        if( _verbose )
-          cout << "bundle name: " << bundleInfo.name() << "... not selected" 
-            << endl;
         startFiber( bundleInfo, fiberInfo );
         Fiber::const_iterator ip, ep = _fiber.end();
         for( ip=_fiber.begin(); ip!=ep; ++ip )
           addFiberPoint( bundleInfo, fiberInfo, *ip );
       }
-      else if( _verbose )
-        cout << "bundle name: " << bundleInfo.name() << "... not selected" 
-          << endl;
     }
 
     terminateFiber(bundleInfo, fiberInfo);
+    _fiber.clear();
   }
 }
 
@@ -202,7 +197,8 @@ void SelectBundlesFromNames::newFiberPoint( const BundleProducer &,
 void SelectBundlesFromNames::noMoreBundle( const BundleProducer & )
 {
     BundleProducer::noMoreBundle();
-    if (_verbose) cout << endl << "fin de l'écriture!!" << endl << flush;
+    if (_verbose) cout << endl << "end of SelectBundlesFromNames filtering."
+      << endl << flush;
 }
 
 } // namespace comist

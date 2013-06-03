@@ -22,8 +22,8 @@ int main( int argc, const char* argv[] )
     string fileNameOut;
     string fileNameOut_notinmesh;
     string mode="Name1_Name2orNotInMesh";
-    Mesh mesh;
-    TimeTexture<short> tex;
+    rc_ptr<Mesh> mesh;
+    rc_ptr<TimeTexture<short> > tex;
     Reader<AimsSurfaceTriangle> r;
     int addInt =0;
     Reader< TimeTexture<short> > texR;
@@ -63,11 +63,12 @@ int main( int argc, const char* argv[] )
     app.addOption( verbose, "--verbose",
                    "show as much information as possible", true );
     app.initialize();
-    AimsSurfaceTriangle s;
-    r.read( s );
+    rc_ptr<AimsSurfaceTriangle> s;
+    s.reset( r.read() );
     til::Mesh1 mesh0;
-    til::convert(mesh0, s);
-    mesh = addNeighborsToMesh(mesh0);
+    til::convert(mesh0, *s);
+    mesh.reset( new Mesh );
+    *mesh = addNeighborsToMesh(mesh0);
 
     if( nimMinlength < 0 )
       nimMinlength = cortMinlength;
@@ -82,22 +83,13 @@ int main( int argc, const char* argv[] )
 
     if (verbose)
       std::cout << "reading texture..." << flush;
-      texR.read( tex );
+      tex.reset( texR.read() );
     if (verbose)
     {
       std::cout << "done" << std::endl;
-      std::cout << "# vertices : " << getVertices(mesh).size() << std::endl;
-      std::cout << "# faces : " << getFaceIndices(mesh).size() << std::endl;
-      std::cout << "Texture dim : " << tex[0].nItem() << endl;
-    }
-    char buff[100];
-    int a = int(tex[0].item(0));
-    std::sprintf(buff, "%02i", a );
-    if (verbose)
-    {
-      std::cout << "texture test " << tex[0].item(0) << std::endl;
-      std::cout << "buff test " << buff << std::endl;
-
+      std::cout << "# vertices : " << getVertices(*mesh).size() << std::endl;
+      std::cout << "# faces : " << getFaceIndices(*mesh).size() << std::endl;
+      std::cout << "Texture dim : " << (*tex)[0].nItem() << endl;
     }
 
     /*  Pipeline structure:
@@ -154,8 +146,9 @@ int main( int argc, const char* argv[] )
       bundle[i].reset( new BundleReader( fileName ) );
 
       // Set names from mesh/label texture
-      gyriFilter[i].reset( 
-        new SelectFiberListenerFromMesh( mesh,tex,mode,addInt,motion, "" ) );
+      gyriFilter[i].reset(
+        new SelectFiberListenerFromMesh( mesh, tex, mode, addInt, motion,
+                                         "" ) );
       if (verbose) cout << "read bundle" << fileName << endl;
       bundle[i]->addBundleListener( *gyriFilter[i] );
 

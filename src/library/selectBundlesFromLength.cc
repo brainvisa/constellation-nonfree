@@ -70,16 +70,17 @@ void SelectBundlesFromLength::fiberTerminated( const BundleProducer &,
 {
   if ( _fiberLength >= _lmin && ( _lmax < 0 || _fiberLength <= _lmax ) )
   {
-    if( _verbose )
-      cout << "fiber selected, length: " << _fiberLength << endl;
+//     if( _verbose )
+//       cout << "fiber selected, length: " << _fiberLength << endl;
     startFiber( bundleInfo, fiberInfo );
     vector<FiberPoint>::const_iterator ip, ep = _fiber.end();
     for( ip=_fiber.begin(); ip!=ep; ++ip )
       addFiberPoint( bundleInfo, fiberInfo, *ip );
     terminateFiber( bundleInfo, fiberInfo );
+    _fiber.clear();
   }
-  else if( _verbose )
-    cout << "fiber rejected, length: " << _fiberLength << endl;
+//   else if( _verbose )
+//     cout << "fiber rejected, length: " << _fiberLength << endl;
 }
 
 

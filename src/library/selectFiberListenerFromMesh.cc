@@ -31,7 +31,7 @@ namespace constel
 
   struct SelectFiberListenerFromMesh::Private
   {
-    Private( Mesh mesh )
+    Private( const Mesh & mesh )
     : kdt( getVertices(mesh) ), fc( _makeKDTree( getVertices(mesh), kdt ) )
     {
     }
@@ -42,10 +42,10 @@ namespace constel
 
 
 //-----------------------------------------------------------------------------
-SelectFiberListenerFromMesh::SelectFiberListenerFromMesh( Mesh mesh,
-    TimeTexture<short> tex, string namesMode, int addInt, Motion motion,
-    const string &bundlesNamesFileName )
-  : d( new Private( mesh ) ), _mesh(mesh), _tex(tex), _namesMode(namesMode),
+SelectFiberListenerFromMesh::SelectFiberListenerFromMesh( rc_ptr<Mesh> mesh,
+    rc_ptr<TimeTexture<short> > tex, const string & namesMode, int addInt,
+    const Motion & motion, const string &bundlesNamesFileName )
+  : d( new Private( *mesh ) ), _mesh(mesh), _tex(tex), _namesMode(namesMode),
     _addInt(addInt), _motion(motion), _file_name(bundlesNamesFileName),
     _file( 0 )
 {
@@ -138,10 +138,10 @@ string SelectFiberListenerFromMesh::fiberName( const Point3df & p1T2,
   stringstream fibername;
   if(_namesMode=="NameFront_NameEnd")
   {
-    if (til::dist2(p1na, getVertices(_mesh)[A], til::prec<float>()) <= 25.0 &&  // fiber point is close to the mesh
-                til::dist2(p2na, getVertices(_mesh)[B], til::prec<float>()) <= 25.0)
+    if (til::dist2(p1na, getVertices(*_mesh)[A], til::prec<float>()) <= 25.0 &&  // fiber point is close to the mesh
+                til::dist2(p2na, getVertices(*_mesh)[B], til::prec<float>()) <= 25.0)
     {
-      fibername << int(_tex[0].item(A)) + _addInt << "_" << int(_tex[0].item(B)) + _addInt;
+      fibername << int((*_tex)[0].item(A)) + _addInt << "_" << int((*_tex)[0].item(B)) + _addInt;
     }
     else
     {
@@ -152,11 +152,11 @@ string SelectFiberListenerFromMesh::fiberName( const Point3df & p1T2,
   {
     float meshClosestPointMaxDistance2 = 25.0;
 //         meshClosestPointMaxDistance2 = 100.0;
-    if (til::dist2(p1na, getVertices(_mesh)[A], til::prec<float>()) <= meshClosestPointMaxDistance2 &&  // fiber point is close to the mesh, before meshClosestPointMaxDistance2 = 25.0
-                til::dist2(p2na, getVertices(_mesh)[B], til::prec<float>()) <= meshClosestPointMaxDistance2)
+    if (til::dist2(p1na, getVertices(*_mesh)[A], til::prec<float>()) <= meshClosestPointMaxDistance2 &&  // fiber point is close to the mesh, before meshClosestPointMaxDistance2 = 25.0
+                til::dist2(p2na, getVertices(*_mesh)[B], til::prec<float>()) <= meshClosestPointMaxDistance2)
     {
-      int nameA = int(_tex[0].item(A));
-      int nameB = int(_tex[0].item(B));
+      int nameA = int((*_tex)[0].item(A));
+      int nameB = int((*_tex)[0].item(B));
       if (nameA < nameB)
         fibername << nameA + _addInt << "_" << nameB + _addInt;
       else
@@ -174,12 +174,12 @@ string SelectFiberListenerFromMesh::fiberName( const Point3df & p1T2,
     //allow that an extremity is very far from cortex
     float meshClosestPointMaxDistance2 = 25.0;
 //         meshClosestPointMaxDistance2 = 100.0;
-    if (til::dist2(p1na, getVertices(_mesh)[A], til::prec<float>()) <= meshClosestPointMaxDistance2 )
+    if (til::dist2(p1na, getVertices(*_mesh)[A], til::prec<float>()) <= meshClosestPointMaxDistance2 )
     {
-      int nameA = int(_tex[0].item(A));
-      if (til::dist2(p2na, getVertices(_mesh)[B], til::prec<float>()) <= meshClosestPointMaxDistance2)
+      int nameA = int((*_tex)[0].item(A));
+      if (til::dist2(p2na, getVertices(*_mesh)[B], til::prec<float>()) <= meshClosestPointMaxDistance2)
       {
-        int nameB = int(_tex[0].item(B));
+        int nameB = int((*_tex)[0].item(B));
         if (nameA < nameB)
           fibername << nameA + _addInt << "_" << nameB + _addInt;
         else
@@ -194,9 +194,9 @@ string SelectFiberListenerFromMesh::fiberName( const Point3df & p1T2,
     }
     else
     {
-      if (til::dist2(p2na, getVertices(_mesh)[B], til::prec<float>()) <= meshClosestPointMaxDistance2)
+      if (til::dist2(p2na, getVertices(*_mesh)[B], til::prec<float>()) <= meshClosestPointMaxDistance2)
       {
-        int nameB = int(_tex[0].item(B));
+        int nameB = int((*_tex)[0].item(B));
         fibername << nameB + _addInt << "_notInMesh";
       }
       else
@@ -207,10 +207,10 @@ string SelectFiberListenerFromMesh::fiberName( const Point3df & p1T2,
   }
   else if(_namesMode=="NameFront")
   {
-    if (til::dist2(p1na, getVertices(_mesh)[A], til::prec<float>()) <= 25.0 &&  // fiber point is close to the mesh
-                til::dist2(p2na, getVertices(_mesh)[B], til::prec<float>()) <= 25.0)
+    if (til::dist2(p1na, getVertices(*_mesh)[A], til::prec<float>()) <= 25.0 &&  // fiber point is close to the mesh
+                til::dist2(p2na, getVertices(*_mesh)[B], til::prec<float>()) <= 25.0)
     {
-      fibername << int(_tex[0].item(A)) + _addInt;
+      fibername << int((*_tex)[0].item(A)) + _addInt;
     }
     else
     {
@@ -219,10 +219,10 @@ string SelectFiberListenerFromMesh::fiberName( const Point3df & p1T2,
   }
   else if(_namesMode=="NameEnd")
   {
-    if (til::dist2(p1na, getVertices(_mesh)[A], til::prec<float>()) <= 25.0 &&  // fiber point is close to the mesh
-                til::dist2(p2na, getVertices(_mesh)[B], til::prec<float>()) <= 25.0)
+    if (til::dist2(p1na, getVertices(*_mesh)[A], til::prec<float>()) <= 25.0 &&  // fiber point is close to the mesh
+                til::dist2(p2na, getVertices(*_mesh)[B], til::prec<float>()) <= 25.0)
     {
-      fibername << int(_tex[0].item(B)) + _addInt;
+      fibername << int((*_tex)[0].item(B)) + _addInt;
     }
     else
     {
