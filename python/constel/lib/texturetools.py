@@ -7,8 +7,7 @@ def removeLabelsFromTexture(tex, labels_list):
   """
   inputs:
           tex: labeled texture between 1 and labelsNb, background = 0, aimsTimeTexture_S16
-          labels_list: list of labels to remove
-          
+          labels_list: list of labels to remove        
   output:
           out_tex:
                 labeled texture without region of labels_list, and renumbered between 1 and NewLabelsNb (= LabelsNb - len(labels_list))
@@ -55,3 +54,39 @@ def average_texture_labels( output, inputs ):
 
   aims.write( otex, output )
 
+
+def mergeLabels( tex, labels_list, new_label ):
+  """
+  inputs:
+        tex: labeled texture ( from FreeSurfer or an other )
+        old_label, new_label: you can overwrite the number ( old_label ) with your own number ( new_label )
+  ouput:
+        otex: labeled texture with merge regions
+  """
+  otex = aims.TimeTexture_S16()
+  tex_ar = tex[0].arraydata()
+  otex[0].assign( tex_ar )
+  otex_ar = otex[0].arraydata()
+  for i in labels_list:
+    print 'i: ', i
+    otex_ar[ otex_ar==int(i) ] = new_label
+  return otex
+        
+def extractLabels( tex, labels_list, new_label ):
+  """
+  inputs:
+        tex: labeled texture ( from FreeSurfer or an other )
+        labels_list, new_label: you can overwrite numbers ( labels_list ) with your own number ( new_label )
+  output:
+        otex: labeled texture with merge regions only
+  """
+  otex = aims.TimeTexture_S16()
+  otex[0].reserve( tex[0].nItem() )
+  for i in xrange( tex[0].nItem() ):
+    otex[0].push_back(0)
+  tex_ar = tex[0].arraydata()
+  otex_ar = otex[0].arraydata()
+  for i in labels_list:
+    otex_ar[ tex_ar==int(i) ] = new_label
+  return otex
+  
