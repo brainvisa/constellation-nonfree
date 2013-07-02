@@ -1,5 +1,5 @@
 from optparse import OptionParser
-from constel.lib import texturetools
+from soma.aims import texturetools
 from soma import aims
 import sys
 
@@ -22,7 +22,7 @@ def main():
   tex = aims.read( options.gyri_tex )
   print 'ilabel', options.ilabel
   print 'type: ', type(options.ilabel)
-  otex = texturetools.mergeLabels( tex, options.ilabel, options.olabel )
+  otex = texturetools.mergeLabelsFromTexture( tex, options.ilabel, options.olabel )
   aims.write( otex, options.gyri_otex )
 
 if __name__ == "__main__": main()
