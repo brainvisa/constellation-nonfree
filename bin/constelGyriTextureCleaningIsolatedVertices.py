@@ -4,10 +4,11 @@ import constel.lib.texturetools as CGT
 from soma import aims
 import optparse
 import numpy
+import sys
 
 def parseOpts( argv ):
   description = 'Threshold an aimsTimeTexture (with one time step only ! Warning !)'
-  parser = OptionParser( description )
+  parser = optparse.OptionParser( description )
   parser.add_option('-i', '--itex', dest = 'tex',
     metavar = 'FILE',
     help = 'input gyri texture' )

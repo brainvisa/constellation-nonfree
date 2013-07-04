@@ -86,7 +86,7 @@ def changeLabelOfWrongLabelVertices( cclabel, label, gyriTex, meshNeighborsVecto
           gyriTex: new gyriTex texture
           winner_label
   """
-  indexes=np.where( cctexLabel_ar == cclabel )[0]
+  indexes=numpy.where( cctexLabel_ar == cclabel )[0]
   neighbourLabels = []
   print 'Nb of wrong indexes: ', indexes.size
   for i in indexes:
@@ -94,7 +94,7 @@ def changeLabelOfWrongLabelVertices( cclabel, label, gyriTex, meshNeighborsVecto
       n_label = gyriTex[0][n]
       if n_label != label:
         neighbourLabels.append( n_label )
-  neighLabels_list = np.unique( neighbourLabels )
+  neighLabels_list = numpy.unique( neighbourLabels )
   maxCount = 0
   winnner_label = -1
   for neighLabel in neighLabels_list:
