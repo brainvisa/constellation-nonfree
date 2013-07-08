@@ -71,6 +71,7 @@ SelectFiberListenerFromMesh::~SelectFiberListenerFromMesh()
 void SelectFiberListenerFromMesh::bundleStarted( const BundleProducer &,
                                    const BundleInfo & bundleInfo )
 {
+  _current_name.clear();
   startBundle(bundleInfo);
 }
 
@@ -78,7 +79,13 @@ void SelectFiberListenerFromMesh::bundleStarted( const BundleProducer &,
 void SelectFiberListenerFromMesh::bundleTerminated( const BundleProducer &,
                                       const BundleInfo & bundleInfo )
 {
-  terminateBundle(bundleInfo);
+  if( !_current_name.empty() )
+  {
+    BundleInfo binfo( _current_name );
+    terminateBundle( binfo );
+  }
+  else
+    terminateBundle( bundleInfo );
 }
 
 
@@ -100,9 +107,13 @@ void SelectFiberListenerFromMesh::fiberTerminated( const BundleProducer &,
   string name = fiberName( _p1, _p2 );
   if( _file )
     *_file << name << endl;
+  if( name == "255" )
+    cout << "SelectFiberListenerFromMesh: fiber 255 found\n";
+
   // trick BundleInfo to set fiber name in
   BundleInfo bundleInfo2( bundleInfo.id(), name );
   terminateFiber(bundleInfo2, fiberInfo);
+  _current_name = name;
 }
 
 

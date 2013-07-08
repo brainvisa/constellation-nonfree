@@ -29,7 +29,7 @@ SelectBundlesFromNames::SelectBundlesFromNames( vector< string > &select_bundles
   if (_verbose)
     for (set<string>::iterator i=_select_bundles_name.begin(),
          e=_select_bundles_name.end(); i!=e; i++)
-      cout << *i << endl;
+      cout << "selection: "<<*i << endl;
 }
 
 
@@ -128,6 +128,12 @@ void SelectBundlesFromNames::bundleStarted( const BundleProducer &,
 void SelectBundlesFromNames::bundleTerminated( const BundleProducer &,
                                       const BundleInfo &bundleInfo )
 {
+  if( _use_fiber_names && _bundle_selected )
+  {
+    BundleInfo binfo2( _last_id, _last_name );
+    terminateBundle( binfo2 );
+    return;
+  }
   if ( _bundle_selected )
     terminateBundle(bundleInfo);
 }

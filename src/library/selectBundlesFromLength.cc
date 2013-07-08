@@ -21,7 +21,7 @@ SelectBundlesFromLength::SelectBundlesFromLength() :
 
 //-----------------------------------------------------------------------------
 SelectBundlesFromLength::SelectBundlesFromLength( float lmin, float lmax,
-  bool verbose ) :
+  bool verbose) :
     _lmin( lmin ), _lmax( lmax ), _verbose(verbose), _fiberLength( 0 )
 {
   if (_verbose)
@@ -49,6 +49,9 @@ void SelectBundlesFromLength::bundleStarted( const BundleProducer &,
 void SelectBundlesFromLength::bundleTerminated( const BundleProducer &,
                                       const BundleInfo &bundleInfo )
 {
+  if( bundleInfo.name() == "255" )
+    cout << "SelectBundlesFromLength, bundle 255 found, id: " << bundleInfo.id() << endl;
+
   terminateBundle(bundleInfo);
 }
 
@@ -72,6 +75,8 @@ void SelectBundlesFromLength::fiberTerminated( const BundleProducer &,
   {
 //     if( _verbose )
 //       cout << "fiber selected, length: " << _fiberLength << endl;
+    if( bundleInfo.name() == "255" )
+      cout << "SelectBundlesFromLength, fiberTerminated, fiber 255, id: " << bundleInfo.id() << endl;
     startFiber( bundleInfo, fiberInfo );
     vector<FiberPoint>::const_iterator ip, ep = _fiber.end();
     for( ip=_fiber.begin(); ip!=ep; ++ip )

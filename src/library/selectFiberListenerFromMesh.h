@@ -71,6 +71,7 @@ private:
   bool _fiberstarted;
   Point3df _p1;
   Point3df _p2;
+  std::string _current_name;
 };
 
 } // namespace constel
