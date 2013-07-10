@@ -5,6 +5,13 @@ from soma import aims
 import numpy
 import sys
 import os
+
+def validation():
+  try:
+    import constel
+  except:
+    raise ValidationError( 'constellation module is not here.' )
+
 import constel.lib.connmatrix.connmatrixtools as TTS
 
 def parseOpts(argv):
