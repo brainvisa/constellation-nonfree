@@ -1,10 +1,16 @@
 #!/usr/bin/env python
-import constel.lib.texturetools as FWB
-import constel.lib.texturetools as CGT
 from soma import aims
 import optparse
 import numpy
 import sys
+
+def validation():
+  try:
+    import constel
+  except:
+    raise ValidationError( 'constellation module is not here.' )
+
+import constel.lib.texturetools as TT
 
 def parseOpts( argv ):
   description = 'Threshold an aimsTimeTexture (with one time step only ! Warning !)'
@@ -28,8 +34,8 @@ def main():
   count = 0
   while cont and count < 10:
     print "clean up number ", str( count+1 ), " :"
-    tex = CGT.cleanGyriTexture( mesh, tex )
-    wrong_labels = FWB.findWrongLabels( mesh, tex )
+    tex = TT.cleanGyriTexture( mesh, tex )
+    wrong_labels = TT.findWrongLabels( mesh, tex )
     cont = False
     count += 1
     if len( wrong_labels ) > 0:
