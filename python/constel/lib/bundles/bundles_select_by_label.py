@@ -21,7 +21,7 @@ def selectPatchBundles(patch_label, patchsMeshTexture_filename, subjectPatchsSha
   names_patch = names_dict[patch_label]
   names = " ".join( names_patch )
 
-  names += str(-1) + "_" + str(patch_label) + " "
+  names += ' ' + str(-1) + "_" + str(patch_label) + " "
   if verbose:
     print names
   names += ' '.join( [ str(x) for x in addlabel_list ] )
