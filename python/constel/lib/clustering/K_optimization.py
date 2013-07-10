@@ -5,6 +5,8 @@ import numpy.random as NR
 from soma import aims
 import decimal as pydeci
 import time
+import constel
+
 
 
 def clusteringResults(X, k_min, k_max, Rclustering_filename, diss=False,
@@ -33,7 +35,6 @@ def clusteringResults(X, k_min, k_max, Rclustering_filename, diss=False,
     #print "save clustering results:"
     cl_dict[k] = {}
     cl_dict[k]['avg.width'] = cl['silinfo']['avg.width']
-    print "'avg.width':" , cl['silinfo']['avg.width']
     #print "save clus.avg.widths..."
     cl_dict[k]['clus.avg.widths'] = cl['silinfo']['clus.avg.widths']
     #print "save clustering...", N.unique((N.asarray(cl["clustering"])).copy()).tolist()
@@ -43,7 +44,6 @@ def clusteringResults(X, k_min, k_max, Rclustering_filename, diss=False,
     avg_width_ar[k - k_min] = cl['silinfo']['avg.width']
     cl_dict[k]['widths']=cl['silinfo']['widths'][:,2]
     k += 1
-
   k_ordering = N.argsort(avg_width_ar)
   k_ordering = k_ordering + k_min
   i = k_ordering.size - 1
@@ -132,8 +132,9 @@ def textureKmedoidsCreation(clusterings_dict, meshVertex_nb, seedVertex_index):
   for k in clusterings_dict.keys():
     kmedoidsTime_tex[stepCount].resize( meshVertex_nb, 0 )
     vertex_silhouette_width_Time_tex[stepCount].resize( meshVertex_nb, 0 )
-    vertex_silhouette_width_Time_tex[stepCount].arraydata()[ 
-      seedVertex_index ] = clusterings_dict[k]['widths']
+    vertsilarr = vertex_silhouette_width_Time_tex[stepCount].arraydata()
+    vertsilarr[ seedVertex_index ] = clusterings_dict[k]['widths'].astype(
+      vertsilarr.dtype )
     kmedoids_array = clusterings_dict[k]['medoids']
     for kmed in kmedoids_array:
       kmedIndexInWhiteMesh = seedVertex_index[kmed]
