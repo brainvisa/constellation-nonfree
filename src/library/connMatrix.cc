@@ -1,6 +1,7 @@
 #include <constellation/connMatrix.h>
 // includes from CATHIER
 #include <cathier/triangle_mesh_geodesic_map.h>
+#include <aims/sparsematrix/sparseordensematrix.h>
 
 
 using namespace comist;
@@ -633,6 +634,41 @@ namespace constel
   }//connMatrixSumRows
 
 
+  vector<double> * connMatrixSumRows( const SparseOrDenseMatrix & matrix, bool verbose )
+  {
+    /*
+    Compute the sum of the matrix rows
+    input: Connectivities matrix_ptr, shape = (r,l)
+    output: Connectivity matrixSumRows, shape = (1,l)
+
+    */
+
+    std::size_t colNb = matrix.getSize2();
+    std::size_t rowsNb = matrix.getSize1();
+    if (verbose) std::cout << "("<<rowsNb << "," << colNb << ") : " << std::flush;
+    vector<double> * matrixSumRows_ptr = new vector<double>(colNb);//default values = zero
+    vector<double> & matrixSumRows  = *matrixSumRows_ptr;
+    for(std::size_t j = 0; j < colNb; ++j)
+    {
+      matrixSumRows[j]=0;
+    }
+//     int five_count = int(rowsNb / 20.0);
+    for (std::size_t i = 0; i < rowsNb; ++i)
+    {
+//       if (i % five_count == 0)
+//       {
+//         std::cout << 5 * int(i / five_count) << "%..." << std::flush;
+//       }
+      vector<double> line_i = matrix.getRow(i);
+      for( int j=0; j<colNb; ++j )
+      {
+        matrixSumRows[j] += line_i[j];
+      }
+    }
+    return ( matrixSumRows_ptr );
+  }//connMatrixSumRows
+
+
   Connectivities * connMatrixTargetsRegroup(
     Connectivities * connMatrixToAllMesh_ptr,
     const TimeTexture<short> & targetRegionsTex, int targetRegionsNb,
@@ -1065,6 +1101,53 @@ output: extractConn_ptr: a connectivity matrix of shape (seedRegionVertexNb, oth
   }
 
 
+  TimeTexture<float> densityTexture( const SparseOrDenseMatrix & connMatrixToAllMesh, std::vector<std::size_t> vertexIndex, bool verbose)
+  {
+    /*
+    input:    connMatrixToAllMesh : connectivity matrix of shape (p, n), p = seed region vertex nb, n = mesh vertex nb
+              vertexIndex : index of the seed region vertex (matrix rows) in the main mesh ( vertexIndex[i]=index corresponding to the ith row of the connectivity matrix in the mesh)
+
+    output:   outputDensityTex : texture of connection density : for each vertex of the seed region : sum of its connections to all the other mesh vertex
+    */
+    if (verbose) std::cout << "Computing density texture" << std::flush;
+
+    std::size_t colNb = connMatrixToAllMesh.getSize2();
+    std::size_t rowsNb = connMatrixToAllMesh.getSize1();
+    if (verbose) std::cout << "("<<rowsNb << "," << colNb << ") : " << std::flush;
+    if(rowsNb != vertexIndex.size())
+      throw runtime_error( "Not the same dimensions as vertexIndex vector" );
+    int five_count = int(rowsNb / 20.0);
+    float currentSum;
+    int currentVertexIndex;
+    TimeTexture<float> outputDensityTex; //(1, til::size(res));
+    int countVertex = 0;
+    outputDensityTex[0].reserve(colNb);
+    for (std::size_t v = 0; v < colNb; ++v)
+      outputDensityTex[0].push_back(-1);
+    for (std::size_t i = 0; i < rowsNb; ++i)
+    {
+      currentVertexIndex = vertexIndex[i];
+      if (i % five_count == 0)
+      {
+        if (verbose) std::cout << 5 * int(i / five_count) << "%..." << std::flush;
+      }
+      outputDensityTex[0][currentVertexIndex]=0;
+      vector<double> line_i = connMatrixToAllMesh.getRow(i);
+      for( int j=0; j<colNb; ++j )
+        currentSum += line_i[j];
+      if (currentSum==-1 and verbose) std::cout<<"-1,"<<std::flush;
+      if (isnan(currentSum) and verbose) std::cout << "currentSum is nan!!" <<std::flush;
+      if (currentSum>0)
+      {
+        outputDensityTex[0][currentVertexIndex] = (float) currentSum;
+      }
+      countVertex++;
+    }
+    if (verbose) std::cout << "countVertex++:" << countVertex++ << ", Done." << std::endl;
+    return outputDensityTex;
+  }
+
+
   TimeTexture<float> meshDensityTexture(
     Connectivities * connMatrixToAllMesh_ptr, bool verbose )
   {
@@ -1084,6 +1167,39 @@ output: extractConn_ptr: a connectivity matrix of shape (seedRegionVertexNb, oth
     Connectivity * totalConnectionDensity_ptr = connMatrixSumRows(connMatrixToAllMesh_ptr);
     Connectivity & totalConnectionDensity = *totalConnectionDensity_ptr;
     for (std::size_t v = 0; v < colNb; ++v) outputDensityTex[0].push_back(-1);
+    for (std::size_t j = 0; j < colNb; ++j)
+    {
+      outputDensityTex[0][j]= totalConnectionDensity[j];
+//       if (outputDensityTex[0][j]!= 0)
+//       {
+//         std::cout << "outputDensityTex[0][j]:, j:"<< j << ", " << outputDensityTex[0][j] << std::endl;
+//       }
+    }
+    if (verbose) std::cout << "Done." << std::endl;
+    delete totalConnectionDensity_ptr;
+    return outputDensityTex;
+  }//meshDensityTexture
+
+
+  TimeTexture<float> meshDensityTexture(
+    const SparseOrDenseMatrix & connMatrixToAllMesh, bool verbose )
+  {
+  /*
+    input:    connMatrixToAllMesh : connectivity matrix of shape (p, n), p = seed region vertex nb, n = mesh vertex nb
+
+    output:   outputDensityTex : texture of connection density : for each vertex of the mesh : sum of its connections to all seed region vertex
+  */
+    if (verbose) std::cout << "Computing Mesh density texture" << std::flush;
+
+    std::size_t colNb = connMatrixToAllMesh.getSize2();
+    std::size_t rowsNb = connMatrixToAllMesh.getSize1();
+    if (verbose) std::cout << "("<<rowsNb << "," << colNb << ") : " << std::flush;
+    TimeTexture<float> outputDensityTex; //(1, til::size(res));
+    outputDensityTex[0].reserve(colNb);
+    vector<double> * totalConnectionDensity_ptr = connMatrixSumRows(connMatrixToAllMesh);
+    vector<double> & totalConnectionDensity = *totalConnectionDensity_ptr;
+    for (std::size_t v = 0; v < colNb; ++v)
+      outputDensityTex[0].push_back(-1);
     for (std::size_t j = 0; j < colNb; ++j)
     {
       outputDensityTex[0][j]= totalConnectionDensity[j];

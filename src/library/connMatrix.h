@@ -9,6 +9,10 @@
 #include <aims/mesh/surface.h>
 #include <aims/mesh/texture.h>
 
+namespace aims
+{
+  class SparseOrDenseMatrix;
+}
 
 namespace constel
 {
@@ -19,6 +23,9 @@ namespace constel
                                bool verbose = false );
   Connectivity * connMatrixSumRows( Connectivities * matrix_ptr,
                                     bool verbose = false );
+  std::vector<double> * connMatrixSumRows(
+    const aims::SparseOrDenseMatrix & matrix,
+    bool verbose = false );
   Connectivities * connMatrixTargetsRegroup(
     Connectivities * connMatrixToAllMesh,
     const TimeTexture<short> & targetRegionsTexture, int targetRegionsNb,
@@ -47,8 +54,14 @@ namespace constel
   TimeTexture<float> densityTexture(
     Connectivities * allMeshConnMatrix, std::vector<std::size_t> VertexIndex,
     bool verbose = false );
+  TimeTexture<float> densityTexture(
+    const aims::SparseOrDenseMatrix & allMeshConnMatrix, std::vector<std::size_t> VertexIndex,
+    bool verbose = false );
   TimeTexture<float> meshDensityTexture(
     Connectivities * connMatrixToAllMesh_ptr,bool verbose = false );
+  TimeTexture<float> meshDensityTexture(
+    const aims::SparseOrDenseMatrix & connMatrixToAllMesh, bool verbose = false );
+
   TimeTexture<float> * oneTargetDensityTargetsRegroupTexture(
     const Connectivity * lineMatrixToTargetRegions_ptr,
     const TimeTexture<short> & targetRegionsTex, int timestep );

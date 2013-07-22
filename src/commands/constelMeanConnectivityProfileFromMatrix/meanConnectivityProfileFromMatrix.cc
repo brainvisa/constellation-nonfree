@@ -3,6 +3,7 @@
 #include <constellation/connConversion.h>
 #include <aims/mesh/texturetools.h>
 #include <aims/getopt/getopt2.h>
+#include <aims/sparsematrix/sparseordensematrix.h>
 
 using namespace aims;
 using namespace carto;
@@ -136,45 +137,21 @@ int main( int argc, const char* argv[] )
 
     if( verbose )
       cout << "reading matrix...\n";
-    aims::SparseMatrix AllMeshConnMatrix;
-    if( connMatrixFormat == "binar_sparse" )
-      AllMeshConnMatrix.read( inConnMatrixFileName );
-    else
-      AllMeshConnMatrix.read( inConnMatrixFileName, "ascii" );
+    aims::SparseOrDenseMatrix AllMeshConnMatrix;
+    Reader<aims::SparseOrDenseMatrix> spmreader( inConnMatrixFileName );
+    spmreader.read( AllMeshConnMatrix );
+    cout << "connectivity matrix is read as " << ( AllMeshConnMatrix.isDense() ? "dense" : "sparse" ) << " matrix" << endl;
 
-    connMatrixToAllMesh_ptr
-      = new constel::Connectivities( labels[seedRegionLabel],
-          til::SparseVector<double>(AllMeshConnMatrix.getSize2() ) );
+    connMatrixToAllMesh_ptr = 0;
 
     if( seedRegionsTexR2.fileName().empty() )
     {
-      Connectivities & connMatrixToAllMesh = *connMatrixToAllMesh_ptr;
-      if( AllMeshConnMatrix.getSize1() == labels[seedRegionLabel] )
-      {
-        if (verbose)
-          cout << "input connectivity matrix corresponds to seed region"
-            << endl;
-        for (size_t i = 0; i < labels[seedRegionLabel]; ++i)
-        {
-          connMatrixToAllMesh[i] = AllMeshConnMatrix.getSparseRow
-            <til::SparseVector<double> >((int32_t)i);
-        }
-      }
-      else
-      {
-        if (verbose)
-          cout << "input connectivity matrix corresponds to all the mesh"
-          << endl;
-        for (size_t i = 0; i < seedVertexIndex.size(); ++i)
-        {
-          connMatrixToAllMesh[i]
-            = AllMeshConnMatrix.getSparseRow
-              <til::SparseVector<double> >((int32_t)seedVertexIndex[i]);
-        }
-      }
     }
     else // seedRegionsTexR2 is specified
     {
+      connMatrixToAllMesh_ptr
+        = new constel::Connectivities( labels[seedRegionLabel],
+            til::SparseVector<double>(AllMeshConnMatrix.getSize2() ) );
       Connectivities & connMatrixToAllMesh = *connMatrixToAllMesh_ptr;
       if(AllMeshConnMatrix.getSize1() == labels[seedRegionLabel])
       {
@@ -204,14 +181,20 @@ int main( int argc, const char* argv[] )
     if(verbose)
       cout << "OK" << endl;
 
+    // free the matrix
+    if( connMatrixToAllMesh_ptr )
+      AllMeshConnMatrix = aims::SparseOrDenseMatrix();
 
     if (connectivityTextureType == "seed_connection_density")
     {
       /*
       Computing densityTexture:
       */
-      TimeTexture<float> outputTargetDensityTex
-        = densityTexture( connMatrixToAllMesh_ptr, seedVertexIndex );
+      TimeTexture<float> outputTargetDensityTex;
+      if( connMatrixToAllMesh_ptr )
+        outputTargetDensityTex = densityTexture( connMatrixToAllMesh_ptr, seedVertexIndex );
+      else
+        outputTargetDensityTex = densityTexture( AllMeshConnMatrix, seedVertexIndex );
       if (verbose)
         cout << "Writing connectivity Density texture:" << connTextureFileName
           << endl;
@@ -237,6 +220,7 @@ int main( int argc, const char* argv[] )
       if( seedRegionsTexR2.fileName().empty() ) //no second input region
       {
         size_t seedRegionLabelVertexNb = labels[seedRegionLabel];
+        /*
         if (normalize)
         {
           Connectivities * connN 
@@ -258,6 +242,7 @@ int main( int argc, const char* argv[] )
           m->write(outConnMatrixFileName);
           delete m;
         }
+        */
 
         // Write region vertex indexes (ascii format only)
         size_t seedVertexIndex_size = seedVertexIndex.size();
@@ -302,8 +287,11 @@ int main( int argc, const char* argv[] )
         outputDensityTex: texture of the connection density of the seed region towards all the other vertex of the mesh
         outputTargetDensityTex: texture of the connection density of the entire mesh towards the seed region
         */
-        TimeTexture<float> outputTargetDensityTex
-          = meshDensityTexture( connMatrixToAllMesh_ptr );
+        TimeTexture<float> outputTargetDensityTex;
+        if( connMatrixToAllMesh_ptr )
+          outputTargetDensityTex = meshDensityTexture( connMatrixToAllMesh_ptr );
+        else
+          outputTargetDensityTex = meshDensityTexture( AllMeshConnMatrix );
         if (verbose)
           cout << "Writing mean connectivity profile texture:"
             << connTextureFileName << endl;
