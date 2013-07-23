@@ -135,11 +135,12 @@ int main( int argc, const char* argv[] )
       }
     }
 
-    if( verbose )
-      cout << "reading matrix...\n";
+    if( verbose ) cout << "reading matrix...\n";
+    
     aims::SparseOrDenseMatrix AllMeshConnMatrix;
     Reader<aims::SparseOrDenseMatrix> spmreader( inConnMatrixFileName );
     spmreader.read( AllMeshConnMatrix );
+    
     cout << "connectivity matrix is read as " << ( AllMeshConnMatrix.isDense() ? "dense" : "sparse" ) << " matrix" << endl;
 
     connMatrixToAllMesh_ptr = 0;
@@ -177,13 +178,15 @@ int main( int argc, const char* argv[] )
               <til::SparseVector<double> >((int32_t)seedVertexIndex[i]);
         }
       }
+      AllMeshConnMatrix = SparseOrDenseMatrix();
+      SparseOrDenseMatrix *mat2 = connectivitiesToSparseOrDenseMatrix( *connMatrixToAllMesh_ptr );
+      AllMeshConnMatrix = *mat2;
+      delete mat2;
+      /* delete connMatrixToAllMesh_ptr;
+      connMatrixToAllMesh_ptr = 0; */
     }
     if(verbose)
       cout << "OK" << endl;
-
-    // free the matrix
-    if( connMatrixToAllMesh_ptr )
-      AllMeshConnMatrix = aims::SparseOrDenseMatrix();
 
     if (connectivityTextureType == "seed_connection_density")
     {
@@ -191,10 +194,7 @@ int main( int argc, const char* argv[] )
       Computing densityTexture:
       */
       TimeTexture<float> outputTargetDensityTex;
-      if( connMatrixToAllMesh_ptr )
-        outputTargetDensityTex = densityTexture( connMatrixToAllMesh_ptr, seedVertexIndex );
-      else
-        outputTargetDensityTex = densityTexture( AllMeshConnMatrix, seedVertexIndex );
+      outputTargetDensityTex = densityTexture( AllMeshConnMatrix, seedVertexIndex );
       if (verbose)
         cout << "Writing connectivity Density texture:" << connTextureFileName
           << endl;
@@ -288,10 +288,7 @@ int main( int argc, const char* argv[] )
         outputTargetDensityTex: texture of the connection density of the entire mesh towards the seed region
         */
         TimeTexture<float> outputTargetDensityTex;
-        if( connMatrixToAllMesh_ptr )
-          outputTargetDensityTex = meshDensityTexture( connMatrixToAllMesh_ptr );
-        else
-          outputTargetDensityTex = meshDensityTexture( AllMeshConnMatrix );
+        outputTargetDensityTex = meshDensityTexture( AllMeshConnMatrix );
         if (verbose)
           cout << "Writing mean connectivity profile texture:"
             << connTextureFileName << endl;
@@ -329,8 +326,10 @@ int main( int argc, const char* argv[] )
               seedRegionLabelVertexNb2, & seedVertexIndex2 );
           if(normalize)
             extractConnMatrix_ptr = connMatrixNormalize(extractConnMatrix_ptr);
+          SparseOrDenseMatrix *mat = connectivitiesToSparseOrDenseMatrix( *extractConnMatrix_ptr );
           TimeTexture<float> outputTargetDensityTex
-            = meshDensityTexture(extractConnMatrix_ptr);
+            = meshDensityTexture( *mat );
+          delete mat;
           if (verbose)
             cout << "Writing mean connectivity profile texture:"
               << connTextureFileName << endl;
