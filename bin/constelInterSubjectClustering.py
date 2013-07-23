@@ -12,11 +12,10 @@ def parseOpts(argv):
   parser = OptionParser(description)
 
   parser.add_option( '-r', '--codeR', dest = 'code', help = 'R clustering filename' )
-  parser.add_option( '-m', '--avgmesh', dest = 'average_mesh', help = 'Input average mesh to the correct group' )
+  parser.add_option( '-m', '--avgmesh', dest = 'avg_mesh', help = 'Input average mesh to the correct group' )
   parser.add_option( '-l', '--label', dest = 'patch_label', help = 'region of interest\'s, between 1 to parcelRegionsNb' )
-  parser.add_option( '-t', '--avggyri', dest = 'average_gryi_segmentation', action='append', help = 'Input average gyri segmentation' ) 
+  parser.add_option( '-t', '--avggyri', dest = 'avg_gyri_texture', action='append', help = 'Input average gyri segmentation' )
   parser.add_option( '-a', '--areamin', dest = 'areaMin_threshold', type='int', help = 'minimum area for parcells in the resulting parcellation, in mm2' )
-  parser.add_option( '-v', '--vertex', dest = 'vertex_index', action='append', help = 'index of vertex' )
   parser.add_option( '-s', '--study', dest = 'study', help = 'study : Average or Concatenate' )
   parser.add_option( '-g', '--avgmatrix', dest = 'avg_matrix', help = 'output average matrix' )
   parser.add_option( '-x', '--text', dest = 'clustering_result', help = 'output clustering result' )
@@ -29,61 +28,78 @@ def parseOpts(argv):
 def main():
   parser, (options, args) = parseOpts(sys.argv)
 
-  Rclustering_filename = options.code
+  Rclustering = options.code
   kmax = None  # the number of clusters is chosen to maximize the average silhouette width of the clustering.
   kmin = 2
   n = 0
+  lkmax = []
+  avg_mesh = aims.read( options.avg_mesh )
+  subjectsNb = len(options.clustering_silhouette)
+  print subjectsNb
   if options.study == 'Concatenate':
-    for oneMatrix in self.individual_reduced_matrix:
-      patchsLabeled_tex = aims.read( options.average_gryi_segmentation[n] )
+    for oneMatrix in xrange(subjectsNb):
+      labels = aims.read( options.avg_gyri_texture[n] )
+      patch_mesh = aims.SurfaceManip.meshExtract( avg_mesh, labels, int(options.patch_label) )[0]
+      patch_area = aims.SurfaceManip.meshArea( patch_mesh )
+      kmax = round( patch_area / ( 2*options.areaMin_threshold ) ) + 1
+      lkmax.append( kmax )
       n += 1
   else:
-    patchsLabeled_tex = aims.read( options.average_gryi_segmentation[n] )
+    labels = aims.read( options.avg_gyri_texture[n] )
+    patch_mesh = aims.SurfaceManip.meshExtract( avg_mesh, labels, int(options.patch_label) )[0]
+    patch_area = aims.SurfaceManip.meshArea( patch_mesh )
+    kmax = round( patch_area / ( 2*options.areaMin_threshold ) ) + 1
+    lkmax.append( kmax )
 
-  average_mesh = aims.read( options.average_mesh )
-  current_patch_mesh = aims.SurfaceManip.meshExtract( average_mesh, patchsLabeled_tex, int(options.patch_label) )[0]
-  current_patch_area = aims.SurfaceManip.meshArea( current_patch_mesh )
-
-  if kmax == None:
-    #areaMin_threshold = 200
-    kmax = round( current_patch_area / ( 2*options.areaMin_threshold ) ) + 1
-    print 'kmax = ', kmax
-    print 'current_patch_area: ', current_patch_area
-    #print 'areaMin_threshold = ', areaMin_threshold
-    print 'areaMin_threshold = ', options.areaMin_threshold
+  kmax = max( lkmax )
+  print 'list of k: ', lkmax
+  print 'kmax = ', kmax
+  print 'Patch area = ', patch_area
+  print 'Area min threshold = ', options.areaMin_threshold
 
   matrix = numpy.asarray( aims.read( options.avg_matrix ) )
   matrix = matrix.reshape( matrix.shape[0], matrix.shape[1] )
-  all_subjects_PatchCl_dict, k_ordering_def = CK.clusteringResults(matrix, kmin, kmax, Rclustering_filename )
-  k_opt = k_ordering_def[0]
-  print 'k_opt = ', k_opt
+  cl_dict, korder = CK.clusteringResults( matrix, kmin, kmax, Rclustering )
+  k_opt = korder[0]
+  print 'k optimale = ', k_opt
 
   countProcessedVertex = 0
-  WhiteMeshVertexNb = average_mesh.vertex().size()
-  print 'WhiteMeshVertexNb : ', WhiteMeshVertexNb
+  vertexNb = avg_mesh.vertex().size()
+  print 'vertices number = ', vertexNb
   listofClusteringSilhouette = []
   listOfClusteringTime = []
   listOfClusteringKopt = []
   n = 0
 
-  for subject in options.vertex_index:
-    vertex_filename = options.vertex_index[n]
-    split_ima_filename = vertex_filename.split("\\")
-    len_split = len(split_ima_filename)
-    if len_split >1:
-      vertex_filename = split_ima_filename[0]
-      for i in xrange(1,len_split):
-        vertex_filename += split_ima_filename[i]
-    subjectPatch_vertexIndex = numpy.loadtxt(vertex_filename)
-    subjectPatch_vertexIndex = subjectPatch_vertexIndex.tolist()
+  for subject in xrange(subjectsNb):
+    #vertex_filename = options.vertex_index[n]
+    #split_ima_filename = vertex_filename.split("\\")
+    #len_split = len(split_ima_filename)
+    #if len_split >1:
+      #vertex_filename = split_ima_filename[0]
+      #for i in xrange(1,len_split):
+        #vertex_filename += split_ima_filename[i]
+    if options.study == 'Concatenate':
+      tex = aims.read( options.avg_gyri_texture[n] )
+    else:
+      tex = aims.read( options.avg_gyri_texture[0] )
+    subjectPatch_vertexIndex = []
+    for i in xrange( tex[0].nItem() ):
+      if tex[0][i] == int(options.patch_label):
+        print 'here'
+        subjectPatch_vertexIndex.append(i)
+    print 'vertex_index:', subjectPatch_vertexIndex
+    print options.patch_label
+    #subjectPatch_vertexIndex = numpy.loadtxt(vertex_filename)
+    #subjectPatch_vertexIndex = subjectPatch_vertexIndex.tolist()
     subjectPatchVertex_nb = len(subjectPatch_vertexIndex)
     all_subjects_labels_list_index_min = countProcessedVertex
     all_subjects_labels_list_index_max = countProcessedVertex + subjectPatchVertex_nb
 
     if options.study == 'Concatenate':
-      clustersTime_tex, clus_avg_width_Time_tex = CK.texturesCreationMultiSubjects(all_subjects_PatchCl_dict, WhiteMeshVertexNb, subjectPatch_vertexIndex, all_subjects_labels_list_index_min, all_subjects_labels_list_index_max)
+      clustersTime_tex, clus_avg_width_Time_tex = CK.texturesCreationMultiSubjects(cl_dict, vertexNb, subjectPatch_vertexIndex, all_subjects_labels_list_index_min, all_subjects_labels_list_index_max)
     elif options.study == 'Average':
-      clustersTime_tex, clus_avg_width_Time_tex = CK.texturesCreation(all_subjects_PatchCl_dict, WhiteMeshVertexNb, subjectPatch_vertexIndex)
+      clustersTime_tex, clus_avg_width_Time_tex = CK.texturesCreation(cl_dict, vertexNb, subjectPatch_vertexIndex)
 
     countProcessedVertex += subjectPatchVertex_nb
     kopt_tex = aims.TimeTexture_S16()
@@ -105,11 +121,11 @@ def main():
   script_filename = options.clustering_result
   script_file = open(script_filename, "a")
   script_file.write( "---\n" + time.strftime( '%d/%m/%y %H:%M',time.localtime() ) + "\n---\n" )
-  script_file.write("Clustering of patch " + str(options.patch_label) + " of area " + str(current_patch_area) + " mm2 \n")
+  script_file.write("Clustering of patch " + str(options.patch_label) + " of area " + str(patch_area) + " mm2 \n")
   script_file.write("kmax :"+ str(kmax) + "\n")
   script_file.write("k : \n")
-  for k in k_ordering_def:
-    script_file.write(str(k) + " clusters, avg.width : " + str(all_subjects_PatchCl_dict[k]['avg.width']) + "\n")
+  for k in korder:
+    script_file.write(str(k) + " clusters, avg.width : " + str(cl_dict[k]['avg.width']) + "\n")
   script_file.write("\n")
   script_file.close()
 
