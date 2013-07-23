@@ -87,6 +87,9 @@ namespace constel
     const TimeTexture<short> & targetRegionsTex, int targetRegionsNb,
     int seedRegionsNb, bool verbose = false );
 
+  aims::SparseOrDenseMatrix* connectivitiesToSparseOrDenseMatrix(
+    const Connectivities & );
+
 
 } // namespace constel
 
