@@ -15,7 +15,6 @@ def parseOpts(argv):
   parser.add_option( '-g', '--gyri-segmentation', dest='gyri_segmentation' )
   parser.add_option( '-w', '--white-mesh', dest='white_mesh' )
   parser.add_option( '-a', '--area-tresh', dest='areaMin_threshold' )
-  parser.add_option( '-v', '--vertex-index', dest='vertex_index' )
   parser.add_option( '-k', '--cluster-kopt', dest='clustering_kopt' )
   parser.add_option( '-t', '--cluster-time', dest='clustering_time' )
   parser.add_option( '-d', '--cluster-kmed', dest='clustering_k_medoids' )
@@ -46,8 +45,10 @@ def main():
 
   subject_PatchCl_dict, k_ordering = CK.clusteringResults( subject_reducedConnMatrix, kmin, kmax, Rclustering_filename )
 
-  subjectPatch_vertexIndex =  numpy.loadtxt( options.vertex_index )
-  subjectPatch_vertexIndex = subjectPatch_vertexIndex.tolist()
+  subjectPatch_vertexIndex = []
+  for i in xrange( patchsLabeled_tex[0].nItem() ):
+    if patchsLabeled_tex[0][i] == options.patch_label:
+      subjectPatch_vertexIndex.append(i)
   clustersTime_tex, clus_avg_width_Time_tex = CK.texturesCreation( subject_PatchCl_dict, subjectWhiteMesh_vertexNb, subjectPatch_vertexIndex )
   kmedoidsTime_tex, vertex_silhouette_width_Time_tex = CK.textureKmedoidsCreation( subject_PatchCl_dict,subjectWhiteMesh_vertexNb, subjectPatch_vertexIndex )
 
