@@ -2,6 +2,7 @@
 #include <aims/sparsematrix/sparseMatrix.h>
 #include <aims/mesh/texturetools.h>
 #include <aims/getopt/getopt2.h>
+#include <aims/sparsematrix/sparseordensematrix.h>
 
 using namespace aims;
 using namespace carto;
@@ -16,199 +17,163 @@ int main( int argc, const char** argv )
   {
     typedef AimsData<float> Matrix;
 
-    Reader<AimsSurfaceTriangle> inMeshAimsR;
+    Reader< AimsSurfaceTriangle > inMeshAimsR;
     Reader< TimeTexture<short> > seedRegionsTexR;
     Reader< TimeTexture<short> > targetRegionsTexR;
     AimsSurfaceTriangle inAimsMesh;
     TimeTexture<short> seedRegionsTex;
     TimeTexture<short> targetRegionsTex;
-    std::size_t targetRegionsNb = 0;
-    std::size_t seedRegionLabel = 0;
-    std::size_t seedRegionsNb = 0;
-    std::string connTextureFileName;
-    std::string connMatrixFileName = "";
+    size_t targetRegionsNb = 0;
+    size_t seedRegionLabel = 0;
+    size_t seedRegionsNb = 0;
+    string connTextureFileName;
+    string connMatrixFileName = "";
     bool verbose = false;
     bool normalize = false;
-    std::string connectivityTextureType = "oneSeedRegion_to_targets";
-    std::string connLineTargetsDensityFileName = "";
-    std::string seedRegionVertexIndexFileName = "";
-    std::string connMatrixFormat = "binar_sparse";
-    std::string inConnMatrixFileName = "";
+    string connectivityTextureType = "oneSeedRegion_to_targets";
+    string connLineTargetsDensityFileName = "";
+    string inConnMatrixFileName = "";
 
-    AimsApplication app( argc, argv, "This command computes and writes connection density texture(s). There are two modes: oneSeedRegion_to_targets, seedVertex_to_targets" );
+    AimsApplication app( argc, argv, "computes and writes connection density texture(s).\n\
+    Modes supported: (1) oneSeedRegion_to_targets (2) seedVertex_to_targets" );
     app.addOption( inMeshAimsR, "-mesh", "input mesh" );
-    app.addOption( inConnMatrixFileName, "-connmatrixfile", "input conn matrix filename" );
-    app.addOption( seedRegionsTexR, "-seedregionstex", "input region texture : study a region in particular" );
-    app.addOption( connTextureFileName, "-outconntex", "output mean connectivity texture file name", true );
-    app.addOption( connMatrixFormat, "-connfmt", "input conn matrix format, .ima, binar_sparse, or ascii_sparse; default = binar_sparse", true );
-    app.addOption( seedRegionLabel, "-seedlabel", "input seed region label, 0 to calculate the mean connectivity for all the regions : connMatrix.shape = (seedRegionsNb, targetRegionsNb); = (seedRegionLabel vertex nb, targetRegionsNb) if seed region label != 0", true );
-    app.addOption( verbose, "-verbose", "show as much information as possible", true );
+    app.addOption( inConnMatrixFileName, "-connmatrixfile",
+                   "input conn matrix filename." );
+    app.addOption( seedRegionsTexR, "-seedregionstex",
+                   "input region texture : study a region in particular." );
+    app.addOption( connTextureFileName, "-outconntex",
+                   "output mean connectivity texture file name.", true );
+    app.addOption( seedRegionLabel, "-seedlabel",
+                   "input seed region label.\n\
+                   0 to calculate the mean connectivity for all the regions:\n\
+                   mat.shape = (seedRegionsNb, targetRegionsNb)\n\
+                   if seed region label != 0:\n\
+                   mat.shape = (seedRegionLabel vertex nb, targetRegionsNb)", true );
+    app.addOption( verbose, "-verbose", "for more information.", true );
     app.addOption( normalize, "-normalize", "normalize connectivity matrix", true);
-    app.addOption( connectivityTextureType, "-type", "connectivity type: oneSeedRegion_to_targets, seedVertex_to_targets, default = oneSeedRegion_to_targets", true);
-    app.addOption( targetRegionsTexR, "-targetregionstex", "target regions texture for the calculation of the global connectivity matrix", true );
-    app.addOption( connLineTargetsDensityFileName, "-outconntargets", "output connectivity targets texture file name (shape (1, targetsNb))", true );
-    app.addOption( seedRegionVertexIndexFileName, "-seedvertexindex", "seedlabel region vertex indexes file name (text format)", true );
-    app.addOption( connMatrixFileName, "-connmatrix", "output connectivity Matrix file name", true );
+    app.addOption( connectivityTextureType, "-type",
+                   "Connectivity types supported: \n\
+                   (1) oneSeedRegion_to_targets (2) seedVertex_to_targets\n\
+                   default = oneSeedRegion_to_targets", true);
+    app.addOption( targetRegionsTexR, "-targetregionstex",
+                   "target regions texture for the calculation \n\
+                   of the global connectivity matrix", true );
+    app.addOption( connLineTargetsDensityFileName, "-outconntargets",
+                   "output connectivity targets texture file name. \n\
+                   (shape (1, targetsNb))", true );
+    app.addOption( connMatrixFileName, "-connmatrix",
+                   "output connectivity Matrix file name",
+                   true );
     app.initialize();
 
-    if( connMatrixFormat != ".ima" && connMatrixFormat != "binar_sparse"
-      && connMatrixFormat != "ascii_sparse" )
-      throw runtime_error( "incorrect connfmt parameter" );
-
     //Reading inputs
-    if(verbose) std::cout << "Reading inputs :" << std::endl;
+    if(verbose) cout << "Reading inputs :" << endl;
 
     inMeshAimsR.read( inAimsMesh );
-    if(verbose) std::cout << "cortex mesh vertex nb:" << int(inAimsMesh.vertex().size()) << std::endl;
+    if(verbose) cout << "cortex mesh vertex nb:"
+      << int(inAimsMesh.vertex().size()) << endl;
     
-    if(verbose) std::cout << "reading seedRegionsTex: " << flush;
+    if(verbose) cout << "reading seedRegionsTex: " << flush;
     seedRegionsTexR.read( seedRegionsTex );
-    if(verbose) std::cout << "Texture dim : " << seedRegionsTex[0].nItem() << std::flush;
+
+    if(verbose) cout << "Texture dim : " << seedRegionsTex[0].nItem() << flush;
     seedRegionsNb = textureMax(seedRegionsTex);
-    if(verbose) std::cout << ", seedRegionsNb:" << seedRegionsNb << std::flush;
-    if(verbose) std::cout << "...done." << std::endl;
+
+    if(verbose) cout << ", seedRegionsNb:" << seedRegionsNb << flush;
+    if(verbose) cout << "...done." << endl;
     
-    std::vector< std::size_t > * labels_ptr = labelsHistogram(seedRegionsTex, seedRegionsNb, verbose);
-    std::vector< std::size_t > & labels = *labels_ptr;
+    vector< size_t > * labels_ptr = labelsHistogram( seedRegionsTex, seedRegionsNb, verbose );
+    vector< size_t > & labels = *labels_ptr;
     
     Matrix inConnMatrixImage;
-    constel::Connectivities * connMatrixToAllMesh_ptr = 0;
+    Connectivities * connMatrixToAllMesh_ptr = 0;
     
-    std::vector<size_t> seedVertexIndex;
-    seedVertexIndex.reserve(labels[seedRegionLabel]);
-    if(verbose) std::cout << "labels[seedRegionLabel]:" << labels[seedRegionLabel] << std::endl;
+    vector<size_t> seedVertexIndex;
+    seedVertexIndex.reserve( labels[seedRegionLabel] );
     
-    
-    if (seedRegionVertexIndexFileName !="")
+    if(verbose)
+      cout << "labels[seedRegionLabel]:" << labels[seedRegionLabel] << endl;
+
+    for( size_t i = 0; i < seedRegionsTex[0].nItem(); ++i )
     {
-      std::ifstream _file(seedRegionVertexIndexFileName.c_str());
-      std::string vertex_index;
-      uint vertexIndex_count = 0;
-      while(_file >> vertex_index)
+      if( seedRegionsTex[0][i] == seedRegionLabel )
+        seedVertexIndex.push_back(i);  
+    }
+
+    aims::SparseOrDenseMatrix AllMeshConnMatrix;
+    Reader<aims::SparseOrDenseMatrix> spmreader( inConnMatrixFileName );
+    spmreader.read( AllMeshConnMatrix );
+
+    uint cortexMeshVertexNb = uint( inAimsMesh.vertex().size() );
+    connMatrixToAllMesh_ptr = 0;
+    
+    // sparse matrix formats
+    cout << "sparse format for connectivity matrix:"
+      << inConnMatrixFileName << endl;
+    cout << "connectivity matrix is read as "
+      << ( AllMeshConnMatrix.isDense() ? "dense" : "sparse" )
+      << " matrix" << endl;
+    cout << "Rows: " << size_t( AllMeshConnMatrix.getSize1() )
+      <<  ", Columns: " << size_t( AllMeshConnMatrix.getSize2() ) << endl;
+    connMatrixToAllMesh_ptr
+      = new constel::Connectivities(labels[seedRegionLabel],
+        til::SparseVector<double>(AllMeshConnMatrix.getSize2()));
+    Connectivities & connMatrixToAllMesh = *connMatrixToAllMesh_ptr;
+
+    if( AllMeshConnMatrix.getSize1() == labels[seedRegionLabel] )
+    {
+      if (verbose)
+        cout << "input connectivity matrix correspond to seed region"
+          << endl;
+      for (size_t i = 0; i < labels[seedRegionLabel]; ++i)
       {
-        uint vertexIndex_uint = strtoul(vertex_index.c_str(), NULL, 0);
-        seedVertexIndex.push_back(vertexIndex_uint);
-//         if(verbose) std::cout << vertex_index << std::endl;
+/*        connMatrixToAllMesh[i]
+          = AllMeshConnMatrix.getSparseRow
+            <til::SparseVector<double> >((int32_t)i);*/
       }
     }
     else
     {
-      for(size_t i = 0; i < seedRegionsTex[0].nItem(); ++i)
-      {
-        if (seedRegionsTex[0][i]==seedRegionLabel)
-        {
-          seedVertexIndex.push_back(i);
-        }
-      }
-    }
-    std::cout << "seedVertexIndex.size():" << seedVertexIndex.size() << std::endl;
-    if (seedVertexIndex.size()!=labels[seedRegionLabel])
-    {
-      throw runtime_error("seedVertexIndex.size()!=labels[seedRegionLabel]");
+      if (verbose) cout << "input connectivity matrix correspond to all the mesh"
+          << endl;
+      cout << "this mode is not supported. Please use a region connectivity matrix.\n";
+      return EXIT_FAILURE;
     }
 
-    uint cortexMeshVertexNb = uint(inAimsMesh.vertex().size());
-
-    if( connMatrixFormat == ".ima" )
+    if( targetRegionsTexR.fileName() != "" )
     {
-      Reader< Matrix > inConnMatrixR( inConnMatrixFileName );
-      std::cout << "connMatrixFormat " << connMatrixFormat << std::endl;
-      inConnMatrixR.read( inConnMatrixImage );
-      if(verbose) std::cout << "conn matrix im dim:" << inConnMatrixImage.dimX() <<", " << inConnMatrixImage.dimY() << ", " << inConnMatrixImage.dimZ() << std::endl;
-      if (inConnMatrixImage.dimX() != labels[seedRegionLabel] or inConnMatrixImage.dimY() != cortexMeshVertexNb)
-      {
-        throw runtime_error("inConnMatrixImage.dimX() != labels[seedRegionLabel] or inConnMatrixImage.dimY() != cortexMeshVertexNb");
-      }
-      connMatrixToAllMesh_ptr = new constel::Connectivities(inConnMatrixImage.dimX(), til::SparseVector<double>(inConnMatrixImage.dimY()));
-      Connectivities & connMatrixToAllMesh = *connMatrixToAllMesh_ptr;
-      for(int x=0;x<inConnMatrixImage.dimX();++x)
-      {
-        for(int y=0;y<inConnMatrixImage.dimY();++y)
-        {
-          double val = double(inConnMatrixImage(x,y,0,0));
-          if (val!=0)
-          {
-            connMatrixToAllMesh[x][y] = val;
-          }
-        }
-      }
-    }
-    else
-    {
-      // sparse matrix formats
-      std::cout << "sparse format for connectivity matrix:"
-        << inConnMatrixFileName << std::endl;
-      std::cout << "seedRegionVertexIndexFileName:"
-        << seedRegionVertexIndexFileName << std::endl;
-      aims::SparseMatrix AllMeshConnMatrix;
-      if (connMatrixFormat == "binar_sparse")
-      {
-        AllMeshConnMatrix.read(inConnMatrixFileName);
-      }
-      else if (connMatrixFormat == "ascii_sparse")
-      {
-        AllMeshConnMatrix.read(inConnMatrixFileName, "ascii");
-      }
-
-      if(verbose) std::cout << "size1: " << size_t(AllMeshConnMatrix.getSize1()) <<  ", size2: " << size_t(AllMeshConnMatrix.getSize2()) << std::endl;
-      connMatrixToAllMesh_ptr = new constel::Connectivities(labels[seedRegionLabel], til::SparseVector<double>(AllMeshConnMatrix.getSize2()));
-      Connectivities & connMatrixToAllMesh = *connMatrixToAllMesh_ptr;
-      if(AllMeshConnMatrix.getSize1() == labels[seedRegionLabel])
-      {
-        if (verbose)  std::cout << "input connectivity matrix correspond to seed region" << std::endl;
-        for (size_t i = 0; i < labels[seedRegionLabel]; ++i)
-        {
-          connMatrixToAllMesh[i] = AllMeshConnMatrix.getSparseRow
-            <til::SparseVector<double> >((int32_t)i);
-        }
-
-      }
-      else
-      {
-        if (verbose)  std::cout << "input connectivity matrix correspond to all the mesh" << std::endl;
-        for (size_t i = 0; i < seedVertexIndex.size(); ++i)
-        {
-//           std::cout << "i:" << i << std::endl;
-          connMatrixToAllMesh[i] = AllMeshConnMatrix.getSparseRow
-            <til::SparseVector<double> >((int32_t)seedVertexIndex[i]);
-        }
-      }
-    }
-
-    if(targetRegionsTexR.fileName()!="")
-    {
-      if(verbose) std::cout << "reading targetRegionsTex..." << std::flush;
+      if(verbose) cout << "reading targetRegionsTex..." << flush;
       targetRegionsTexR.read( targetRegionsTex );
-      if(verbose) std::cout << "Texture dim : " << targetRegionsTex[0].nItem() << std::flush;
-      targetRegionsNb = textureMax(targetRegionsTex);
-      if(verbose) std::cout << ", targetRegionsNb: " << targetRegionsNb << std::flush;
-      if(verbose) std::cout << "...done." << std::endl;
+
+      if(verbose) cout << "Texture dim : " << targetRegionsTex[0].nItem() << flush;
+
+      targetRegionsNb = textureMax( targetRegionsTex );
+      if(verbose) cout << ", targetRegionsNb: " << targetRegionsNb << flush;
+      if(verbose) cout << "...done." << endl;
     }
     else
     {
       throw runtime_error( "no or wrong targetRegionsTex input...!" );
     }
 
-    if (verbose)
-    {
-      std::cout << "seedRegionLabel : " << seedRegionLabel << std::endl;
-    }
-    if(verbose) std::cout << "Reading inputs done." << std::endl << std::endl;
+    if(verbose) cout << "Label name: " << seedRegionLabel << endl;
+    if(verbose) cout << "Reading inputs done." << endl << endl;
     
+//     /*free the matrix*/
+//     if( connMatrixToAllMesh_ptr )
+//       AllMeshConnMatrix = aims::SparseOrDenseMatrix();
     
-    if (connectivityTextureType == "oneSeedRegion_to_targets" or connectivityTextureType == "seedVertex_to_targets")
+    if( connectivityTextureType == "oneSeedRegion_to_targets"
+      or connectivityTextureType == "seedVertex_to_targets" )
     {
       /*
       Computing densityTexture:
       */
-      if(connMatrixToAllMesh_ptr)
-      {
-        std::cout << "exist:" << std::endl;
-      }
-      else
-      {
-        std::cout << "not exist !" << std::endl;
-      }
+//       if(connMatrixToAllMesh_ptr)
+//       if( AllMeshConnMatrix )
+//         cout << "exist:" << endl;
+//       else
+//         cout << "not exist !" << endl;
 //       constel::Connectivities & connMatrixToAllMesh = *connMatrixToAllMesh_ptr;
 //       for (uint i = 0; i < cortexMeshVertexNb; ++i)
 //       {
@@ -228,84 +193,97 @@ int main( int argc, const char** argv )
       
       
       vector<size_t> * seedVertexIndex_ptr = &seedVertexIndex;
-      Connectivities * extractAndRegroupConnMatrix_ptr = connMatrixSeedMesh_to_targetMeshTargets_regroup(connMatrixToAllMesh_ptr, targetRegionsTex, targetRegionsNb);
+//       Connectivities * extractAndRegroupConnMatrix_ptr = connMatrixSeedMesh_to_targetMeshTargets_regroup( connMatrixToAllMesh_ptr, targetRegionsTex, targetRegionsNb);
+      Connectivities * extractAndRegroupConnMatrix_ptr = connMatrixSeedMesh_to_targetMeshTargets_regroup( AllMeshConnMatrix, targetRegionsTex, targetRegionsNb );
+
+      AllMeshConnMatrix = SparseOrDenseMatrix();
+      SparseOrDenseMatrix *mat2 = connectivitiesToSparseOrDenseMatrix( *extractAndRegroupConnMatrix_ptr );
+      AllMeshConnMatrix = *mat2;
+      delete mat2;
+      delete extractAndRegroupConnMatrix_ptr;
+      cout << "after connMatrixSeedMesh_to_targetMeshTargets_regroup, matrix size: " << AllMeshConnMatrix.getSize1() << " x " << AllMeshConnMatrix.getSize2() << endl;
       
       if (connectivityTextureType == "oneSeedRegion_to_targets")
       {
-        constel::Connectivity * totalConnSeedRegionToTargets_ptr = connMatrixSumRows(extractAndRegroupConnMatrix_ptr);
-        
+        vector<double> * totalConnSeedRegionToTargets_ptr = connMatrixSumRows( AllMeshConnMatrix );
+        double sum_i = 0;
         if (normalize)
         {
-          constel::Connectivity & line_i = *totalConnSeedRegionToTargets_ptr;
-          if (line_i.is_null()!=1)
+          vector<double> & line_i = *totalConnSeedRegionToTargets_ptr;
+          unsigned n = line_i.size();
+          for( int i = 0; i<n ; ++i )
           {
-            constel::Connectivity sparseVectorIdentity = constel::Connectivity(line_i.size());
-            for(std::size_t j = 0; j < line_i.size(); ++j)
-            {
-              sparseVectorIdentity[j]=1.;
-            }
-            double sum_i = til::dot<double>(sparseVectorIdentity, line_i);
-            if(sum_i!=0)
-            {
-              for(std::size_t j = 0; j < line_i.size(); ++j)
-              {
-                double connval = line_i[j];
-                line_i[j] = (1/sum_i)*connval;
-              }
-            }
+            sum_i += line_i[i];
+          }
+          for( size_t j = 0; j<n; ++j )
+          {
+            line_i[j] /= sum_i;
           }
         }
-        constel::Connectivity & totalConnSeedRegionToTargets = *totalConnSeedRegionToTargets_ptr;
-        TimeTexture<float> * outputTargetDensityTex_ptr = oneTargetDensityTargetsRegroupTexture(totalConnSeedRegionToTargets_ptr, targetRegionsTex, 0);
+        
+        vector<double>  & totalConnSeedRegionToTargets = *totalConnSeedRegionToTargets_ptr;
+        TimeTexture<float> * outputTargetDensityTex_ptr = oneTargetDensityTargetsRegroupTexture( totalConnSeedRegionToTargets_ptr, targetRegionsTex, 0 );
         TimeTexture<float> & outputTargetDensityTex = *outputTargetDensityTex_ptr;
-        if (verbose) std::cout << "Writing Density texture, shape (1, meshVertexNb):" << connTextureFileName << std::endl;
+       
+        if(verbose)
+          cout << "Writing Density texture, shape (1, meshVertexNb):" << connTextureFileName << endl;
+
         Writer<TimeTexture<float> > wt( connTextureFileName );
         wt.write( outputTargetDensityTex );
-        if (connLineTargetsDensityFileName!="")
+
+        if( connLineTargetsDensityFileName != "" )
         {
           TimeTexture<float> targetsDensity_tex;
-          targetsDensity_tex[0].reserve(targetRegionsNb);
-          for (std::size_t t = 0; t < targetRegionsNb; ++t)
+          targetsDensity_tex[0].reserve( targetRegionsNb );
+          for ( size_t t = 0; t < targetRegionsNb; ++t )
           {
-            targetsDensity_tex[0].push_back(totalConnSeedRegionToTargets[t]);
+            targetsDensity_tex[0].push_back( totalConnSeedRegionToTargets[t] );
           }
           Writer<TimeTexture<float> > wt2( connLineTargetsDensityFileName );
           wt2.write( targetsDensity_tex );
-          if(verbose) std::cout << "targets density connectivity texture written...! " << std::endl;
+          if(verbose)
+            cout << "targets density connectivity texture written...! " << endl;
         }
         else
         {
-          if(verbose) std::cout << "Don't write connectivity of targets texture, shape (1, targetsNb)." << std::endl;
+          if(verbose)
+            cout << "Don't write connectivity of targets texture, shape (1, targetsNb)." << endl;
         }
-        if (connMatrixFileName!= "")
+        if ( connMatrixFileName != "" )
         {
-          writeAimsFmtConnMatrix(extractAndRegroupConnMatrix_ptr,connMatrixFileName);
+          Writer<SparseOrDenseMatrix> w( connMatrixFileName );
+          w.write( AllMeshConnMatrix );
         }
         else
         {
-          if(verbose) std::cout << "Don't write connectivity matrix image." << std::endl;
+          if(verbose)
+            cout << "Don't write connectivity matrix image." << endl;
         }
+        
         delete totalConnSeedRegionToTargets_ptr;
         delete outputTargetDensityTex_ptr;
         
       }
       else // (connectivityTextureType == "seedVertex_to_targets")
       {
-        if (normalize) extractAndRegroupConnMatrix_ptr = connMatrixNormalize(extractAndRegroupConnMatrix_ptr);
-        std::cout << "seedVertex_to_targets connMatrix computed." << std::endl;
-        if (connMatrixFileName!= "")
+        // TODO connMatrixNormalize( SparseOrDenseMatrix )
+        if( normalize )
+          connMatrixNormalize( AllMeshConnMatrix );
+        cout << "seedVertex_to_targets connMatrix computed." << endl;
+        if( connMatrixFileName != "" )
         {
-          writeAimsFmtConnMatrix(extractAndRegroupConnMatrix_ptr,connMatrixFileName);
+          Writer<SparseOrDenseMatrix> w( connMatrixFileName );
+          w.write( AllMeshConnMatrix );
         }
         else
-        {
-          if(verbose) std::cout << "Don't write connectivity matrix image." << std::endl;
-        }
+          cout << "Don't write connectivity matrix image." << endl;
       }
-      delete extractAndRegroupConnMatrix_ptr;
+      
       delete labels_ptr;
     }
+    
     delete connMatrixToAllMesh_ptr;
+    
     return EXIT_SUCCESS;
   }
   catch( carto::user_interruption & )
@@ -318,4 +296,3 @@ int main( int argc, const char** argv )
   }
   return EXIT_FAILURE;
 }
-

@@ -201,6 +201,7 @@ void makeConnectivityTexture_seedConnectionDensity(
 
 void makeConnectivityTexture_seedMeanConnectivityProfile(
   Connectivities* connMatrixToAllMesh_ptr,
+//                                        const SparseOrDenseMatrix & connMatrixToAllMesh                  
   const string & connTextureFileName,
   const TimeTexture<short> & seedRegionsTex, size_t seedRegionLabel,
   size_t seedRegionsNb, double distthresh, double wthresh, bool logOption,
@@ -225,26 +226,21 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
 
   vector<size_t> * seedVertexIndex;
   std::size_t seedRegionLabelVertexNb = labels[seedRegionLabel];
-  Connectivities * extractConnMatrix_ptr = connMatrixReducedFromRegion(connMatrixToAllMesh_ptr, seedRegionsTex, seedRegionLabel, seedRegionLabelVertexNb, & seedVertexIndex);
+  Connectivities * extractConnMatrix_ptr = connMatrixReducedFromRegion( connMatrixToAllMesh_ptr, seedRegionsTex, seedRegionLabel, seedRegionLabelVertexNb, & seedVertexIndex );
   if( distthresh != 0 )
     sparseMatrixDiffusionSmoothing( extractConnMatrix_ptr, inAimsMesh,
       wthresh, distthresh, seedRegionsTex, seedRegionLabel );
 
   Connectivities & extractConnMatrix = *extractConnMatrix_ptr;
-  if (normalize)
-    extractConnMatrix_ptr = connMatrixNormalize(extractConnMatrix_ptr);
-  if (connMatrixFileName != "" )
+//   AllMeshConnMatrix = SparseOrDenseMatrix();
+  SparseOrDenseMatrix *mat = connectivitiesToSparseOrDenseMatrix( *extractConnMatrix_ptr );
+//   AllMeshConnMatrix = *mat;
+  if(normalize)
+    connMatrixNormalize( *mat );
+  if(connMatrixFileName != "" )
   {
-    if (connMatrixFormat == "binar_sparse" or connMatrixFormat == "ascii")
-    {
-      if(verbose) std::cout << "Writing seed region connMatrix ima:" << connMatrixFileName << std::endl;
-      writeConnectivities( *extractConnMatrix_ptr, connMatrixFileName,
-                           connMatrixFormat=="ascii" );
-    }
-    else//saving connectivity matrix in .ima (aims fmt)
-    {
-      writeAimsFmtConnMatrix(extractConnMatrix_ptr,connMatrixFileName);
-    }
+    Writer<SparseOrDenseMatrix> w( connMatrixFileName );
+    w.write( *mat );
     if (logOption and logFile != "")
     {
       if (verbose) std::cout << "Computing ln(1+matrix) and storing resulting file in " << connMatrixFileName << "..." << std::endl;
@@ -329,17 +325,20 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
   delete extractConnMatrix_ptr;
   delete seedVertexIndex;
   int connTextureToTargetMeshesFileNames_size = connTextureToTargetMeshesFileNames.size();
-  if (connTextureToTargetMeshesFileNames_size == meshes_nb )
+  if( connTextureToTargetMeshesFileNames_size == meshes_nb )
   {
-    for (int meshLabel = 0; meshLabel < meshes_nb; ++meshLabel)
+    for( int meshLabel = 0; meshLabel < meshes_nb; ++meshLabel )
     {
-      if (connTextureToTargetMeshesFileNames[meshLabel] != "" )
+      if( connTextureToTargetMeshesFileNames[meshLabel] != "" )
       {
         vector<size_t> * seedVertexIndex;
-        Connectivities * extractConnMatrix_ptr = connMatrixRegionExtract(connMatrixCortexToMesh_ptr_vector[meshLabel], seedRegionsTex, seedRegionLabel, seedRegionLabelVertexNb, & seedVertexIndex );
-        if (normalize) extractConnMatrix_ptr = connMatrixNormalize(extractConnMatrix_ptr);
-        TimeTexture<float> outputTargetDensityTex = meshDensityTexture(extractConnMatrix_ptr);
-        if (verbose) std::cout << "Writing mean connectivity profile texture:" << connTextureToTargetMeshesFileNames[meshLabel] << std::endl;
+        SparseOrDenseMatrix *mat = connectivitiesToSparseOrDenseMatrix( *connMatrixCortexToMesh_ptr_vector[meshLabel] );
+        Connectivities * extractConnMatrix_ptr = connMatrixRegionExtract( *mat, seedRegionsTex, seedRegionLabel, seedRegionLabelVertexNb, & seedVertexIndex );
+        SparseOrDenseMatrix *mat2 = connectivitiesToSparseOrDenseMatrix( *extractConnMatrix_ptr );
+        if(normalize)
+          connMatrixNormalize( *mat2 );
+        TimeTexture<float> outputTargetDensityTex = meshDensityTexture( *mat2 );
+        if(verbose) std::cout << "Writing mean connectivity profile texture:" << connTextureToTargetMeshesFileNames[meshLabel] << std::endl;
         til::aimswrite(outputTargetDensityTex, connTextureToTargetMeshesFileNames[meshLabel]);
         delete extractConnMatrix_ptr;
         delete seedVertexIndex;
@@ -380,7 +379,7 @@ int main( int argc, char* argv[] )
     float meshClosestPoint_maxDistance = 5.0;//in mm
     std::string connectivityTextureType = "seed_connection_density";
     std::string seedRegionVertexIndexFileName;
-    std::string  seedRegionVertexIndexType = "text";
+    std::string  seedRegionVertexIndexType = "";
     uint length_min = 0;
     uint length_max = 0;
     bool logOption = false;
@@ -388,31 +387,57 @@ int main( int argc, char* argv[] )
     Reader<AimsData<short> > roisMaskR;
     AimsData<short> roisMask;
     
-    AimsApplication app( argc, aims_const_hack(argv), "This command computes and writes connection density texture(s). There are two modes: mesh_to_mesh, oneSeedRegion_to_mesh" );
+    AimsApplication app( argc, aims_const_hack(argv),
+                         "computes and writes connection density texture(s).\n\
+                         Modes supported: (1) mesh_to_mesh (2) oneSeedRegion_to_mesh" );
     app.addOption( bundleFilename, "-bundles", "input bundles" );
     app.addOption( inMeshAimsR, "-mesh", "input mesh" );
-    app.addOptionSeries( inTargetMeshesAimsR_files, "-targets", "input target meshes, (subcortical nucleus meshes for example)");
-    app.addOption( connTextureFileName, "-outconntex", "output mean connectivity texture file name" );
-    app.addOptionSeries( connTextureToTargetMeshesFileNames, "-outtargetstex", "output mean connectivity texture file name (to targets meshes)");
+    app.addOptionSeries( inTargetMeshesAimsR_files, "-targets",
+                         "input target meshes" );
+    app.addOption( connTextureFileName, "-outconntex",
+                   "output mean connectivity texture file name" );
+    app.addOptionSeries( connTextureToTargetMeshesFileNames, "-outtargetstex",
+                         "output mean connectivity texture file name\n\
+                         (to targets meshes)");
     app.addOption( motionName, "-trs", "transform from t2 to anat" );
-    app.addOption( connMatrixComputingType, "-matrixcompute", "type of computing the connectivity matrix: meshclosestpoint or meshintersectionpoint, or meshintersectionpointfast, default = meshclosestpoint", true );
-    app.addOption( distthresh, "-dist", "dist for the neighborhood around each vertex for smoothing the connectivity matrix, default = 5.0", true );
-    app.addOption( wthresh, "-wthresh", "weight threshold for thresholding the connectivity matrix, default = 1.0", true );
-    app.addOption( meshClosestPoint_maxDistance, "-distmax", "mesh closest point minimum distance, default = 25.", true );
-    app.addOption( seedRegionsTexR, "-seedregionstex", "input region texture : if you want to study a region in particular, default = all the mesh", true );
-    app.addOption( seedRegionLabel, "-seedlabel", "input seed region label, 0 to calculate the mean connectivity for all the regions : connMatrix.shape = (seedRegionsNb, targetRegionsNb); = (seedRegionLabel vertex nb, targetRegionsNb) if seed region label != 0", true );
+    app.addOption( connMatrixComputingType, "-matrixcompute",
+                   "type of computing the connectivity matrix supported:\n\
+                   (1) meshclosestpoint (2) meshintersectionpoint (3) meshintersectionpointfast\n\
+                   default = meshclosestpoint", true );
+    app.addOption( distthresh, "-dist",
+                   "dist for the neighborhood around each vertex for smoothing the connectivity matrix\n\
+                   default = 5.0", true );
+    app.addOption( wthresh, "-wthresh",
+                   "weight threshold for thresholding the connectivity matrix, default = 1.0", true );
+    app.addOption( meshClosestPoint_maxDistance, "-distmax",
+                   "mesh closest point minimum distance, default = 25.", true );
+    app.addOption( seedRegionsTexR, "-seedregionstex",
+                   "input region texture. default = all the mesh", true );
+    app.addOption( seedRegionLabel, "-seedlabel",
+                   "input seed region label. 0 to calculate the mean connectivity for all the regions : connMatrix.shape = (seedRegionsNb, targetRegionsNb); = (seedRegionLabel vertex nb, targetRegionsNb) if seed region label != 0", true );
     app.addOption( verbose, "-verbose", "show as much information as possible", true );
     app.addOption( normalize, "-normalize", "normalize connectivity matrix", true);
-    app.addOption( connectivityTextureType, "-type", "connectivity type: seed_mean_connectivity_profile, default = seed_connection_density");
-    app.addOption( connMatrixFormat, "-connfmt", "input conn matrix format, .ima or binar_sparse; default = binar_sparse",true );
-    app.addOption( connMatrixFileName, "-connmatrix", "connectivity matrix filename of the seed region, size = (seedRegionVertexNb,meshVertexNb)",true);
-    app.addOption( seedRegionVertexIndexType, "-vertexindextype", "format for seedRegionVertexIndexFile: =texture(.tex) or =text(.txt) or =both(.tex and .txt)", true );
-    app.addOption( seedRegionVertexIndexFileName, "-seedvertexindex", "seedlabel region vertex indexes file name", true );
+    app.addOption( connectivityTextureType, "-type",
+                   "connectivity type: seed_mean_connectivity_profile, default = seed_connection_density");
+    app.addOption( connMatrixFormat, "-connfmt",
+                   "input conn matrix format, .ima or binar_sparse; default = binar_sparse",true );
+    app.addOption( connMatrixFileName, "-connmatrix",
+                   "connectivity matrix filename of the seed region, \n\
+                   size = (seedRegionVertexNb,meshVertexNb)",true);
+    app.addOption( seedRegionVertexIndexType, "-vertexindextype",
+                   "format for seedRegionVertexIndexFile:\n\
+                   =texture(.tex) or =text(.txt) or =both(.tex and .txt), default = "" ", true );
+    app.addOption( seedRegionVertexIndexFileName, "-seedvertexindex",
+                   "seedlabel region vertex indexes file name", true );
     app.addOption( length_min, "-lmin", "length min for fibers", true);
     app.addOption( length_max, "-lmax", "length max for fibers", true);
-    app.addOption( logOption, "-log", "log option, if = True, applies the ln(1 + x) to the connectivity matrix, default = False", true);
-    app.addOption( logFile, "-logfile", "log filename, in case of logOption = 1, store log matrix in another file. by default, store log matrix in connMatrixFileName", true);
-    app.addOption( roisMaskR, "-roimask", "input region roi mask: ribbon around the mesh, in the case of  connMatrixComputingType = meshintersectionpointfast", true );
+    app.addOption( logOption, "-log", "log option, if = True,\n\
+                   applies the ln(1 + x) to the connectivity matrix, default = False", true);
+    app.addOption( logFile, "-logfile",
+                   "log filename, in case of logOption = 1, store log matrix in another file.\n\
+                   by default, store log matrix in connMatrixFileName", true);
+    app.addOption( roisMaskR, "-roimask",
+                   "input region roi mask: ribbon around the mesh, in the case of  connMatrixComputingType = meshintersectionpointfast", true );
     app.initialize();
 
     //Reading inputs
