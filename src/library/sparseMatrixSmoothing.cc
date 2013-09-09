@@ -1,8 +1,14 @@
+
+// to enable shallow_array_adaptor in boost
+#define BOOST_UBLAS_SHALLOW_ARRAY_ADAPTOR
+
 #include <constellation/sparseMatrixSmoothing.h>
 #include <constellation/tildefs.h>
 #include <constellation/connConversion.h>
 #include <aims/mesh/curv.h>
+#include <aims/sparsematrix/sparseordensematrix.h>
 #include <cathier/triangle_mesh_geodesic_map.h>
+#include <cartobase/smart/rcptrtrick.h>
 #include <boost/numeric/ublas/matrix.hpp> // zero_matrix is needed in operation
 #include <boost/numeric/ublas/operation.hpp>
 #include <boost/numeric/ublas/operation_sparse.hpp>
@@ -53,32 +59,38 @@ namespace
   class MatrixProxy
   {
   public:
-    typedef typename MatrixTraits<Matrix>::iterator iterator;
-    typedef typename MatrixTraits<Matrix>::columniterator columniterator;
+//     typedef typename MatrixTraits<Matrix>::iterator iterator;
+//     typedef typename MatrixTraits<Matrix>::columniterator columniterator;
+    typedef boost::numeric::ublas::shallow_array_adaptor<double> dstorage;
+    typedef boost::numeric::ublas::matrix<
+      double, boost::numeric::ublas::row_major, dstorage > boost_matrix;
 
-    MatrixProxy( Matrix & matrix );
+    MatrixProxy( rc_ptr<Matrix> matrix );
     size_t nlines() const;
     size_t ncols() const;
-    iterator begin();
-    iterator end();
-    static size_t column( const columniterator & );
-    static double & value( const columniterator & );
-    static columniterator colbegin( const iterator & );
-    static columniterator colend( const iterator & );
-    void assign( size_t line, size_t col, double value, iterator & it );
-    SparseMatrix* toSparseMatrix();
-    void fromSparseMatrix( SparseMatrix *matrix );
-    void fromSparseMatrix( boost_sparse_matrix &matrix );
-    void deleteSparseMatrix( SparseMatrix* matrix );
+//     iterator begin();
+//     iterator end();
+//     static size_t column( const columniterator & );
+//     static double & value( const columniterator & );
+//     static columniterator colbegin( const iterator & );
+//     static columniterator colend( const iterator & );
+//     void assign( size_t line, size_t col, double value, iterator & it );
+    rc_ptr<SparseMatrix> toSparseMatrix();
+    SparseOrDenseMatrix::DenseMatrixType toDenseMatrix();
+    void fromMatrix( rc_ptr<SparseMatrix> matrix );
+    void fromMatrix( SparseOrDenseMatrix::DenseMatrixType matrix );
+    void fromMatrix( boost_sparse_matrix &matrix );
+    void fromMatrix( boost_matrix &matrix );
+//     void deleteSparseMatrix( SparseMatrix* matrix );
 
   private:
-    Matrix & _matrix;
+    rc_ptr<Matrix> _matrix;
   };
 
 
   template <typename Matrix>
   inline
-  MatrixProxy<Matrix>::MatrixProxy( Matrix & matrix )
+  MatrixProxy<Matrix>::MatrixProxy( rc_ptr<Matrix> matrix )
     : _matrix( matrix )
   {
   }
@@ -89,7 +101,7 @@ namespace
   inline
   size_t MatrixProxy<SparseMatrix>::nlines() const
   {
-    return _matrix.getSize1();
+    return _matrix->getSize1();
   }
 
 
@@ -97,10 +109,10 @@ namespace
   inline
   size_t MatrixProxy<SparseMatrix>::ncols() const
   {
-    return _matrix.getSize2();
+    return _matrix->getSize2();
   }
 
-
+/*
   template <>
   inline
   MatrixProxy<SparseMatrix>::iterator MatrixProxy<SparseMatrix>::begin()
@@ -162,47 +174,161 @@ namespace
   {
     _matrix( line, col ) = value;
   }
-
+*/
 
   template <>
   inline
-  SparseMatrix* MatrixProxy<SparseMatrix>::toSparseMatrix()
+  rc_ptr<SparseMatrix> MatrixProxy<SparseMatrix>::toSparseMatrix()
   {
-    return &_matrix;
+    return _matrix;
   }
 
 
   template <>
   inline
-  void MatrixProxy<SparseMatrix>::fromSparseMatrix( SparseMatrix *matrix )
+  SparseOrDenseMatrix::DenseMatrixType
+  MatrixProxy<SparseMatrix>::toDenseMatrix()
   {
-    if( matrix != &_matrix )
+    SparseOrDenseMatrix sd;
+    sd.setMatrix( _matrix );
+    return sd.asDense();
+  }
+
+
+  template <>
+  inline
+  void MatrixProxy<SparseMatrix>::fromMatrix( rc_ptr<SparseMatrix> matrix )
+  {
+    _matrix = matrix;
+  }
+
+
+  template <>
+  inline
+  void MatrixProxy<SparseMatrix>::fromMatrix(
+    SparseOrDenseMatrix::DenseMatrixType matrix )
+  {
+    SparseOrDenseMatrix sd;
+    sd.setMatrix( matrix );
+    _matrix = sd.asSparse();
+  }
+
+
+  template <>
+  inline
+  void MatrixProxy<SparseMatrix>::fromMatrix( boost_sparse_matrix &matrix )
+  {
+    if( &matrix != &_matrix->boostMatrix() )
     {
-      _matrix = *matrix;
-      delete matrix; // Note the deletion
+      _matrix->boostMatrix() = matrix;
     }
   }
 
 
   template <>
   inline
-  void MatrixProxy<SparseMatrix>::fromSparseMatrix(
+  void MatrixProxy<SparseMatrix>::fromMatrix( boost_matrix &matrix )
+  {
+    _matrix->boostMatrix() = matrix;
+  }
+
+
+//   template <>
+//   inline
+//   void MatrixProxy<SparseMatrix>::deleteSparseMatrix( SparseMatrix* matrix )
+//   {
+//     if( matrix != &_matrix )
+//       delete matrix;
+//   }
+
+  // SparseOrDenseMatrix
+
+  template <>
+  inline
+  size_t MatrixProxy<SparseOrDenseMatrix>::nlines() const
+  {
+    return _matrix->getSize1();
+  }
+
+
+  template <>
+  inline
+  size_t MatrixProxy<SparseOrDenseMatrix>::ncols() const
+  {
+    return _matrix->getSize2();
+  }
+
+
+  template <>
+  inline
+  rc_ptr<SparseMatrix> MatrixProxy<SparseOrDenseMatrix>::toSparseMatrix()
+  {
+    return _matrix->asSparse();
+  }
+
+
+  template <>
+  inline
+  SparseOrDenseMatrix::DenseMatrixType
+  MatrixProxy<SparseOrDenseMatrix>::toDenseMatrix()
+  {
+    return _matrix->asDense();
+  }
+
+
+  template <>
+  inline
+  void MatrixProxy<SparseOrDenseMatrix>::fromMatrix(
+    rc_ptr<SparseMatrix> matrix )
+  {
+    _matrix->setMatrix( matrix );
+  }
+
+
+  template <>
+  inline
+  void MatrixProxy<SparseOrDenseMatrix>::fromMatrix(
+    SparseOrDenseMatrix::DenseMatrixType matrix )
+  {
+    _matrix->setMatrix( matrix );
+  }
+
+
+  template <>
+  inline
+  void MatrixProxy<SparseOrDenseMatrix>::fromMatrix(
     boost_sparse_matrix &matrix )
   {
-    if( &matrix != &_matrix.boostMatrix() )
-    {
-      _matrix.boostMatrix() = matrix;
-    }
+    if( !_matrix->isDense()
+        && &_matrix->sparseMatrix()->boostMatrix() == &matrix )
+      return;
+    _matrix->setMatrix( rc_ptr<SparseMatrix>( new SparseMatrix ) );
+    _matrix->sparseMatrix()->boostMatrix() = matrix;
   }
 
 
   template <>
   inline
-  void MatrixProxy<SparseMatrix>::deleteSparseMatrix( SparseMatrix* matrix )
+  void MatrixProxy<SparseOrDenseMatrix>::fromMatrix(
+    boost_matrix &matrix )
   {
-    if( matrix != &_matrix )
-      delete matrix;
+    if( _matrix->isDense()
+        && &_matrix->denseMatrix()->at( 0 ) == &matrix( 0, 0 ) )
+      return;
+    if( !_matrix->isDense() )
+      _matrix->reallocate( matrix.size1(), matrix.size2() );
+    memcpy( &_matrix->denseMatrix()->at( 0 ), &matrix,
+            matrix.size1() * matrix.size2() * sizeof( double ) );
   }
+
+
+//   template <>
+//   inline
+//   void MatrixProxy<SparseOrDenseMatrix>::deleteSparseMatrix( SparseMatrix* matrix )
+//   {
+//     if( matrix != &_matrix )
+//       delete matrix;
+//   }
 
   // Connectivities
 
@@ -211,7 +337,7 @@ namespace
   inline
   size_t MatrixProxy<Connectivities>::nlines() const
   {
-    return _matrix.size();
+    return _matrix->size();
   }
 
 
@@ -219,10 +345,10 @@ namespace
   inline
   size_t MatrixProxy<Connectivities>::ncols() const
   {
-    return _matrix.begin()->size();
+    return _matrix->begin()->size();
   }
 
-
+/*
   template <>
   inline
   MatrixProxy<Connectivities>::iterator MatrixProxy<Connectivities>::begin()
@@ -284,39 +410,71 @@ namespace
   {
     (*iter)[ col ] = value;
   }
-
+*/
 
   template <>
   inline
-  SparseMatrix* MatrixProxy<Connectivities>::toSparseMatrix()
+  rc_ptr<SparseMatrix> MatrixProxy<Connectivities>::toSparseMatrix()
   {
-    return connectivitiesToSparseMatrix( _matrix );
+    return rc_ptr<SparseMatrix>( connectivitiesToSparseMatrix( *_matrix ) );
   }
 
 
   template <>
   inline
-  void MatrixProxy<Connectivities>::fromSparseMatrix( SparseMatrix *matrix )
+  SparseOrDenseMatrix::DenseMatrixType
+  MatrixProxy<Connectivities>::toDenseMatrix()
   {
-    sparseMatrixToConnectivities( *matrix, _matrix );
-    delete matrix; // Note the deletion
-  }
-
-  template <>
-  inline
-  void MatrixProxy<Connectivities>::fromSparseMatrix(
-    boost_sparse_matrix &matrix )
-  {
-    sparseMatrixToConnectivities( matrix, _matrix );
+    SparseOrDenseMatrix sd;
+    sd.setMatrix( rc_ptr<SparseMatrix>( connectivitiesToSparseMatrix(
+      *_matrix ) ) );
+    return sd.asDense(); // FIXME: inefficient, double conversion
   }
 
 
   template <>
   inline
-  void MatrixProxy<Connectivities>::deleteSparseMatrix( SparseMatrix* matrix )
+  void MatrixProxy<Connectivities>::fromMatrix( rc_ptr<SparseMatrix> matrix )
   {
-    delete matrix;
+    sparseMatrixToConnectivities( *matrix, *_matrix );
   }
+
+
+  template <>
+  inline
+  void MatrixProxy<Connectivities>::fromMatrix(
+    SparseOrDenseMatrix::DenseMatrixType matrix )
+  {
+    SparseOrDenseMatrix sd;
+    sd.setMatrix( matrix ); // FIXME: inefficient, double conversion
+    sparseMatrixToConnectivities( *sd.asSparse(), *_matrix );
+  }
+
+
+  template <>
+  inline
+  void MatrixProxy<Connectivities>::fromMatrix( boost_sparse_matrix &matrix )
+  {
+    sparseMatrixToConnectivities( matrix, *_matrix );
+  }
+
+
+  template <>
+  inline
+  void MatrixProxy<Connectivities>::fromMatrix( boost_matrix &matrix )
+  {
+    // FIXME
+    cout << "MatrixProxy<Connectivities>::fromMatrix( boost_matrix &matrix ) - NOT IMPLEMENTED\n";
+//     sparseMatrixToConnectivities( matrix, *_matrix );
+  }
+
+
+//   template <>
+//   inline
+//   void MatrixProxy<Connectivities>::deleteSparseMatrix( SparseMatrix* matrix )
+//   {
+//     delete matrix;
+//   }
 
   //
 
@@ -449,14 +607,16 @@ namespace
   //
 
   template <typename Matrix>
-  void _sparseMatrixDiffusionSmoothing( Matrix & matrix,
+  void _sparseMatrixDiffusionSmoothing( rc_ptr<Matrix> matrix,
     const AimsTimeSurface<3,Void> & mesh, double wthresh, double sigma,
     const TimeTexture<int32_t> & patches, int32_t patch, bool use_matpow )
   {
     cout << "sparseMatrixDiffusionSmoothing. Weights calculation...\n";
     MatrixProxy<Matrix> matp( matrix );
     double wmax = 0.98; // arbitrary, as in AimsTextureSmoothing
-    std::map<unsigned, std::set< std::pair<unsigned,float> > >  weightLapl= AimsMeshWeightFiniteElementLaplacian( mesh.begin()->second, wmax );
+    std::map<unsigned, std::set< std::pair<unsigned,float> > >
+      weightLapl= AimsMeshWeightFiniteElementLaplacian( mesh.begin()->second,
+                                                        wmax );
 
     unsigned line, nl = matp.nlines(), col, nc = matp.ncols();
     double dur = sigma * sigma / ( 8. * ::log(2) );
@@ -497,7 +657,7 @@ namespace
       boost_sparse_matrix *submat = subMatrixLaplacian( *laplmat,
         patches.begin()->second.data(), patch );
       cout << "Submatrix done. Getting SparseMatrix\n";
-      SparseMatrix *smat = matp.toSparseMatrix();
+      rc_ptr<SparseMatrix> smat = matp.toSparseMatrix();
       cout << "Applying for columns...\n";
 
       boost_sparse_matrix colsmoothed( nl, nc );
@@ -510,12 +670,19 @@ namespace
       cout << "Applying for lines...\n";
       smat->boostMatrix().clear();
       // smooth along lines
-      sparse_prod( colsmoothed, *tlapl, smat->boostMatrix()  );
+      smat.reset( 0 ); // release smat
+      SparseOrDenseMatrix::DenseMatrixType res( matp.ncols(), matp.nlines() );
+      typename MatrixProxy<Matrix>::dstorage darray(
+        res->getSizeY() * res->getSizeX(), &res->at(0) );
+      typename MatrixProxy<Matrix>::boost_matrix
+        mdata( res->getSizeY(), res->getSizeX(), darray );
+      sparse_prod( colsmoothed, *tlapl, mdata ); //smat->boostMatrix()  );
       cout << "done.\n";
       delete tlapl;
       colsmoothed.clear();
       // back to input matrix, if needed
-      matp.fromSparseMatrix( smat );
+//       matp.fromMatrix( smat );
+      matp.fromMatrix( res );
 
       return;
     }
@@ -528,7 +695,7 @@ namespace
       LaplacianWeights* laplmat
         = makeLaplacianSmoothingCoefficients( weightLapl, 1, dt, wthresh );
 
-      cout << "Laplacian coefs done.\n";
+      cout << "Laplacian coefs done. Smoothing in iterative mode\n";
 
       /* Smoothing along lines is done using the coefs in laplmat.
         More precisely, the transposed of laplmat should be applied to the
@@ -549,12 +716,22 @@ namespace
 
       boost_sparse_matrix *submat = subMatrixLaplacian( *laplmat,
         patches.begin()->second.data(), patch );
-      cout << "Submatrix done. Getting SparseMatrix\n";
-      SparseMatrix *smat = matp.toSparseMatrix();
+      cout << "Submatrix done.\n";
+      cout << "submat: " << submat->size1() << " x " << submat->size2() << endl;
+
+      // get dense version of the input matrix
+      cout << "getting dense matrix.\n";
+      SparseOrDenseMatrix::DenseMatrixType smat = matp.toDenseMatrix();
+
       cout << "Applying for columns...\n";
 
-      boost_sparse_matrix colsmoothed( nl, nc );
-      boost_sparse_matrix *m1 = &smat->boostMatrix(), *m2 = &colsmoothed, *tm;
+      typename MatrixProxy<Matrix>::boost_matrix colsmoothed( nl, nc );
+      typename MatrixProxy<Matrix>::dstorage darray(
+        smat->getSizeY() * smat->getSizeX(), &smat->at(0) );
+      typename MatrixProxy<Matrix>::boost_matrix
+        mdata( smat->getSizeY(), smat->getSizeX(), darray );
+      typename MatrixProxy<Matrix>::boost_matrix
+        *m1 = &mdata, *m2 = &colsmoothed, *tm;
       // smooth along cols
       int i;
       for( i=0; i<niter; ++i )
@@ -589,8 +766,7 @@ namespace
       delete tlapl;
       m2->clear();
       // back to input matrix, if needed
-      matp.fromSparseMatrix( *m1 );
-      matp.deleteSparseMatrix( smat );
+      matp.fromMatrix( *m1 );
 
       return;
 
@@ -680,7 +856,7 @@ namespace
 namespace constel
 {
 
-  void sparseMatrixDiffusionSmoothing( SparseMatrix & matrix,
+  void sparseMatrixDiffusionSmoothing( rc_ptr<SparseMatrix> matrix,
     const AimsTimeSurface<3,Void> & mesh, double wthresh, double sigma,
     const TimeTexture<int32_t> & patches, int32_t patch, bool use_matpow )
   {
@@ -689,7 +865,7 @@ namespace constel
   }
 
 
-  void sparseMatrixDiffusionSmoothing( SparseMatrix & matrix,
+  void sparseMatrixDiffusionSmoothing( rc_ptr<SparseMatrix> matrix,
     const AimsTimeSurface<3,Void> & mesh, double wthresh, double sigma,
     const TimeTexture<int16_t> & patches, int32_t patch, bool use_matpow )
   {
@@ -701,28 +877,49 @@ namespace constel
   }
 
 
-  void sparseMatrixDiffusionSmoothing( Connectivities * conn_ptr,
+  void sparseMatrixDiffusionSmoothing( rc_ptr<SparseOrDenseMatrix> matrix,
     const AimsTimeSurface<3,Void> & mesh, double wthresh, double sigma,
     const TimeTexture<int32_t> & patches, int32_t patch, bool use_matpow )
   {
-    _sparseMatrixDiffusionSmoothing( *conn_ptr, mesh, wthresh, sigma,
-                                     patches, patch, use_matpow );
+    _sparseMatrixDiffusionSmoothing( matrix, mesh, wthresh, sigma, patches,
+                                     patch, use_matpow );
   }
 
 
-  void sparseMatrixDiffusionSmoothing( Connectivities * conn_ptr,
+  void sparseMatrixDiffusionSmoothing( rc_ptr<SparseOrDenseMatrix> matrix,
     const AimsTimeSurface<3,Void> & mesh, double wthresh, double sigma,
     const TimeTexture<int16_t> & patches, int32_t patch, bool use_matpow )
   {
     TimeTexture<int32_t> t32;
     Converter<TimeTexture<int16_t>, TimeTexture<int32_t> > c;
     c.convert( patches, t32 );
-    _sparseMatrixDiffusionSmoothing( *conn_ptr, mesh, wthresh, sigma,
+    _sparseMatrixDiffusionSmoothing( matrix, mesh, wthresh, sigma, t32,
+                                     patch, use_matpow );
+  }
+
+
+  void sparseMatrixDiffusionSmoothing( rc_ptr<Connectivities> conn_ptr,
+    const AimsTimeSurface<3,Void> & mesh, double wthresh, double sigma,
+    const TimeTexture<int32_t> & patches, int32_t patch, bool use_matpow )
+  {
+    _sparseMatrixDiffusionSmoothing( conn_ptr, mesh, wthresh, sigma,
+                                     patches, patch, use_matpow );
+  }
+
+
+  void sparseMatrixDiffusionSmoothing( rc_ptr<Connectivities> conn_ptr,
+    const AimsTimeSurface<3,Void> & mesh, double wthresh, double sigma,
+    const TimeTexture<int16_t> & patches, int32_t patch, bool use_matpow )
+  {
+    TimeTexture<int32_t> t32;
+    Converter<TimeTexture<int16_t>, TimeTexture<int32_t> > c;
+    c.convert( patches, t32 );
+    _sparseMatrixDiffusionSmoothing( conn_ptr, mesh, wthresh, sigma,
                                      t32, patch, use_matpow );
   }
 
 
-  void sparseMatrixGaussianSmoothing(SparseMatrix & matrix,
+  void sparseMatrixGaussianSmoothing( SparseMatrix & matrix,
     const AimsSurfaceTriangle & inAimsMesh, float distthresh, float wthresh )
   {
     /*

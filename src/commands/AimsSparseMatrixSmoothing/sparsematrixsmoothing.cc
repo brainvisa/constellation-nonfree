@@ -17,6 +17,7 @@ int main( int argc, const char** argv )
   bool gaussian = false;
   Reader<TimeTexture<int32_t> > labeltexR;
   int patch = 0;
+  bool iterative_smoothing = false;
 
   AimsApplication app( argc, argv, "Sparse matrix smoothing using heat diffusion or gaussian smoothing, with the geometry of a mesh. Can typically be used for connectivity matrix smoothing. Smoothing is applied for each line, each line is a texture for the mesh." );
   app.addOption( matFilename, "-i", "input sparse matrix" );
@@ -30,6 +31,8 @@ int main( int argc, const char** argv )
   app.addOption( patch, "-p", "patch index (num in label texture)" );
   app.addOption( gaussian, "-g",
     "use gaussian smoothing. Default is heat diffusion", true );
+  app.addOption( iterative_smoothing, "--iterative_smoothing",
+    "use iterative smoothing for the connectivity matrix. By default the diffusion smoothing is implemented using a sparse laplacian coefficient matrix elevated to the power of the number of iterations. It is more efficient, but needs lots of memory for large matrixes. Use this option if your machine lacks memory.", true );
 
   try
   {
@@ -37,11 +40,13 @@ int main( int argc, const char** argv )
 
     AimsSurfaceTriangle mesh;
     inMeshAimsR.read( mesh );
-    SparseMatrix matrix;
-    matrix.read( matFilename );
+    rc_ptr<SparseOrDenseMatrix> matrix;
+    Reader<SparseOrDenseMatrix> mread( matFilename );
+    matrix.reset( mread.read() );
 
     if( gaussian )
-      sparseMatrixGaussianSmoothing( matrix, mesh, sigma, threshold );
+      sparseMatrixGaussianSmoothing( *matrix->asSparse(), mesh, sigma,
+                                     threshold );
     else
     {
       TimeTexture<int32_t> ptex;
@@ -55,10 +60,11 @@ int main( int argc, const char** argv )
 //           pindices.push_back( i );
 
       sparseMatrixDiffusionSmoothing( matrix, mesh, threshold, sigma,
-                                      ptex, patch );
+                                      ptex, patch, !iterative_smoothing );
     }
 
-    matrix.write( outmatFilename );
+    Writer<SparseOrDenseMatrix> mwrite( outmatFilename );
+    mwrite.write( *matrix );
 
     return EXIT_SUCCESS;
   }
