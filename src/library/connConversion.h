@@ -16,6 +16,9 @@ namespace constel
   void sparseMatrixToConnectivities(
     const aims::SparseMatrix & mat, Connectivities & conn );
 
+  void sparseMatrixToConnectivities(
+    const aims::boost_sparse_matrix & mat, Connectivities & conn );
+
   void writeConnectivities( const Connectivities & conn,
                             const std::string & filename, bool ascii=false );
 

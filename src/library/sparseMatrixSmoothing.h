@@ -12,22 +12,22 @@ namespace constel
   void sparseMatrixDiffusionSmoothing( aims::SparseMatrix & matrix,
     const AimsTimeSurface<3,Void> & mesh, double connectivityThreshold,
     double distanceThreshold, const TimeTexture<int32_t> & patches,
-    int32_t patch );
+    int32_t patch, bool use_matpow = true );
 
   void sparseMatrixDiffusionSmoothing( aims::SparseMatrix & matrix,
     const AimsTimeSurface<3,Void> & mesh, double connectivityThreshold,
     double distanceThreshold, const TimeTexture<int16_t> & patches,
-    int32_t patch );
+    int32_t patch, bool use_matpow = true );
 
   void sparseMatrixDiffusionSmoothing( Connectivities * conn_ptr,
     const AimsTimeSurface<3,Void> & mesh, double connectivityThreshold,
     double distanceThreshold, const TimeTexture<int32_t> & patches,
-    int32_t patch );
+    int32_t patch, bool use_matpow = true );
 
   void sparseMatrixDiffusionSmoothing( Connectivities * conn_ptr,
     const AimsTimeSurface<3,Void> & mesh, double connectivityThreshold,
     double distanceThreshold, const TimeTexture<int16_t> & patches,
-    int32_t patch );
+    int32_t patch, bool use_matpow = true );
 
   void sparseMatrixGaussianSmoothing( aims::SparseMatrix & matrix,
     const AimsSurfaceTriangle & aimsMesh, float distthresh,

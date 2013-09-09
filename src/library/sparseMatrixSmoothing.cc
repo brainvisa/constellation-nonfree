@@ -68,6 +68,8 @@ namespace
     void assign( size_t line, size_t col, double value, iterator & it );
     SparseMatrix* toSparseMatrix();
     void fromSparseMatrix( SparseMatrix *matrix );
+    void fromSparseMatrix( boost_sparse_matrix &matrix );
+    void deleteSparseMatrix( SparseMatrix* matrix );
 
   private:
     Matrix & _matrix;
@@ -181,6 +183,27 @@ namespace
     }
   }
 
+
+  template <>
+  inline
+  void MatrixProxy<SparseMatrix>::fromSparseMatrix(
+    boost_sparse_matrix &matrix )
+  {
+    if( &matrix != &_matrix.boostMatrix() )
+    {
+      _matrix.boostMatrix() = matrix;
+    }
+  }
+
+
+  template <>
+  inline
+  void MatrixProxy<SparseMatrix>::deleteSparseMatrix( SparseMatrix* matrix )
+  {
+    if( matrix != &_matrix )
+      delete matrix;
+  }
+
   // Connectivities
 
 
@@ -277,6 +300,22 @@ namespace
   {
     sparseMatrixToConnectivities( *matrix, _matrix );
     delete matrix; // Note the deletion
+  }
+
+  template <>
+  inline
+  void MatrixProxy<Connectivities>::fromSparseMatrix(
+    boost_sparse_matrix &matrix )
+  {
+    sparseMatrixToConnectivities( matrix, _matrix );
+  }
+
+
+  template <>
+  inline
+  void MatrixProxy<Connectivities>::deleteSparseMatrix( SparseMatrix* matrix )
+  {
+    delete matrix;
   }
 
   //
@@ -412,7 +451,7 @@ namespace
   template <typename Matrix>
   void _sparseMatrixDiffusionSmoothing( Matrix & matrix,
     const AimsTimeSurface<3,Void> & mesh, double wthresh, double sigma,
-    const TimeTexture<int32_t> & patches, int32_t patch )
+    const TimeTexture<int32_t> & patches, int32_t patch, bool use_matpow )
   {
     cout << "sparseMatrixDiffusionSmoothing. Weights calculation...\n";
     MatrixProxy<Matrix> matp( matrix );
@@ -430,143 +469,209 @@ namespace
     cout << "lines: " << nl << ", cols: " << nc << endl;
     double tmp;
 
-#define use_matpow
-// use_matpow: use coef matrix ^^ niter, calculated once
-#ifdef use_matpow
-    LaplacianWeights* laplmat
-      = makeLaplacianSmoothingCoefficients( weightLapl, niter, dt, wthresh );
-
-    cout << "Laplacian coefs done.\n";
-
-    /* Smoothing along lines is done using the coefs in laplmat.
-       More precisely, the transposed of laplmat should be applied to the
-       input matrix ( matrix * tr( laplmat ) ) as matricial operation.
-
-       Now we also want to smooth along columns, inside the starting points
-       region.
-       Laplacian coefficients are corrected according to vertices outside the
-       patch also having weights in the laplacian matrix.
-       The sub-matrix of laplmat corresponding to the region vertices is
-       extracted using this correction.
-       So, we take the sub-matrix submat, and apply it to the columns
-       of martrix: submat * matrix.
-
-       Combining the two operations, we have:
-       submat * martrix * tr( laplmat )
-    */
-
-    boost_sparse_matrix *submat = subMatrixLaplacian( *laplmat,
-      patches.begin()->second.data(), patch );
-    cout << "Submatrix done. Getting SparseMatrix\n";
-    SparseMatrix *smat = matp.toSparseMatrix();
-    cout << "Applying for columns...\n";
-
-    boost_sparse_matrix colsmoothed( nl, nc );
-    // smooth along cols
-    sparse_prod( *submat, smat->boostMatrix(), colsmoothed );
-    delete submat;
-    cout << "getting SparseMatrix for coefs\n";
-    boost_sparse_matrix* tlapl = toTransposedBoostSparseMatrix( *laplmat );
-    delete laplmat;
-    cout << "Applying for lines...\n";
-    smat->boostMatrix().clear();
-    // smooth along lines
-    sparse_prod( colsmoothed, *tlapl, smat->boostMatrix()  );
-    cout << "done.\n";
-    delete tlapl;
-    colsmoothed.clear();
-    // back to input matrix, if needed
-    matp.fromSparseMatrix( smat );
-
-    return;
-
-#else
-    /* Note: this version does not perform columns smoothing
-    */
-
-    double tminglob = FLT_MAX, tmaxglob = -FLT_MAX,
-      otmin=FLT_MAX, otmax=-FLT_MAX;
-    typename MatrixProxy<Matrix>::iterator iline = matp.begin();
-
-    for( line=0; line<nl; ++line, ++iline )
+    // use_matpow: use coef matrix ^^ niter, calculated once
+    if( use_matpow )
     {
-      cout << "\rsmoothing line " << line << " / " << nl << "..." << flush;
-      vector<double> row( nc, 0. );
-      typename MatrixProxy<Matrix>::columniterator ic = matp.colbegin( iline ),
-        ec = matp.colend( iline );
-      double tmin = FLT_MAX, tmax = -FLT_MAX;
+      LaplacianWeights* laplmat
+        = makeLaplacianSmoothingCoefficients( weightLapl, niter, dt, wthresh );
 
-      for( ; ic!=ec; ++ic )
-      {
-        double value = matp.value( ic );
-        row[ matp.column( ic ) ] = value;
-        if( value < tmin )
-        {
-          tmin = value;
-          if( tmin < tminglob )
-            tminglob = tmin;
-        }
-        if( value > tmax )
-        {
-          tmax = value;
-          if( tmax > tmaxglob )
-            tmaxglob = tmax;
-        }
-      }
-      if( tmin > 0. )
-        tmin = 0.;
-      if( tmax < 0. )
-        tmax = 0.;
-      if( tminglob > 0. )
-        tminglob = 0.;
-      if( tmaxglob < 0. )
-        tmaxglob = 0.;
+      cout << "Laplacian coefs done.\n";
 
-#ifdef use_matpow
-      applyLaplacianMatrix( row, outrow, *laplmat );
+      /* Smoothing along lines is done using the coefs in laplmat.
+        More precisely, the transposed of laplmat should be applied to the
+        input matrix ( matrix * tr( laplmat ) ) as matricial operation.
+
+        Now we also want to smooth along columns, inside the starting points
+        region.
+        Laplacian coefficients are corrected according to vertices outside the
+        patch also having weights in the laplacian matrix.
+        The sub-matrix of laplmat corresponding to the region vertices is
+        extracted using this correction.
+        So, we take the sub-matrix submat, and apply it to the columns
+        of martrix: submat * matrix.
+
+        Combining the two operations, we have:
+        submat * martrix * tr( laplmat )
+      */
+
+      boost_sparse_matrix *submat = subMatrixLaplacian( *laplmat,
+        patches.begin()->second.data(), patch );
+      cout << "Submatrix done. Getting SparseMatrix\n";
+      SparseMatrix *smat = matp.toSparseMatrix();
+      cout << "Applying for columns...\n";
+
+      boost_sparse_matrix colsmoothed( nl, nc );
+      // smooth along cols
+      sparse_prod( *submat, smat->boostMatrix(), colsmoothed );
+      delete submat;
+      cout << "getting SparseMatrix for coefs\n";
+      boost_sparse_matrix* tlapl = toTransposedBoostSparseMatrix( *laplmat );
       delete laplmat;
-#else
+      cout << "Applying for lines...\n";
+      smat->boostMatrix().clear();
+      // smooth along lines
+      sparse_prod( colsmoothed, *tlapl, smat->boostMatrix()  );
+      cout << "done.\n";
+      delete tlapl;
+      colsmoothed.clear();
+      // back to input matrix, if needed
+      matp.fromSparseMatrix( smat );
 
-//       otex =  AimsMeshLaplacian(itex,weightLapl);
-//       cout << "Estime dt\n";
-//       dt = AimsMeshFiniteElementDt(itex,otex,H);
-//       cout << "dt estimated : " << dt << endl;
+      return;
+    }
+    else
+    {
+#if 1
+      /* smooth each timestep independently, not using a sparse coef matrix for
+         all iterations at a time.
+         Useful when the patch is large and the coef matrix is too big */
+      LaplacianWeights* laplmat
+        = makeLaplacianSmoothingCoefficients( weightLapl, 1, dt, wthresh );
 
-      for( it=0; it<niter; ++it )
+      cout << "Laplacian coefs done.\n";
+
+      /* Smoothing along lines is done using the coefs in laplmat.
+        More precisely, the transposed of laplmat should be applied to the
+        input matrix ( matrix * tr( laplmat ) ) as matricial operation.
+
+        Now we also want to smooth along columns, inside the starting points
+        region.
+        Laplacian coefficients are corrected according to vertices outside the
+        patch also having weights in the laplacian matrix.
+        The sub-matrix of laplmat corresponding to the region vertices is
+        extracted using this correction.
+        So, we take the sub-matrix submat, and apply it to the columns
+        of martrix: submat * matrix.
+
+        Combining the two operations, we have:
+        submat * martrix * tr( laplmat )
+      */
+
+      boost_sparse_matrix *submat = subMatrixLaplacian( *laplmat,
+        patches.begin()->second.data(), patch );
+      cout << "Submatrix done. Getting SparseMatrix\n";
+      SparseMatrix *smat = matp.toSparseMatrix();
+      cout << "Applying for columns...\n";
+
+      boost_sparse_matrix colsmoothed( nl, nc );
+      boost_sparse_matrix *m1 = &smat->boostMatrix(), *m2 = &colsmoothed, *tm;
+      // smooth along cols
+      int i;
+      for( i=0; i<niter; ++i )
       {
-        AimsMeshLaplacian( row, outrow, weightLapl );
-        for( col=0; col<nc; ++col)
-          row[col] += dt * outrow[col];
+        cout << "\riter: " << i << flush;
+        sparse_prod( *submat, *m1, *m2 );
+        // swap matrixes
+        tm = m1;
+        m1 = m2;
+        m2 = tm;
       }
-#endif
-
-      for( col=0; col<nc; ++col )
+      // result in m1
+      cout << endl;
+      delete submat;
+      cout << "getting SparseMatrix for coefs\n";
+      boost_sparse_matrix* tlapl = toTransposedBoostSparseMatrix( *laplmat );
+      delete laplmat;
+      cout << "Applying for lines...\n";
+      m2->clear();
+      // smooth along lines
+      for( i=0; i<niter; ++i )
       {
-#ifdef use_matpow
-        tmp = outrow[col];
+        cout << "\riter: " << i << flush;
+        sparse_prod( *m1, *tlapl, *m2 );
+        // swap matrixes
+        tm = m1;
+        m1 = m2;
+        m2 = tm;
+      }
+      // result in m1
+      cout << "done.\n";
+      delete tlapl;
+      m2->clear();
+      // back to input matrix, if needed
+      matp.fromSparseMatrix( *m1 );
+      matp.deleteSparseMatrix( smat );
+
+      return;
+
 #else
-        tmp = row[col];
-#endif
-        if( tmp != 0 ) // could use thresholding to ensure sparsity
+      /* Note: this version does not perform columns smoothing
+      */
+
+      double tminglob = FLT_MAX, tmaxglob = -FLT_MAX,
+        otmin=FLT_MAX, otmax=-FLT_MAX;
+      typename MatrixProxy<Matrix>::iterator iline = matp.begin();
+
+      for( line=0; line<nl; ++line, ++iline )
+      {
+        cout << "\rsmoothing line " << line << " / " << nl << "..." << flush;
+        vector<double> row( nc, 0. );
+        typename MatrixProxy<Matrix>::columniterator ic
+          = matp.colbegin( iline ), ec = matp.colend( iline );
+        double tmin = FLT_MAX, tmax = -FLT_MAX;
+
+        for( ; ic!=ec; ++ic )
         {
-          if( tmp < otmin )
-            otmin = tmp;
-          if( tmp > otmax )
-            otmax = tmp;
-          // clamp values between initial bounds
-          if( tmp < tmin )
-            tmp = tmin;
-          else if( tmp > tmax )
-            tmp = tmax;
-          matp.assign( line, col, tmp, iline );
+          double value = matp.value( ic );
+          row[ matp.column( ic ) ] = value;
+          if( value < tmin )
+          {
+            tmin = value;
+            if( tmin < tminglob )
+              tminglob = tmin;
+          }
+          if( value > tmax )
+          {
+            tmax = value;
+            if( tmax > tmaxglob )
+              tmaxglob = tmax;
+          }
+        }
+        if( tmin > 0. )
+          tmin = 0.;
+        if( tmax < 0. )
+          tmax = 0.;
+        if( tminglob > 0. )
+          tminglob = 0.;
+        if( tmaxglob < 0. )
+          tmaxglob = 0.;
+
+  //       otex =  AimsMeshLaplacian(itex,weightLapl);
+  //       cout << "Estime dt\n";
+  //       dt = AimsMeshFiniteElementDt(itex,otex,H);
+  //       cout << "dt estimated : " << dt << endl;
+
+        for( it=0; it<niter; ++it )
+        {
+          AimsMeshLaplacian( row, outrow, weightLapl );
+          for( col=0; col<nc; ++col)
+            row[col] += dt * outrow[col];
+        }
+
+        for( col=0; col<nc; ++col )
+        {
+          tmp = row[col];
+          if( tmp != 0 ) // could use thresholding to ensure sparsity
+          {
+            if( tmp < otmin )
+              otmin = tmp;
+            if( tmp > otmax )
+              otmax = tmp;
+            // clamp values between initial bounds
+            if( tmp < tmin )
+              tmp = tmin;
+            else if( tmp > tmax )
+              tmp = tmax;
+            matp.assign( line, col, tmp, iline );
+          }
         }
       }
-    }
 
-    cout << endl;
-    cout << "input matrix bounds: " << tminglob << " / " << tmaxglob << endl;
-    cout << "output matrix bounds: " << otmin << " / " << otmax << endl;
+      cout << endl;
+      cout << "input matrix bounds: " << tminglob << " / " << tmaxglob << endl;
+      cout << "output matrix bounds: " << otmin << " / " << otmax << endl;
 #endif
+    }
   }
 
 }
@@ -577,43 +682,43 @@ namespace constel
 
   void sparseMatrixDiffusionSmoothing( SparseMatrix & matrix,
     const AimsTimeSurface<3,Void> & mesh, double wthresh, double sigma,
-    const TimeTexture<int32_t> & patches, int32_t patch )
+    const TimeTexture<int32_t> & patches, int32_t patch, bool use_matpow )
   {
     _sparseMatrixDiffusionSmoothing( matrix, mesh, wthresh, sigma, patches,
-                                     patch );
+                                     patch, use_matpow );
   }
 
 
   void sparseMatrixDiffusionSmoothing( SparseMatrix & matrix,
     const AimsTimeSurface<3,Void> & mesh, double wthresh, double sigma,
-    const TimeTexture<int16_t> & patches, int32_t patch )
+    const TimeTexture<int16_t> & patches, int32_t patch, bool use_matpow )
   {
     TimeTexture<int32_t> t32;
     Converter<TimeTexture<int16_t>, TimeTexture<int32_t> > c;
     c.convert( patches, t32 );
     _sparseMatrixDiffusionSmoothing( matrix, mesh, wthresh, sigma, t32,
-                                     patch );
+                                     patch, use_matpow );
   }
 
 
   void sparseMatrixDiffusionSmoothing( Connectivities * conn_ptr,
     const AimsTimeSurface<3,Void> & mesh, double wthresh, double sigma,
-    const TimeTexture<int32_t> & patches, int32_t patch )
+    const TimeTexture<int32_t> & patches, int32_t patch, bool use_matpow )
   {
     _sparseMatrixDiffusionSmoothing( *conn_ptr, mesh, wthresh, sigma,
-                                     patches, patch );
+                                     patches, patch, use_matpow );
   }
 
 
   void sparseMatrixDiffusionSmoothing( Connectivities * conn_ptr,
     const AimsTimeSurface<3,Void> & mesh, double wthresh, double sigma,
-    const TimeTexture<int16_t> & patches, int32_t patch )
+    const TimeTexture<int16_t> & patches, int32_t patch, bool use_matpow )
   {
     TimeTexture<int32_t> t32;
     Converter<TimeTexture<int16_t>, TimeTexture<int32_t> > c;
     c.convert( patches, t32 );
     _sparseMatrixDiffusionSmoothing( *conn_ptr, mesh, wthresh, sigma,
-                                     t32, patch );
+                                     t32, patch, use_matpow );
   }
 
 

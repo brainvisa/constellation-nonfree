@@ -36,6 +36,23 @@ namespace constel
 
 
   void sparseMatrixToConnectivities(
+    const aims::boost_sparse_matrix & mat, Connectivities & conn )
+  {
+    conn.clear();
+    conn.resize( mat.size1(), Connectivity( mat.size2() ) );
+    boost_sparse_matrix::const_iterator1 il, el = mat.end1();
+    boost_sparse_matrix::const_iterator2 ic, ec;
+    unsigned i;
+    for( il=mat.begin1(); il!=el; ++il )
+    {
+      i = il.index1();
+      for( ic=il.begin(), ec=il.end(); ic!=ec; ++ic )
+        conn[ i ][ ic.index2() ] = *ic;
+    }
+  }
+
+
+  void sparseMatrixToConnectivities(
     const aims::SparseMatrix & mat, Connectivities & conn )
   {
     conn.clear();
