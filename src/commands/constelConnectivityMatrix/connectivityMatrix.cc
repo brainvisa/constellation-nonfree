@@ -226,7 +226,10 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
 
   vector<size_t> * seedVertexIndex;
   std::size_t seedRegionLabelVertexNb = labels[seedRegionLabel];
-  Connectivities * extractConnMatrix_ptr = connMatrixReducedFromRegion( connMatrixToAllMesh_ptr, seedRegionsTex, seedRegionLabel, seedRegionLabelVertexNb, & seedVertexIndex );
+  rc_ptr<Connectivities> extractConnMatrix_ptr( 
+    connMatrixReducedFromRegion( connMatrixToAllMesh_ptr, seedRegionsTex, 
+                                 seedRegionLabel, seedRegionLabelVertexNb, 
+                                 & seedVertexIndex ) );
   if( distthresh != 0 )
     sparseMatrixDiffusionSmoothing( extractConnMatrix_ptr, inAimsMesh,
       wthresh, distthresh, seedRegionsTex, seedRegionLabel, use_matpow );
@@ -269,7 +272,7 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
       }
       else//saving connectivity matrix in .ima (aims fmt)
       {
-        writeAimsFmtConnMatrix(extractConnMatrix_ptr,logFile);
+        writeAimsFmtConnMatrix(extractConnMatrix_ptr.get(),logFile);
       }
     }
     //       Write region vertex indexes (ascii format only)
@@ -319,10 +322,11 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
 //         ostringstream s;
 //         s << outputDirname << "DensityConnection_region" << seedRegionLabel << "_" << outputString;
 //         til::aimswrite(outputDensityTex, s.str());
-  TimeTexture<float> outputTargetDensityTex = meshDensityTexture(extractConnMatrix_ptr);
+  TimeTexture<float> outputTargetDensityTex
+    = meshDensityTexture( extractConnMatrix_ptr.get() );
   if (verbose) std::cout << "Writing mean connectivity profile texture:" << connTextureFileName << std::endl;
   til::aimswrite(outputTargetDensityTex, connTextureFileName);
-  delete extractConnMatrix_ptr;
+  extractConnMatrix_ptr.reset(); // delete
   delete seedVertexIndex;
   int connTextureToTargetMeshesFileNames_size = connTextureToTargetMeshesFileNames.size();
   if( connTextureToTargetMeshesFileNames_size == meshes_nb )
