@@ -59,8 +59,6 @@ namespace
   class MatrixProxy
   {
   public:
-//     typedef typename MatrixTraits<Matrix>::iterator iterator;
-//     typedef typename MatrixTraits<Matrix>::columniterator columniterator;
     typedef boost::numeric::ublas::shallow_array_adaptor<double> dstorage;
     typedef boost::numeric::ublas::matrix<
       double, boost::numeric::ublas::row_major, dstorage > boost_matrix;
@@ -68,13 +66,6 @@ namespace
     MatrixProxy( rc_ptr<Matrix> matrix );
     size_t nlines() const;
     size_t ncols() const;
-//     iterator begin();
-//     iterator end();
-//     static size_t column( const columniterator & );
-//     static double & value( const columniterator & );
-//     static columniterator colbegin( const iterator & );
-//     static columniterator colend( const iterator & );
-//     void assign( size_t line, size_t col, double value, iterator & it );
     rc_ptr<SparseMatrix> toSparseMatrix();
     SparseOrDenseMatrix::DenseMatrixType toDenseMatrix();
     void fromMatrix( rc_ptr<SparseMatrix> matrix );
@@ -82,7 +73,6 @@ namespace
     void fromMatrix( boost_sparse_matrix &matrix );
     void fromMatrix( boost_matrix &matrix );
     void clear();
-//     void deleteSparseMatrix( SparseMatrix* matrix );
 
   private:
     rc_ptr<Matrix> _matrix;
@@ -113,69 +103,6 @@ namespace
     return _matrix->getSize2();
   }
 
-/*
-  template <>
-  inline
-  MatrixProxy<SparseMatrix>::iterator MatrixProxy<SparseMatrix>::begin()
-  {
-    return _matrix.begin1();
-  }
-
-
-  template <>
-  inline
-  MatrixProxy<SparseMatrix>::iterator MatrixProxy<SparseMatrix>::end()
-  {
-    return _matrix.end1();
-  }
-
-
-  template <>
-  inline
-  size_t MatrixProxy<SparseMatrix>::column(
-    const MatrixProxy<SparseMatrix>::columniterator & iter )
-  {
-    return iter.index2();
-  }
-
-
-  template <>
-  inline
-  double & MatrixProxy<SparseMatrix>::value(
-    const MatrixProxy<SparseMatrix>::columniterator & iter )
-  {
-    return *iter;
-  }
-
-
-  template <>
-  inline
-  MatrixProxy<SparseMatrix>::columniterator
-    MatrixProxy<SparseMatrix>::colbegin(
-      const MatrixProxy<SparseMatrix>::iterator & iter )
-  {
-    return iter.begin();
-  }
-
-
-  template <>
-  inline
-  MatrixProxy<SparseMatrix>::columniterator
-    MatrixProxy<SparseMatrix>::colend(
-      const MatrixProxy<SparseMatrix>::iterator & iter )
-  {
-    return iter.end();
-  }
-
-
-  template <>
-  inline
-  void MatrixProxy<SparseMatrix>::assign( size_t line, size_t col,
-    double value, MatrixProxy<SparseMatrix>::iterator & )
-  {
-    _matrix( line, col ) = value;
-  }
-*/
 
   template <>
   inline
@@ -348,69 +275,6 @@ namespace
     return _matrix->begin()->size();
   }
 
-/*
-  template <>
-  inline
-  MatrixProxy<Connectivities>::iterator MatrixProxy<Connectivities>::begin()
-  {
-    return _matrix.begin();
-  }
-
-
-  template <>
-  inline
-  MatrixProxy<Connectivities>::iterator MatrixProxy<Connectivities>::end()
-  {
-    return _matrix.end();
-  }
-
-
-  template <>
-  inline
-  size_t MatrixProxy<Connectivities>::column(
-    const MatrixProxy<Connectivities>::columniterator & iter )
-  {
-    return iter->first;
-  }
-
-
-  template <>
-  inline
-  double & MatrixProxy<Connectivities>::value(
-    const MatrixProxy<Connectivities>::columniterator & iter )
-  {
-    return iter->second;
-  }
-
-
-  template <>
-  inline
-  MatrixProxy<Connectivities>::columniterator
-    MatrixProxy<Connectivities>::colbegin(
-      const MatrixProxy<Connectivities>::iterator & iter )
-  {
-    return iter->sparse_begin();
-  }
-
-
-  template <>
-  inline
-  MatrixProxy<Connectivities>::columniterator
-    MatrixProxy<Connectivities>::colend(
-      const MatrixProxy<Connectivities>::iterator & iter )
-  {
-    return iter->sparse_end();
-  }
-
-
-  template <>
-  inline
-  void MatrixProxy<Connectivities>::assign( size_t, size_t col,
-    double value, MatrixProxy<Connectivities>::iterator & iter )
-  {
-    (*iter)[ col ] = value;
-  }
-*/
 
   template <>
   inline
@@ -675,7 +539,7 @@ namespace
       res->getSizeY() * res->getSizeX(), &res->at(0) );
     typename MatrixProxy<Matrix>::boost_matrix
       mdata( res->getSizeY(), res->getSizeX(), darray );
-    sparse_prod( colsmoothed, *tlapl, mdata ); //smat->boostMatrix()  );
+    sparse_prod( colsmoothed, *tlapl, mdata );
     cout << "done.\n";
     delete tlapl;
     colsmoothed.clear();
