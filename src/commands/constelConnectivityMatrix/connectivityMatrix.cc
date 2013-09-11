@@ -211,7 +211,7 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
   const string & seedRegionVertexIndexFileName,
   const vector<string> & connTextureToTargetMeshesFileNames, int meshes_nb,
   vector<Connectivities*> & connMatrixCortexToMesh_ptr_vector,
-  bool verbose, bool use_matpow )
+  bool verbose )
 {
   if (seedRegionLabel <= 0 or seedRegionLabel > seedRegionsNb)
   {
@@ -232,7 +232,7 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
                                  & seedVertexIndex ) );
   if( distthresh != 0 )
     sparseMatrixDiffusionSmoothing( extractConnMatrix_ptr, inAimsMesh,
-      wthresh, distthresh, seedRegionsTex, seedRegionLabel, use_matpow );
+      wthresh, distthresh, seedRegionsTex, seedRegionLabel );
 
   Connectivities & extractConnMatrix = *extractConnMatrix_ptr;
 //   AllMeshConnMatrix = SparseOrDenseMatrix();
@@ -390,7 +390,6 @@ int main( int argc, char* argv[] )
     std::string logFile = "";
     Reader<AimsData<short> > roisMaskR;
     AimsData<short> roisMask;
-    bool iterative_smoothing = false;
 
     AimsApplication app( argc, aims_const_hack(argv),
                          "computes and writes connection density texture(s).\n\
@@ -443,8 +442,6 @@ int main( int argc, char* argv[] )
                    by default, store log matrix in connMatrixFileName", true);
     app.addOption( roisMaskR, "-roimask",
                    "input region roi mask: ribbon around the mesh, in the case of  connMatrixComputingType = meshintersectionpointfast", true );
-    app.addOption( iterative_smoothing, "--iterative_smoothing",
-                   "use iterative smoothing for the connectivity matrix. By default the diffusion smoothing is implemented using a sparse laplacian coefficient matrix elevated to the power of the number of iterations. It is more efficient, but needs lots of memory for large matrixes. Use this option if your machine lacks memory.", true );
     app.initialize();
 
     //Reading inputs
@@ -534,7 +531,7 @@ int main( int argc, char* argv[] )
     else if (connectivityTextureType == "seed_mean_connectivity_profile")
       makeConnectivityTexture_seedMeanConnectivityProfile(
         connMatrixToAllMesh_ptr, connTextureFileName, seedRegionsTex,
-        seedRegionLabel, seedRegionsNb, distthresh, wthresh, logOption, logFile, connMatrixFileName, inAimsMesh, normalize, connMatrixFormat, seedRegionVertexIndexType, seedRegionVertexIndexFileName, connTextureToTargetMeshesFileNames, meshes_nb, connMatrixCortexToMesh_ptr_vector, verbose, !iterative_smoothing );
+        seedRegionLabel, seedRegionsNb, distthresh, wthresh, logOption, logFile, connMatrixFileName, inAimsMesh, normalize, connMatrixFormat, seedRegionVertexIndexType, seedRegionVertexIndexFileName, connTextureToTargetMeshesFileNames, meshes_nb, connMatrixCortexToMesh_ptr_vector, verbose );
     delete connMatrixToAllMesh_ptr;
     for (int meshLabel = 0; meshLabel < meshes_nb; ++meshLabel)
     {

@@ -13,35 +13,35 @@ namespace constel
     carto::rc_ptr<aims::SparseMatrix> matrix,
     const AimsTimeSurface<3,Void> & mesh, double connectivityThreshold,
     double distanceThreshold, const TimeTexture<int32_t> & patches,
-    int32_t patch, bool use_matpow = true );
+    int32_t patch );
 
   void sparseMatrixDiffusionSmoothing(
     carto::rc_ptr<aims::SparseMatrix> matrix,
     const AimsTimeSurface<3,Void> & mesh, double connectivityThreshold,
     double distanceThreshold, const TimeTexture<int16_t> & patches,
-    int32_t patch, bool use_matpow = true );
+    int32_t patch );
 
   void sparseMatrixDiffusionSmoothing(
     carto::rc_ptr<aims::SparseOrDenseMatrix> matrix,
     const AimsTimeSurface<3,Void> & mesh, double connectivityThreshold,
     double distanceThreshold, const TimeTexture<int32_t> & patches,
-    int32_t patch, bool use_matpow = true );
+    int32_t patch );
 
   void sparseMatrixDiffusionSmoothing(
     carto::rc_ptr<aims::SparseOrDenseMatrix> matrix,
     const AimsTimeSurface<3,Void> & mesh, double connectivityThreshold,
     double distanceThreshold, const TimeTexture<int16_t> & patches,
-    int32_t patch, bool use_matpow = true );
+    int32_t patch );
 
   void sparseMatrixDiffusionSmoothing( carto::rc_ptr<Connectivities> conn_ptr,
     const AimsTimeSurface<3,Void> & mesh, double connectivityThreshold,
     double distanceThreshold, const TimeTexture<int32_t> & patches,
-    int32_t patch, bool use_matpow = true );
+    int32_t patch );
 
   void sparseMatrixDiffusionSmoothing( carto::rc_ptr<Connectivities> conn_ptr,
     const AimsTimeSurface<3,Void> & mesh, double connectivityThreshold,
     double distanceThreshold, const TimeTexture<int16_t> & patches,
-    int32_t patch, bool use_matpow = true );
+    int32_t patch );
 
   void sparseMatrixGaussianSmoothing( aims::SparseMatrix & matrix,
     const AimsSurfaceTriangle & aimsMesh, float distthresh,
