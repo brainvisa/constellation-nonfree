@@ -34,7 +34,7 @@ def main():
     options.connectivity_matrix_reduced ) )
   subject_reducedConnMatrix = subject_reducedConnMatrix.reshape(
     subject_reducedConnMatrix.shape[0], subject_reducedConnMatrix.shape[1] )
-
+  subject_reducedConnMatrix = numpy.transpose( subject_reducedConnMatrix )
   subject_white_mesh = aims.read( options.white_mesh )
   subjectWhiteMesh_vertexNb = subject_white_mesh.vertex().size()
   current_patch_mesh = aims.SurfaceManip.meshExtract( subject_white_mesh, patchsLabeled_tex, options.patch_label )[0]
@@ -49,6 +49,10 @@ def main():
   for i in xrange( patchsLabeled_tex[0].nItem() ):
     if patchsLabeled_tex[0][i] == options.patch_label:
       subjectPatch_vertexIndex.append(i)
+  subjectPatch_vertexIndex = numpy.array(subjectPatch_vertexIndex)
+  subjectPatch_vertexIndex = subjectPatch_vertexIndex.tolist()
+  print subjectPatch_vertexIndex
+  
   clustersTime_tex, clus_avg_width_Time_tex = CK.texturesCreation( subject_PatchCl_dict, subjectWhiteMesh_vertexNb, subjectPatch_vertexIndex )
   kmedoidsTime_tex, vertex_silhouette_width_Time_tex = CK.textureKmedoidsCreation( subject_PatchCl_dict,subjectWhiteMesh_vertexNb, subjectPatch_vertexIndex )
 

@@ -59,6 +59,7 @@ def main():
 
   matrix = numpy.asarray( aims.read( options.avg_matrix ) )
   matrix = matrix.reshape( matrix.shape[0], matrix.shape[1] )
+  matrix = numpy.transpose( matrix )
   cl_dict, korder = CK.clusteringResults( matrix, kmin, kmax, Rclustering )
   k_opt = korder[0]
   print 'k optimale = ', k_opt
