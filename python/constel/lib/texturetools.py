@@ -134,3 +134,22 @@ def cleanGyriTexture( mesh, gyriTex ):
       gyriTex, win = changeLabelOfWrongLabelVertices( l+1, label, gyriTex, meshNeighborsVector, cctexLabel_ar )
       print "Changed in ", win
   return gyriTex
+
+def textureTime(n_time, list_number, nb_vertices, vertices_patch):
+  """
+  inputs:
+        n_time: 
+        list_number: 
+        nb_vertices: 
+        vertices_patch: 
+  output:
+        tex: for each time step, results of the k-th clustering
+  """
+  count = 0
+  tex = aims.TimeTexture_S16()
+  for k in range(n_time):
+    tex[count].resize(nb_vertices, 0)
+    tex[count].arraydata()[vertices_patch] = list_number[k].astype(numpy.int16)
+    count += 1
+  
+  return tex

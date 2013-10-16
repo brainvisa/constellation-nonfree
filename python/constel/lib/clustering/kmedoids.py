@@ -37,7 +37,7 @@ class KMEDOIDS_R(object):
     X = np.asarray(X)
     print "X shape:", X.shape
     print "k in R:", k
-    print "start binding avec R : Computing kmedoids algo"
+    print "start binding with R : Computing kmedoids algo"
     
     if diss:
       if init_kmedoids:
@@ -45,11 +45,9 @@ class KMEDOIDS_R(object):
       else:
         cl = robjects.r.kmedoidsondist2(X,k)
       #cl = robjects.r.pam(x, k, diss=TRUE, medoids=init_medoids)
-    else:
+    else: # on est bien ici!!!
       #cl = robjects.r.coucoukmedoids(X,k,display)[0] #type(parcellData) = dict
       cl = robjects.r.coucoukmedoids(X,k,display)
-    print type(cl)
-    #print cl
     #print avg_width
     dict = {}
     dict['silinfo']={}

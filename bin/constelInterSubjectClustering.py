@@ -52,6 +52,7 @@ def main():
     lkmax.append( kmax )
 
   kmax = max( lkmax )
+  kmax = 10
   print 'list of k: ', lkmax
   print 'kmax = ', kmax
   print 'Patch area = ', patch_area
@@ -61,6 +62,8 @@ def main():
   matrix = matrix.reshape( matrix.shape[0], matrix.shape[1] )
   matrix = numpy.transpose( matrix )
   cl_dict, korder = CK.clusteringResults( matrix, kmin, kmax, Rclustering )
+  print 'k order: ', korder
+  print 'print dico: ', cl_dict
   k_opt = korder[0]
   print 'k optimale = ', k_opt
 
@@ -87,10 +90,9 @@ def main():
     subjectPatch_vertexIndex = []
     for i in xrange( tex[0].nItem() ):
       if tex[0][i] == int(options.patch_label):
-        print 'here'
         subjectPatch_vertexIndex.append(i)
-    print 'vertex_index:', subjectPatch_vertexIndex
-    print options.patch_label
+    #print 'vertex_index:', subjectPatch_vertexIndex
+    #print options.patch_label
     #subjectPatch_vertexIndex = numpy.loadtxt(vertex_filename)
     #subjectPatch_vertexIndex = subjectPatch_vertexIndex.tolist()
     subjectPatchVertex_nb = len(subjectPatch_vertexIndex)
@@ -105,7 +107,6 @@ def main():
     countProcessedVertex += subjectPatchVertex_nb
     kopt_tex = aims.TimeTexture_S16()
     k_opt_Time = k_opt - kmin
-    print 'k_opt_Time = ', k_opt_Time
     kopt_tex[0].assign( clustersTime_tex[k_opt_Time] )
 
     texTime = aims.write(clustersTime_tex, str( options.clustering_time[n] ) )

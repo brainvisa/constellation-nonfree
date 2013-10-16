@@ -8,7 +8,6 @@ import time
 import constel
 
 
-
 def clusteringResults(X, k_min, k_max, Rclustering_filename, diss=False,
     init_kmedoids=None):
   """
@@ -32,7 +31,7 @@ def clusteringResults(X, k_min, k_max, Rclustering_filename, diss=False,
     print "X.shape:", X.shape
     clusteringMethod = rkmedoids.KMEDOIDS_R(Rclustering_filename)
     cl = clusteringMethod.predict(X, k, 0, diss, init_kmedoids)
-    #print "save clustering results:"
+    print "save clustering results:"
     cl_dict[k] = {}
     cl_dict[k]['avg.width'] = cl['silinfo']['avg.width']
     #print "save clus.avg.widths..."
@@ -51,6 +50,7 @@ def clusteringResults(X, k_min, k_max, Rclustering_filename, diss=False,
   for i in xrange(k_ordering.size):
     k_ordering_def[i] = k_ordering[k_ordering.size - i - 1 ]
   print "k in order of validity:", k_ordering_def
+  print "dico de clusterid: ", cl_dict
   return cl_dict, k_ordering_def
 
 
@@ -69,9 +69,11 @@ def texturesCreation(clusterings_dict, meshVertex_nb, seedVertex_index):
   clustersTime_tex = aims.TimeTexture_S16()
   clus_avg_width_Time_tex = aims.TimeTexture_FLOAT()
   for k in clusterings_dict.keys():
+    print 'keys', clusterings_dict.keys()
     clustersTime_tex[stepCount].resize( meshVertex_nb, 0 )
     clustersTime_tex[stepCount].arraydata()[ seedVertex_index ] \
       = clusterings_dict[k]['labels_list']
+    print"clusterings_dict", clusterings_dict[k]['labels_list']
     current_clust_avg_width_tex = constel.oneTargetDensityTargetsRegroupTexture(N.asarray(clusterings_dict[k]['clus.avg.widths']), clustersTime_tex, stepCount)
     clus_avg_width_Time_tex[stepCount].assign( current_clust_avg_width_tex[0] )
     stepCount += 1
