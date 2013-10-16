@@ -104,6 +104,7 @@ def texturesCreationMultiSubjects( clusterings_dict, meshVertex_nb,
     clustersTime_tex[stepCount].arraydata()[ seedVertex_index ] \
       = clusterings_dict[k]['labels_list'][
         labels_list_min_index:labels_list_max_index]
+    
     current_clust_avg_width_tex \
       = constel.oneTargetDensityTargetsRegroupTexture(
         N.asarray(clusterings_dict[k]['clus.avg.widths']), clustersTime_tex, 

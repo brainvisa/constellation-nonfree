@@ -140,8 +140,8 @@ def textureTime(n_time, list_number, nb_vertices, vertices_patch):
   inputs:
         n_time: 
         list_number: 
-        nb_vertices: 
-        vertices_patch: 
+        nb_vertices: vertex number for output textures
+        vertices_patch: vertex index of the seed region
   output:
         tex: for each time step, results of the k-th clustering
   """
