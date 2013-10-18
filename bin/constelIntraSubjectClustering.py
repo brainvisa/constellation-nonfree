@@ -36,8 +36,8 @@ def parseOpts(argv):
 def main():
   parser, (options, args) = parseOpts(sys.argv)
 
-  Rclustering_filename = os.path.join( os.path.dirname( mainPath ),\
-                                       'R', 'clustering', 'kmedoids.R' )
+  #Rclustering_filename = os.path.join( os.path.dirname( mainPath ),\
+                                       #'R', 'clustering', 'kmedoids.R' )
 
   mesh = aims.read(options.mesh)
   gyri_seg = aims.read(options.gyri_segmentation)
@@ -56,7 +56,7 @@ def main():
   print "Clustering for K = 2 :", kmax
   
   kmin = 2
-  NiterK = 100
+  NiterK = 1000
   clusterID = []
   for K in range(2, kmax+1):
     clusterid, err, nfound = pc.kmedoids(distance, K, NiterK)
