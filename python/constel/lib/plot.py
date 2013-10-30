@@ -28,4 +28,5 @@ def silhouette_score_plot(s, k):
   #plt.axis([0, 12, 0, 1.5])
   plt.ylabel('Silhouette Value')
   plt.xlabel('Cluster')
-  return plt.show()
+  plt.show()
+  return fig

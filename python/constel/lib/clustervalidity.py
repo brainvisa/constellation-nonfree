@@ -31,3 +31,4 @@ def silhouette_score(X, K):
   s = silhouette_sample(X, K)
   score = np.mean(s)
   return score
+  
