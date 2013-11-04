@@ -18,10 +18,10 @@ def writeConnMatrixAsIma(mat, filename, lines_length = 100.0, cols_length = 80.0
 
 def permutationResampling(feat):
   '''Resampling by permutation of the features'''
-   Nsamples = feat.shape[0]
-   Ndim = feat.shape[1]
+  Nsamples = feat.shape[0]
+  Ndim = feat.shape[1]
     
-   perm = np.random.permutation(feat[:, 0].reshape((Nsamples, 1)))
-   for f in range(1, Ndim):
-     perm = np.hstack((perm, np.random.permutation(feat[:, f].reshape((Nsamples, 1))) ))
-   return perm    
+  perm = np.random.permutation(feat[:, 0].reshape((Nsamples, 1)))
+  for f in range(1, Ndim):
+    perm = np.hstack((perm, np.random.permutation(feat[:, f].reshape((Nsamples, 1))) ))
+  return perm    
