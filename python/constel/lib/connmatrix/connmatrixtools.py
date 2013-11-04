@@ -1,6 +1,6 @@
 
 from soma import aims
-
+import numpy as np
 
 def writeConnMatrixAsIma(mat, filename, lines_length = 100.0, cols_length = 80.0):
   print "Writing Matrix As .ima"
@@ -16,3 +16,12 @@ def writeConnMatrixAsIma(mat, filename, lines_length = 100.0, cols_length = 80.0
   aims.write(mat_ima, filename)
   print "done."
 
+def permutationResampling(feat):
+  '''Resampling by permutation of the features'''
+   Nsamples = feat.shape[0]
+   Ndim = feat.shape[1]
+    
+   perm = np.random.permutation(feat[:, 0].reshape((Nsamples, 1)))
+   for f in range(1, Ndim):
+     perm = np.hstack((perm, np.random.permutation(feat[:, f].reshape((Nsamples, 1))) ))
+   return perm    
