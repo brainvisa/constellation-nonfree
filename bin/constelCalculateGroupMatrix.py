@@ -52,9 +52,9 @@ def main():
   if options.study == 'Average':
     avgsubjectsReducedConnMatrix = (1./count)*avgsubjectsReducedConnMatrix
     avgReducedConnMatrix = TTS.writeConnMatrixAsIma( avgsubjectsReducedConnMatrix, options.matrix )
-  print 'matrix : ', options.matrix 
-  print 'count : ', count
-  print 'sum min/max:', numpy.min( avgsubjectsReducedConnMatrix ), numpy.max( avgsubjectsReducedConnMatrix )
-  print 'average min/max:', numpy.min( avgsubjectsReducedConnMatrix ), numpy.max( avgsubjectsReducedConnMatrix )
+  #print 'matrix : ', options.matrix 
+  #print 'count : ', count
+  #print 'sum min/max:', numpy.min( avgsubjectsReducedConnMatrix ), numpy.max( avgsubjectsReducedConnMatrix )
+  #print 'average min/max:', numpy.min( avgsubjectsReducedConnMatrix ), numpy.max( avgsubjectsReducedConnMatrix )
 
 if __name__ == "__main__" : main()

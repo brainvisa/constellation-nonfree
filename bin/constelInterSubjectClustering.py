@@ -62,7 +62,10 @@ def main():
   #print 'Area min threshold = ', options.areaMin_threshold
 
   reduced_matrix = aims.read(options.avg_matrix)
-  reduced_matrix = np.transpose(np.asarray(reduced_matrix)[:,:,0,0])
+  if options.study == 'Concatenate':
+    reduced_matrix = np.asarray(reduced_matrix)[:,:,0,0]
+  if options.study == 'Average':
+    reduced_matrix = np.transpose(np.asarray(reduced_matrix)[:,:,0,0])
   print "Reduced matrix of size (Nsample, Ndim): M", reduced_matrix.shape
   
   distance = pc.distancematrix(reduced_matrix, dist='e')
@@ -117,10 +120,10 @@ def main():
     all_subjects_labels_list_index_min = countProcessedVertex
     all_subjects_labels_list_index_max = countProcessedVertex + subjectPatchVertex_nb
 
-    #if options.study == 'Concatenate':
-      #clustersTime_tex, clus_avg_width_Time_tex = CK.texturesCreationMultiSubjects(cl_dict,
-#nb_vertices, vertices_patch, all_subjects_labels_list_index_min,
-#all_subjects_labels_list_index_max)
+    if options.study == 'Concatenate':
+      #clustersTime_tex, clus_avg_width_Time_tex = CK.texturesCreationMultiSubjects(cl_dict, nb_vertices, vertices_patch, all_subjects_labels_list_index_min, all_subjects_labels_list_index_max)
+      k = kmax-1
+      clusters = tt.textureTime(k, clusterID, nb_vertices, vertices_patch, 2, all_subjects_labels_list_index_min, all_subjects_labels_list_index_max)
     if options.study == 'Average':
       #clustersTime_tex, clus_avg_width_Time_tex = CK.texturesCreation(cl_dict, nb_vertices,
 #vertices_patch)
