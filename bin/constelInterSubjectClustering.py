@@ -128,7 +128,7 @@ def main():
       #clustersTime_tex, clus_avg_width_Time_tex = CK.texturesCreation(cl_dict, nb_vertices,
 #vertices_patch)
       k = kmax-1
-      clusters = tt.textureTime(k, clusterID, nb_vertices, vertices_patch)
+      clusters = tt.textureTime(k, clusterID, nb_vertices, vertices_patch, 1)
 
     countProcessedVertex += subjectPatchVertex_nb
     #kopt_tex = aims.TimeTexture_S16()
