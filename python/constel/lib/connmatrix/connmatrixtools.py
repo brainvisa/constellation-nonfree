@@ -40,7 +40,7 @@ def orderDataMatrix(mat, labels):
   if n!=obs_nb:
     raise exceptions.ValueError("matrix dimensions and labels size are not compatible")
   labels_argsort = labels.argsort()
-  order_mat = N.zeros((n,p),dtype = N.float32)
+  order_mat = np.zeros((n,p),dtype = np.float32)
   for i in xrange(n):
     order_mat[i,:]=mat[labels_argsort[i],:]
   sortLabels= labels.copy()
@@ -55,11 +55,11 @@ def euclidianDistance(v1,v2):
           dist(v1,v2)
   """
   dist = ((v1-v2)**2).sum()
-  return N.sqrt(dist)
+  return np.sqrt(dist)
    
 def euclidianDistanceMatrix(matrix):
   (n,p)=matrix.shape
-  euclidian_dist_matrix = N.zeros((n,n), dtype = N.float)
+  euclidian_dist_matrix = np.zeros((n,n), dtype = np.float)
   for i in xrange(n):
     v1 = matrix[i]
     dist_value = 0
