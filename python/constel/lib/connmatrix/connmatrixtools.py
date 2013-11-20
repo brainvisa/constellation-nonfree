@@ -70,3 +70,48 @@ def euclidianDistanceMatrix(matrix):
       euclidian_dist_matrix[i][j]= dist_value
       euclidian_dist_matrix[j][i]= dist_value
   return euclidian_dist_matrix
+  
+def connMatrixParcelsToTargets(inputConnMatrixPatchVertexToTargets_ima, parcels_tex, tex_timeStep = 0, mode = "meanOfProfiles"):
+  """
+  Compute the mean connectivity profile of each parcels and create the associated connMatrixParcelsToTargets_ima:
+  inputs:
+    inputConnMatrixPatchVertexToTargets_ima: size (patchVertex_nb, targets_nb)
+    patchVertexIndex_list: size (patchVertex_nb): index of the patch vertex in the parcels_tex
+    parcels_tex: labeled aims Time Texture_S16, parcellation of the patch
+    tex_timeStep: if the input parcels_tex has several time steps, indicates the chosen step. (each step corresponding to a parcellation of the patch, time_step = 0, parcellation into 2 clusters)
+    mode: "mean": normalized by the number of parcels vertices
+       or "sum": not normalized
+  outputs:
+    connMatrixParcelsToTargets_ima: size (parcels_nb, targets_nb)
+  """
+  (n,p) = inputConnMatrixPatchVertexToTargets_ima.shape
+  labels = np.zeros((n), dtype=int)
+  
+  patchVertexIndex_list = []
+
+  for i in xrange( parcels_tex[0].nItem() ):
+    if parcels_tex[0][i] != 0:
+      patchVertexIndex_list.append(i)
+      
+  patchVertexIndex_list = np.array( patchVertexIndex_list ) 
+  patchVertexIndex_list =  patchVertexIndex_list.tolist()
+  for i in xrange(n):#iteration on patch Vertex
+    index_i = np.uint32(patchVertexIndex_list[i])
+    labels[i]= parcels_tex[tex_timeStep][index_i]
+  
+  labels_unique = np.unique(labels).tolist()
+  
+  connMatrixParcelsToTargets_ima = np.zeros((len(labels_unique),p),dtype=np.float32)
+  labelCount = 0
+  for i in xrange(len(labels_unique)):
+    label = labels_unique[i]
+    label_connMatrixToTargets_array = inputConnMatrixPatchVertexToTargets_ima[np.where(labels==label)]
+    if mode =="meanOfProfiles":
+      connMatrixParcelsToTargets_ima[labelCount]=label_connMatrixToTargets_array.mean(axis = 0)
+    elif mode == "sumOfProfiles":
+      connMatrixParcelsToTargets_ima[labelCount]=label_connMatrixToTargets_array.sum(axis = 0)
+    else:
+      raise exceptions.ValueError("the mode must be \"mean\" or \"sum\" ")
+    labelCount+=1
+  
+  return connMatrixParcelsToTargets_ima
