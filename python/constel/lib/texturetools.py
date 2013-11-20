@@ -157,3 +157,28 @@ def textureTime(n_time, list_number, nb_vertices, vertices_patch, mode, minid=No
     count += 1
   
   return tex
+
+def oneTargetDensityTargetsRegroupTexture(lineMatrixToTargetRegions,
+    targetRegionsTex, T_it = 0):
+  """
+  enlever et remplacer par le binding python de la fonction existant en c++ dans roca/lib/conmatrix.cc
+  Compute density texture (associated to a mesh) of a targetRegion towards all the target regions
+  inputs:     lineMatrixToTargetsRegions_ptr : connectivity of one target to all the target regions, shape = (1,targetRegionsNb), numpy array
+              targetRegionsTex : labeled texture, between 0 and targetRegionsNb, 0 = background, 1 to targetRegionsNb = target regions
+              T_it: selected time step of the targetRegionsTex time texture, 0 by default
+  output:     outputDensityTex : output connectivity texture
+  """
+  meshVertexNb = targetRegionsTex.nItem()
+  targetRegionsNb = lineMatrixToTargetRegions.size
+  outputDensityTex = aims.TimeTexture_FLOAT()
+  outputDensityTex[0].reserve(meshVertexNb);
+  for v in xrange(meshVertexNb):
+    outputDensityTex[0].push_back(-1)
+  for i in xrange(meshVertexNb):
+    label = targetRegionsTex[T_it][i]
+    if (1 <= label and label <= targetRegionsNb):
+      outputDensityTex[0][i] = lineMatrixToTargetRegions[label-1];
+    else:
+      outputDensityTex[0][i] = -1;
+
+  return outputDensityTex
