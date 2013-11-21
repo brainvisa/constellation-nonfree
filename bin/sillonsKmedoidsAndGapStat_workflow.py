@@ -23,10 +23,12 @@ parser.add_option( '-j', '--jobs', dest = 'jobs', type='int',
 options, args = parser.parse_args(sys.argv)
 
 jobs = []
-npermut = int( math.ceil( float( options.permut ) / options.jobs ) )
-nperm = [npermut] * (options.jobs-1)
-nperm.append( options.permut - (options.jobs-1) * npermut )
+npermut = options.permut / options.jobs
+nadd = options.permut % options.jobs
+nperm = [npermut] * options.jobs
 for j in xrange( options.jobs ):
+  if j < nadd:
+    nperm[j] += 1
   outfile = os.path.join( options.directory, 'gap_job_%d.npy' % j )
   cmd = [ '/volatile/sandrine/svn/brainvisa/connectomist/constellation-private/trunk/bin/sillonsKmedoidsAndGapStat_map.py', '-m', options.matrix, '-k', str(options.kmax),
     '-n', str(options.niter), '-o', outfile, '-p', str(nperm[j]) ]
