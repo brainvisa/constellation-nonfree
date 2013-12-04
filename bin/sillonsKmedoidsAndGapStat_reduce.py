@@ -8,12 +8,9 @@ from soma import aims
 import anatomist.direct.api as anatomist
 import Pycluster as pc
 import sys
+import glob
 import math
 from optparse import OptionParser
-
-#featFile='/Users/olivier/dataLocal/SillonsVlad/S.F.inf./Left/spamGlobalLocalMontreal/SFinfFeatures.txt'
-#featFile='/Users/olivier/dataLocal/SillonsVlad/S.F.inf./Left/spamGlobalLocalMontreal/uniformFeatures.txt'
-
 
 distK=[] #classe K, les distances.
 indexK=[] # classe K, les index
@@ -58,42 +55,7 @@ def GenerateUniform(whiteFeat, Nsample, Ndim):
           
      print 'Generated uniform matrix of shape: ', s.shape
      return s
-     
-     
-####################################################################
-# case resampling, i.e. bootstrap with replacement
-####################################################################
-  
-def caseResampling(feat):
-     N=feat.shape[0]
-     bootVect=random.random_integers(N, size=N)
-     bootVect=bootVect-1
-     newFeat=feat[bootVect[0],:]
-     for i in range(1,bootVect.size):
-          newFeat=vstack((newFeat, feat[bootVect[i],:]))
-     survive=array([])
-     for i in bootVect:
-          if ((where(survive==i)[0]).size==0):
-               survive=append(survive, array([int(i)]))
-     return newFeat, bootVect, survive
-     # newFeat est la nouvelle matrice de features
-     # bootVect est la liste des indices du reechantillonage, 
-     # survive est la liste des elements ayant survecu au reechantillonage
-
-####################################################################
-# resampling by permutation of the features 
-####################################################################
-  
-def permutationResampling(feat):
-     Nsamples=feat.shape[0]
-     Nfeat=feat.shape[1]
-     
-     permF=random.permutation(feat[:,0].reshape((Nsamples,1)))
-     for f in range (1, Nfeat):
-          permF=hstack((permF, random.permutation(feat[:,f].reshape((Nsamples,1))) ))
-
-     return permF     
-     
+         
 ####################################################################
 # within cluster sum of distance 
 ####################################################################
@@ -226,9 +188,9 @@ def main(arguments):
         uniform=whiteFeat.copy()
     
     # WB=zeros((B, Kmax+1))
-    
+    inputs = glob.glob(options.input)
     WBparts = []
-    for infile in options.input:
+    for infile in inputs:
       WBparts.append( load( infile ) )
     WB = vstack( WBparts )
     del WBparts
