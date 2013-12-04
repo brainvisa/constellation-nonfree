@@ -71,47 +71,48 @@ def euclidianDistanceMatrix(matrix):
       euclidian_dist_matrix[j][i]= dist_value
   return euclidian_dist_matrix
   
-def connMatrixParcelsToTargets(inputConnMatrixPatchVertexToTargets_ima, parcels_tex, tex_timeStep = 0, mode = "meanOfProfiles"):
+def connMatrixParcelsToTargets(reducedmatrix, parcels, timestep = 0, mode = "meanOfProfiles"):
   """
-  Compute the mean connectivity profile of each parcels and create the associated connMatrixParcelsToTargets_ima:
+  Compute the mean connectivity profile of each parcels and create the associated matrix:
   inputs:
-    inputConnMatrixPatchVertexToTargets_ima: size (patchVertex_nb, targets_nb)
-    patchVertexIndex_list: size (patchVertex_nb): index of the patch vertex in the parcels_tex
-    parcels_tex: labeled aims Time Texture_S16, parcellation of the patch
-    tex_timeStep: if the input parcels_tex has several time steps, indicates the chosen step. (each step corresponding to a parcellation of the patch, time_step = 0, parcellation into 2 clusters)
+    reducedmatrix: size (patchVertex_nb, targets_nb)
+    vertices_patch: size (patchVertex_nb): index of the patch vertex in the parcels
+    parcels: labeled aims Time Texture_S16, parcellation of the patch
+    timestep: if the input parcels has several time steps, indicates the chosen step. (each step corresponding to a parcellation of the patch, time_step = 0, parcellation into 2 clusters)
     mode: "mean": normalized by the number of parcels vertices
        or "sum": not normalized
   outputs:
-    connMatrixParcelsToTargets_ima: size (parcels_nb, targets_nb)
+    matrix: size (parcels_nb, targets_nb)
   """
-  (n,p) = inputConnMatrixPatchVertexToTargets_ima.shape
+  (n,p) = reducedmatrix.shape
+  print "reducedmatrix.shape", reducedmatrix.shape
   labels = np.zeros((n), dtype=int)
   
-  patchVertexIndex_list = []
+  vertices_patch = []
 
-  for i in xrange( parcels_tex[0].nItem() ):
-    if parcels_tex[0][i] != 0:
-      patchVertexIndex_list.append(i)
+  for i in xrange( parcels[0].nItem() ):
+    if parcels[0][i] != 0:
+      vertices_patch.append(i)
       
-  patchVertexIndex_list = np.array( patchVertexIndex_list ) 
-  patchVertexIndex_list =  patchVertexIndex_list.tolist()
+  vertices_patch = np.array( vertices_patch ) 
+  vertices_patch =  vertices_patch.tolist()
   for i in xrange(n):#iteration on patch Vertex
-    index_i = np.uint32(patchVertexIndex_list[i])
-    labels[i]= parcels_tex[tex_timeStep][index_i]
+    index_i = np.uint32(vertices_patch[i])
+    labels[i]= parcels[timestep][index_i]
   
   labels_unique = np.unique(labels).tolist()
   
-  connMatrixParcelsToTargets_ima = np.zeros((len(labels_unique),p),dtype=np.float32)
+  matrix = np.zeros((len(labels_unique),p),dtype=np.float32)
   labelCount = 0
   for i in xrange(len(labels_unique)):
     label = labels_unique[i]
-    label_connMatrixToTargets_array = inputConnMatrixPatchVertexToTargets_ima[np.where(labels==label)]
+    label_connMatrixToTargets_array = reducedmatrix[np.where(labels==label)]
     if mode =="meanOfProfiles":
-      connMatrixParcelsToTargets_ima[labelCount]=label_connMatrixToTargets_array.mean(axis = 0)
+      matrix[labelCount]=label_connMatrixToTargets_array.mean(axis = 0)
     elif mode == "sumOfProfiles":
-      connMatrixParcelsToTargets_ima[labelCount]=label_connMatrixToTargets_array.sum(axis = 0)
+      matrix[labelCount]=label_connMatrixToTargets_array.sum(axis = 0)
     else:
       raise exceptions.ValueError("the mode must be \"mean\" or \"sum\" ")
     labelCount+=1
   
-  return connMatrixParcelsToTargets_ima
+  return matrix
