@@ -27,3 +27,18 @@ def wcDist(distance, clusterid, K, fact):
     W[l] = sum / float(2.0 * centerid.size)
     addW += W[l]
   return addW
+
+def centroid(dist):
+     s = dist.sum(axis = 0)
+     c = where(s == s.min())[0][0]
+     return c
+     
+def distToCenters(distance, centers, clusterid, K):
+     i = 0
+     distCent = zeros(K)
+     for i in range(K):
+          c = centers[i]
+          group = where(clusterid == c)[0]
+          dgroup = distance[c, group]
+          distCent[i] = dgroup.mean()
+     return distCent
