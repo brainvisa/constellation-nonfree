@@ -31,4 +31,51 @@ def silhouette_score(X, K):
   s = silhouette_sample(X, K)
   score = np.mean(s)
   return score
-  
+
+def ComputeClusterValidity(distance, clusterid, K):
+     centers = getCenters(clusterid, K)
+     distC = distToCenters(distance, centers, clusterid, K)
+     sDB = 0
+     sCH = 0
+     centAll = centroid(distance)
+
+     Nsample = distance.shape[0]
+
+     print '     step1'
+     for i in range(K):
+          Di = zeros(K)
+          for j in range(K):
+               if (i!=j):
+                    Di[j] = (distC[i] + distC[j]) / distance[centers[i], centers[j]]
+          sDB += Di.max()
+     sDB = sDB / float(K)
+     
+     print '     step2'
+     if (K>20):
+          dinter = array([])
+          dintra = array([])
+          for i in range(Nsample):
+               for j in range (i + 1, Nsample):
+                    if (clusterid[i] != clusterid[j]):
+                         dinter = append(dinter, distance[i,j])
+                    else:
+                         dintra = append(dintra, distance[i,j])
+          print dinter.shape, dintra.shape
+          sDunn = dinter.min() / dintra.max()
+     else:
+          sDunn = 0
+
+     print '     step3'
+     if (K>1):
+          B = 0
+          W = 0     
+          for i in range(K):
+               B += (distance[centers[i], centAll] * where(clusterid == centers[i])[0].size)
+               for j in range(Nsample):
+                    if (clusterid[j] == centers[i]):
+                         W += distance[j, centers[i]]
+          sCH = B*(Nsample - K) / (W * 10.0 * (K-1))
+     else:
+          sCH = 0
+     print '     OK'
+     return (1.0 - sDB), sDunn, sCH
