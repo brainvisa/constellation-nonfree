@@ -42,3 +42,9 @@ def distToCenters(distance, centers, clusterid, K):
           dgroup = distance[c, group]
           distCent[i] = dgroup.mean()
      return distCent
+
+def sse(tab):
+  """Sum square error function"""
+  v = 0.5*np.sum(np.square(tab))
+  return v
+  

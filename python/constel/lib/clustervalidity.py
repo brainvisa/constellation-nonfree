@@ -32,7 +32,7 @@ def silhouette_score(X, K):
   score = np.mean(s)
   return score
 
-def ComputeClusterValidity(distance, clusterid, K):
+def computeClusterValidity(distance, clusterid, K):
      centers = getCenters(clusterid, K)
      distC = distToCenters(distance, centers, clusterid, K)
      sDB = 0
@@ -51,7 +51,7 @@ def ComputeClusterValidity(distance, clusterid, K):
      sDB = sDB / float(K)
      
      print '     step2'
-     if (K>20):
+     if (K>2):
           dinter = array([])
           dintra = array([])
           for i in range(Nsample):

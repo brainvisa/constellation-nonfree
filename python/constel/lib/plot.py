@@ -30,3 +30,32 @@ def silhouette_score_plot(s, k):
   plt.xlabel('Cluster')
   plt.show()
   return fig
+  
+def validity_indexes_plot(sDB, sDunn, sCH, SFA, SFG, SFMed):
+  fig = plt.figure()
+  
+  plt.subplot(1, 3, 1)
+  plt.imshow(distMat, interpolation = 'nearest')
+  plt.title('Distance Matrix')
+  plt.grid(True)
+  
+  plt.subplot(1, 3, 2)
+  plt.grid(True)
+  plt.plot(sDB, label = 'D-B')
+  plt.plot(sDunn, label = 'Dunn')
+  plt.plot(sCH, label = 'C-H')
+  plt.xlabel('K')
+  plt.title('Clustering validity index')
+  plt.legend()
+
+  plt.subplot(1, 3, 3)
+  plt.grid(True)
+  plt.plot(SFA, label = 'SF-A')
+  plt.plot(SFG, label = 'SF-G')
+  plt.plot(SFMed, label = 'SF-Med')
+  plt.xlabel('K')
+  plt.title('Fusion-based scores')
+  plt.legend()
+  
+  plt.show()
+  return fig
