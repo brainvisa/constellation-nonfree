@@ -7,7 +7,7 @@ def writeConnMatrixAsIma(mat, filename, lines_length = 100.0, cols_length = 80.0
   (n,p)=mat.shape
   mat_ima = aims.Volume_FLOAT(n,p,1,1)
   mat_ima_array = mat_ima.arraydata()
-  mat_ima_array[0,0,:,:] = mat.transpose()
+  mat_ima_array[0, 0, :, :] = mat.transpose()
   if n==p:
     mat_ima.header()['voxel_size'] = aims.vector_FLOAT([lines_length/n, lines_length/p, 1,1])
   else:
@@ -19,12 +19,40 @@ def writeConnMatrixAsIma(mat, filename, lines_length = 100.0, cols_length = 80.0
 def permutationResampling(feat):
   '''Resampling by permutation of the features'''
   Nsamples = feat.shape[0]
-  Ndim = feat.shape[1]
-    
+  Ndim = feat.shape[1]  
   perm = np.random.permutation(feat[:, 0].reshape((Nsamples, 1)))
   for f in range(1, Ndim):
     perm = np.hstack((perm, np.random.permutation(feat[:, f].reshape((Nsamples, 1))) ))
   return perm
+  
+def caseResampling(feat):
+  '''
+  newFeat: new features matrix
+  bootVect: list of indices resampling
+  survive: list of items that survived the resampling
+  '''
+  N = feat.shape[0]
+  bootVect = random.random_integers(N, size = N)
+  bootVect = bootVect - 1
+  newFeat = feat[bootVect[0], :]
+  for i in range(1, bootVect.size):
+    newFeat = vstack((newFeat, feat[bootVect[i], :]))
+  survive = array([])
+  for i in bootVect:
+    if ((where(survive == i)[0]).size == 0):
+      survive = append(survive, array([int(i)]))
+  return newFeat, bootVect, survive
+  
+def GenerateUniform(whiteFeat, Nsample, Ndim):
+  n0=(whiteFeat[:,0].max()-whiteFeat[:,0].min())*random.random_sample((Nsample,1))+whiteFeat[:,0].min()
+  n1=(whiteFeat[:,1].max()-whiteFeat[:,1].min())*random.random_sample((Nsample,1))+whiteFeat[:,1].min()
+  s=hstack((n0,n1))
+  for i in range(2, Ndim):
+    ni=(whiteFeat[:,i].max()-whiteFeat[:,i].min())*random.random_sample((Nsample,1))+whiteFeat[:,i].min()
+    s=hstack((s, ni))
+          
+  print 'Generated uniform matrix of shape: ', s.shape
+  return s
   
 def orderDataMatrix(mat, labels):
   """
