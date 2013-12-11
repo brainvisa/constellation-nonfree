@@ -83,4 +83,17 @@ output_histo = reductionHisto(input_histo, input_lengths, output_lengths)
     output_histo[i,:]=input_histo[valid].sum(axis = 0)
   return output_histo
 
+def sameNbElements(listA, listB, NonZeroRealNb=True):
+  '''Return lists with the same number of elements'''
+  for index in range(len(listA)):
+    if listA[index] == 0 and listB[index] != 0:
+      listB[index] = 0
+    elif listA[index] != 0 and listB[index] == 0:
+      listA[index] = 0
+  if NonZeroRealNb:
+    listA = [x for x in listA if x != 0]
+    listB = [x for x in listB if x != 0]
+  if len(listA) != len(listB):
+    print 'ERROR: The A size is different from the B.'
+  return listA, listB
 
