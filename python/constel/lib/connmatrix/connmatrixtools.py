@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from soma import aims
 import numpy as np
+import itertools
 
 def writeConnMatrixAsIma(mat, filename, lines_length = 100.0, cols_length = 80.0):
   print "Writing Matrix As .ima"
@@ -86,17 +87,17 @@ def euclidianDistance(v1,v2):
   return np.sqrt(dist)
    
 def euclidianDistanceMatrix(matrix):
-  (n,p)=matrix.shape
+  (n,p) = matrix.shape
   euclidian_dist_matrix = np.zeros((n,n), dtype = np.float)
   for i in xrange(n):
     v1 = matrix[i]
     dist_value = 0
-    euclidian_dist_matrix[i][i]=0
+    euclidian_dist_matrix[i][i] = 0
     for j in xrange(0,i):
       v2 = matrix[j]
       dist_value = euclidianDistance(v1,v2)
-      euclidian_dist_matrix[i][j]= dist_value
-      euclidian_dist_matrix[j][i]= dist_value
+      euclidian_dist_matrix[i][j] = dist_value
+      euclidian_dist_matrix[j][i] = dist_value
   return euclidian_dist_matrix
   
 def connMatrixParcelsToTargets(reducedmatrix, parcels, timestep = 0, mode = "meanOfProfiles"):
@@ -135,7 +136,7 @@ def connMatrixParcelsToTargets(reducedmatrix, parcels, timestep = 0, mode = "mea
   for i in xrange(len(labels_unique)):
     label = labels_unique[i]
     label_connMatrixToTargets_array = reducedmatrix[np.where(labels==label)]
-    if mode =="meanOfProfiles":
+    if mode == "meanOfProfiles":
       matrix[labelCount]=label_connMatrixToTargets_array.mean(axis = 0)
     elif mode == "sumOfProfiles":
       matrix[labelCount]=label_connMatrixToTargets_array.sum(axis = 0)
@@ -144,3 +145,10 @@ def connMatrixParcelsToTargets(reducedmatrix, parcels, timestep = 0, mode = "mea
     labelCount+=1
   
   return matrix
+  
+def contingency_matrix( labels1, labels2 ):
+  classes = list( set( labels1 ) )
+  n = len( classes )
+  contingency_matrix = np.array( [ zip(labels1, labels2 ).count(x) for x in itertools.product( classes, repeat = 2 ) ] ).reshape( n, n )
+  #contingency_matrix = np.bincount( n * ( labels1 - 1 ) + ( labels2 - 1 ), minlength = n * n).reshape( n, n )
+  return contingency_matrix
