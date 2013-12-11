@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 import numpy as np
 
 def getCenters(clust, K):
@@ -47,4 +48,20 @@ def sse(tab):
   """Sum square error function"""
   v = 0.5*np.sum(np.square(tab))
   return v
+
+def entropy( labels ):
+  '''Computes entropy of label distribution'''
+  n_labels = len( labels )  
+  if n_labels <= 1:
+    return 0    
+  counts = np.bincount( labels )
+  counts = np.array( [ x for x in counts if x != 0 ] ).astype(float)
+  counts_sum = np.sum( counts )
+  probs = counts / n_labels
+  n_classes = np.count_nonzero( probs )  
+  if n_classes <= 1:
+    return 0  
+  entropy = -np.sum( probs * ( np.log( counts ) - np.log( counts_sum ) ) )
+  return entropy
+  
   
