@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import numpy as np
 from math import log
 from scipy.misc import comb
@@ -33,4 +34,4 @@ def randIndex( list1, list2 ):
   return ( ( sum_ - prod_ ) / ( mean_ - prod_ ) )
   
 def jacard( list1, list2 ):
-  
+  pass
