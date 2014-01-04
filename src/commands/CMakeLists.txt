@@ -22,7 +22,7 @@ foreach( _command ${_commands} )
   foreach( _f ${_proSources} )
     set( _sources ${_sources} ${_command}/${_f} )
   endforeach()
-  add_executable( ${_target} ${_sources} )
+  BRAINVISA_ADD_EXECUTABLE( ${_target} ${_sources} )
   target_link_libraries( ${_target} constellation )
   BRAINVISA_INSTALL( TARGETS ${_target}
                      DESTINATION bin
