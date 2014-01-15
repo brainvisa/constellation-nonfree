@@ -188,7 +188,7 @@ def main(arguments):
         uniform=whiteFeat.copy()
     
     # WB=zeros((B, Kmax+1))
-    inputs = glob.glob(options.input)
+    inputs = glob.glob('*.npy')
     WBparts = []
     for infile in inputs:
       WBparts.append( load( infile ) )
