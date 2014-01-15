@@ -111,7 +111,7 @@ def main(arguments):
     wflag=0 # whitening of features or not ? (2 per feature, 1 per category, 0 no)
     d='e' # distance : 'se'=squared euclidean, 'e'=euclidean, 'b'=city-block
     expeDir=arguments[5] 
-    
+    re='p'
     gapFile=options.output
 
     featFile=options.matrix
