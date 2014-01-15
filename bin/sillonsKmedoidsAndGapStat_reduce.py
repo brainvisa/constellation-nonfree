@@ -21,7 +21,7 @@ subjCentK=[] # classe K, le sujet le plus proche du centre
 errE_K=[] #error as a function of K, this is plotted to find the optimal K
 errRmean_K=[] # the same divided by the number of clusters
 Nresamp=2000 # How many resmapling during validation
-
+B=10000
 plot=0 # plot de l'erreur globale vs nbre de clusters
 
 
