@@ -88,7 +88,7 @@ def main():
         print '      Clustering assessed'
               
     print 'Resampling done'
-    save(options.output, WB)
+    np.save(options.output, WB)
 
 if __name__ == "__main__":
      main()
