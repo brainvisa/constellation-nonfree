@@ -1,233 +1,111 @@
 #!/usr/bin/env python
-# Filename: sillonsKMedoids.py
 
-from numpy import *
-from scipy import cluster as cl
-import scipy
-from soma import aims
-import anatomist.direct.api as anatomist
+import constel.lib.connmatrix.connmatrixtools as clcm
+import constel.lib.clustering.clusterstools as clcc
+import scipy.spatial.distance as ssd
+import scipy.cluster.vq as scv
 import Pycluster as pc
-import sys
+from soma import aims
+import numpy as np
+import optparse
 import glob
 import math
-from optparse import OptionParser
+import sys
 
-distK=[] #classe K, les distances.
-indexK=[] # classe K, les index
-centerK=[]
-subjK=[] # classe K, les sujets
-subjCentK=[] # classe K, le sujet le plus proche du centre
+def parseOpts(argv):
+    desc = """Computing Wk for data and gap."""
+    parser = optparse.OptionParser(desc)
+    parser.add_option('-i', '--input', dest='input', metavar='FILE', action='append',
+                      help='input permutation files (list)')
+    parser.add_option('-m', '--matrix', dest='matrix', metavar='FILE',
+                      help='Input connectivity matrix')
+    parser.add_option('-k', '--kmax', dest='kmax', type='int',
+                      help='Max number of clusters K')
+    parser.add_option('-n', '--niter', dest='niter', type='int',
+                      help='Number of iterations of same kmedoid algorithm')
+    parser.add_option('-o', '--output', dest='output', metavar='FILE',
+                      help='Output gap file')
+    parser.add_option('-p', '--permutations', dest='permut', type='int',
+                      help='number of permutations')                   
+    parser.add_option('-e', '--distance', dest='dist', type='str',
+                      help='Distance : sqeuclidean, euclidean, cityblock')
+    parser.add_option('-f', '--wflag', dest='wflag', type='int',
+                      help='Whitening of features or not ? 2 per feature, 1 per category, 0 no')                  
+    return parser, parser.parse_args(argv)
 
-errE_K=[] #error as a function of K, this is plotted to find the optimal K
-errRmean_K=[] # the same divided by the number of clusters
-Nresamp=2000 # How many resmapling during validation
-B=10000
-plot=0 # plot de l'erreur globale vs nbre de clusters
+def main():
+    parser, (options, args) = parseOpts(sys.argv)
 
-
-####################################################################
-# normalize the data (sigma=1) per category
-####################################################################
-
-def partialWhiten(features):
-     dist=features[:,0:6]
-     direc=features[:,6:12]
-     sdist=std(dist)
-     sidrec=std(direc)
-     direc=direc/sidrec
-     dist=dist/sdist
-     white=hstack((dist, direc))
-     return white
-
-####################################################################
-# generate samples from uniform distrib with same shape than
-# original samples
-####################################################################
-
-def GenerateUniform(whiteFeat, Nsample, Ndim):     
-     n0=(whiteFeat[:,0].max()-whiteFeat[:,0].min())*random.random_sample((Nsample,1))+whiteFeat[:,0].min()
-     n1=(whiteFeat[:,1].max()-whiteFeat[:,1].min())*random.random_sample((Nsample,1))+whiteFeat[:,1].min()
-     s=hstack((n0,n1))
-     
-     for i in range(2, Ndim):
-          ni=(whiteFeat[:,i].max()-whiteFeat[:,i].min())*random.random_sample((Nsample,1))+whiteFeat[:,i].min()
-          s=hstack((s, ni))
-          
-     print 'Generated uniform matrix of shape: ', s.shape
-     return s
-         
-####################################################################
-# within cluster sum of distance 
-####################################################################
-
-def getCenters(clust,K):
-     i=0
-     cent=array([])
-     #print clust.size
-     while (cent.size < K):
-          c=clust[i]
-          if ((where(cent==c)[0]).size==0):
-               cent=append(cent,  array([int( c )]))
-          i+=1
-     return cent
-
-def wcDist(distance, clusterid, K, fact):
-     centers=getCenters(clusterid, K)
-     total=0
-     W=zeros(K)
-     Total=0.0
-     for l in range(K):
-          sum=0.0
-          indit=where(clusterid==centers[l])[0] #le tuple des indexs
-          for i in indit:
-               for j in indit:
-                    if (i<j):
-                         sum+=(distance[j][i]**fact)
-                    elif (j<i):
-                         sum+=(distance[i][j]**fact)
-          W[l]=sum/float(2.0*indit.size)
-          Total+=W[l]
-     return Total
-
-####################################################################
-# Main function
-# usage : python silllonsKMedoidsAndGapStat.py 2 se p /Users/olivier/dataLocal/SillonsVlad/S.F.inf./Left/spamGlobalLocalMontreal/SFinfFeatures.txt expeDir/
-####################################################################
-
-def main(arguments):
-    parser = OptionParser( 'blabla' )
-    parser.add_option( '-i', '--input', dest = 'input', metavar = 'FILE', action='append',
-                        help = 'input permutation files (list)')
-    parser.add_option( '-m', '--matrix', dest = 'matrix', metavar = 'FILE',
-                        help = 'input connectivity matrix')
-    parser.add_option( '-k', '--kmax', dest = 'kmax', type='int',
-                        help = 'K max')
-    parser.add_option( '-n', '--niter', dest = 'niter', type='int',
-                        help = 'number of iterations of same kmedoid')
-    parser.add_option( '-o', '--output', dest = 'output', metavar = 'FILE',
-                        help = 'output gap file')
-    options, args = parser.parse_args(arguments)
+    print 'Opening and reading: ', options.matrix
+    matrix = aims.read(options.matrix)
+    matrixar = np.asarray(matrix)[:, :, 0, 0].transpose()
+    n_sample, n_dim = matrixar.shape
+    print 'Number of samples: ', n_sample, 'Dimension: ', n_dim
     
-    wflag=0 # whitening of features or not ? (2 per feature, 1 per category, 0 no)
-    d='e' # distance : 'se'=squared euclidean, 'e'=euclidean, 'b'=city-block
-    expeDir=arguments[5] 
-    re='p'
-    gapFile=options.output
-
-    featFile=options.matrix
-    
-    NiterK=options.niter # nb iteration for k-medoids algorithm
-    #print 'WARNING VERY SLOW - NiterK has been set to 10000 !!! Go change it if that is not what you want'
-
-    Kmax=options.kmax # max nb of clusters
-    vects=[]
-    print 'Opening and reading ', featFile
-    
-    vects=aims.read(featFile)
-    
-    feat=asarray(vects)[:,:,0,0].transpose()
-    
-    Nsample=feat.shape[0]
-    Ndim=feat.shape[1]
-    
-    print 'Number of samples: ', Nsample
-    print 'Dimension: ', Ndim
-    
-    
-    if d=='se':
-        fact=2
-        d='e'
-    else:
-        fact=1
-
-    #whiteFeat=cl.vq.whiten(feat)
-    if (wflag==2):
+    if (options.wflag == 2):
         print 'Per feature whitening'
-        whiteFeat=scipy.cluster.vq.whiten(feat)
-    elif (wflag==1):
+        features = scv.whiten(matrixar)
+    elif (options.wflag == 1):
         print 'Per category (dist and dir) whitening'
-        whiteFeat=partialWhiten(feat)
+        features = clcm.partialWhiten(matrixar)
     else:
         print 'No whitening'
-        whiteFeat=feat
-#     centers, disto=cl.vq.kmeans(whiteFeat, K, 100)
-#     code, dist = cl.vq.vq(whiteFeat, centers)
-
-    distance1=pc.distancematrix(whiteFeat, dist=d)
+        features = matrixar
+        
+    if (options.dist == 'sqeuclidean'):
+        fact = 2
+    else:
+        fact = 1
+        
+    distance = ssd.squareform(ssd.pdist(features, options.dist))
+    W = np.zeros(options.kmax + 1)
+    print 'Computing Wk for data'
+    for K in range(1, options.kmax + 1):
+        clusterid, error, nfound = pc.kmedoids(distance, K, options.niter)
+        wc = clcc.wcDist(distance, clusterid, K, fact)
+        print 'K = ', K, ', error = ', error, ', wcDist = ', wc
+        W[K] = math.log(wc)
+    print 'Wk = ', W
     
-    # addition I should have made before : squaring the euclidean distances.
-    
-    distance=[array([])]
-    
-    if (d=='e'):
-        print 'Euclidean distance at power ', fact
-        for i in range(1, whiteFeat.shape[0]):
-              distance.append((distance1[i]**fact).copy())
-    elif (d=='b'):
-        print 'City-block distance'
-        distance=distance1
-
-    W=zeros(Kmax+1)
-    print 'computing Wk for data'
-    for K in range(1, Kmax+1):
-        clusterid, error, nfound = pc.kmedoids(distance, K, NiterK)
-        wc=wcDist(distance1, clusterid, K, 2)
-        print 'K=', K, ', error=', error, ', wcDist=', wc
-        W[K]=math.log(wc)
-    print 'OK'
-    print 'Wk=', W
-    
-    if (re=='m'):
-        print 'Generating uniform distribution with Monte-carlo'
-        uniform=GenerateUniform(whiteFeat, Nsample, Ndim)
-    elif (re=='b'):
-        print 'Generating uniform distribution that will be bootstrapped'
-        uniform=GenerateUniform(whiteFeat, Nsample, Ndim)
-    elif (re=='p'):
-        print 'Reference distribution will be sampled by permutations of the original one'
-        uniform=whiteFeat.copy()
-    
-    # WB=zeros((B, Kmax+1))
     inputs = glob.glob('*.npy')
     WBparts = []
     for infile in inputs:
-      WBparts.append( load( infile ) )
-    WB = vstack( WBparts )
+      WBparts.append(np.load(infile))
+    WB = np.vstack(WBparts)
     del WBparts
               
     print 'Computing Gap'
-    meanWB=mean(WB, axis=0)
-    sdWB=std(WB, axis=0)
-    gap=zeros(Kmax+1)
-    sW=zeros(Kmax+1)
-    for K in range(1, Kmax+1):
-        gap[K]=(meanWB[K] - W[K])
-        sW[K]=sdWB[K]*math.sqrt(1+1.0/float(B))
+    meanWB = np.mean(WB, axis = 0)
+    sdWB = np.std(WB, axis = 0)
+    gap = np.zeros(options.kmax + 1)
+    sW = np.zeros(options.kmax + 1)
+    for K in range(1, options.kmax + 1):
+        gap[K] = (meanWB[K] - W[K])
+        sW[K] = sdWB[K] * math.sqrt(1 + 1.0 / float(options.permut))
     
-    print 'MeanWB=', meanWB
-    print 'sdWB=', sdWB 
-    print 'Gap=', gap
-    print 'STD=', sW
+    print 'MeanWB =', meanWB
+    print 'sdWB =', sdWB 
+    print 'Gap =', gap
+    print 'STD =', sW  
+    print 'Writing results to ', options.output
     
-    print 'Writing results to ', gapFile
-
-    fileR=open(gapFile, 'w')
-    fileR.write(featFile + '\n')
-    lineW=''
-    lineMW=''
-    lineG=''
-    lineS=''
-    for K in range(1,Kmax+1):
-        lineW=lineW + str(W[K]) + ' '
-        lineMW=lineMW + str(meanWB[K]) + ' '
-        lineG=lineG + str(gap[K]) + ' '
-        lineS=lineS + str(sW[K]) + ' '
-    fileR.write(lineW + '\n')
-    fileR.write(lineMW + '\n')
-    fileR.write(lineG + '\n')
-    fileR.write(lineS + '\n')
+    fileR = open(options.output, 'w')
+    fileR.write('--> Reading:' + options.matrix + '\n')
+    lineW = ''
+    lineMW = ''
+    lineG = ''
+    lineS = ''
+    for K in range(1, options.kmax + 1):
+        lineW = lineW + str(W[K]) + ' '
+        lineMW = lineMW + str(meanWB[K]) + ' '
+        lineG = lineG + str(gap[K]) + ' '
+        lineS = lineS + str(sW[K]) + ' '
+    fileR.write('--> MeanWB: ' + lineW + '\n')
+    fileR.write('--> sdWB: ' + lineMW + '\n')
+    fileR.write('--> Gap: ' + lineG + '\n')
+    fileR.write('--> STD: ' + lineS + '\n')
 
     fileR.close()
 
 if __name__ == "__main__":
-     main(sys.argv)
+     main()

@@ -1,260 +1,95 @@
 #!/usr/bin/env python
-# Filename: sillonsKMedoids.py
 
-from numpy import *
-from scipy import cluster as cl
-import scipy
-from soma import aims
-import anatomist.direct.api as anatomist
+import constel.lib.connmatrix.connmatrixtools as clcm
+import constel.lib.clustering.clusterstools as clcc
+import scipy.spatial.distance as ssd
+import scipy.cluster.vq as scv
 import Pycluster as pc
-import sys
+from soma import aims
+import numpy as np
+import optparse
 import math
-from optparse import OptionParser
+import sys
 
-#featFile='/Users/olivier/dataLocal/SillonsVlad/S.F.inf./Left/spamGlobalLocalMontreal/SFinfFeatures.txt'
-#featFile='/Users/olivier/dataLocal/SillonsVlad/S.F.inf./Left/spamGlobalLocalMontreal/uniformFeatures.txt'
-
-
-
-distK=[] #classe K, les distances.
-indexK=[] # classe K, les index
-centerK=[]
-subjK=[] # classe K, les sujets
-subjCentK=[] # classe K, le sujet le plus proche du centre
-
-errE_K=[] #error as a function of K, this is plotted to find the optimal K
-errRmean_K=[] # the same divided by the number of clusters
-Nresamp=2000 # How many resmapling during validation
-
-plot=0 # plot de l'erreur globale vs nbre de clusters
-
-
-####################################################################
-# normalize the data (sigma=1) per category
-####################################################################
-
-def partialWhiten(features):
-     dist=features[:,0:6]
-     direc=features[:,6:12]
-     sdist=std(dist)
-     sidrec=std(direc)
-     direc=direc/sidrec
-     dist=dist/sdist
-     white=hstack((dist, direc))
-     return white
-
-####################################################################
-# generate samples from uniform distrib with same shape than
-# original samples
-####################################################################
-
-def GenerateUniform(whiteFeat, Nsample, Ndim):     
-     n0=(whiteFeat[:,0].max()-whiteFeat[:,0].min())*random.random_sample((Nsample,1))+whiteFeat[:,0].min()
-     n1=(whiteFeat[:,1].max()-whiteFeat[:,1].min())*random.random_sample((Nsample,1))+whiteFeat[:,1].min()
-     s=hstack((n0,n1))
+def parseOpts(argv):
+    desc = """blabla."""
+    parser = optparse.OptionParser(desc)
+    parser.add_option('-m', '--matrix', dest='matrix', metavar='FILE',
+                       help='input connectivity matrix')
+    parser.add_option('-k', '--kmax', dest='kmax', type='int',
+                       help='K max')
+    parser.add_option('-n', '--niter', dest='niter', type='int',
+                       help='number of iterations of same kmedoid')
+    parser.add_option('-p', '--permutations', dest='permut', type='int',
+                       help='number of permutations')
+    parser.add_option('-o', '--output', dest='output', metavar='FILE',
+                       help='output permutations file')
+    parser.add_option('-r', '--re', dest='typer', type='str',
+                      help='Type of resampling: b=bootstrap p=permutations m=montecarlo ')                 
+    parser.add_option('-e', '--distance', dest='dist', type='str',
+                      help='Distance : sqeuclidean, euclidean, cityblock')
+    parser.add_option('-f', '--wflag', dest='wflag', type='int',
+                      help='Whitening of features or not ? 2 per feature, 1 per category, 0 no')                    
+    return parser, parser.parse_args(argv)
      
-     for i in range(2, Ndim):
-          ni=(whiteFeat[:,i].max()-whiteFeat[:,i].min())*random.random_sample((Nsample,1))+whiteFeat[:,i].min()
-          s=hstack((s, ni))
-          
-     print 'Generated uniform matrix of shape: ', s.shape
-     return s
-     
-     
-####################################################################
-# case resampling, i.e. bootstrap with replacement
-####################################################################
-  
-def caseResampling(feat):
-     N=feat.shape[0]
-     bootVect=random.random_integers(N, size=N)
-     bootVect=bootVect-1
-     newFeat=feat[bootVect[0],:]
-     for i in range(1,bootVect.size):
-          newFeat=vstack((newFeat, feat[bootVect[i],:]))
-     survive=array([])
-     for i in bootVect:
-          if ((where(survive==i)[0]).size==0):
-               survive=append(survive, array([int(i)]))
-     return newFeat, bootVect, survive
-     # newFeat est la nouvelle matrice de features
-     # bootVect est la liste des indices du reechantillonage, 
-     # survive est la liste des elements ayant survecu au reechantillonage
+def main():
+    parser, (options, args) = parseOpts(sys.argv)
+   
+    print 'Opening and reading: ', options.matrix
+    matrix = aims.read(options.matrix)
+    matrixar = np.asarray(matrix)[:, :, 0, 0].transpose()
+    n_sample, n_dim = matrixar.shape
+    print 'Number of samples: ', n_sample, 'Dimension: ', n_dim
 
-####################################################################
-# resampling by permutation of the features 
-####################################################################
-  
-def permutationResampling(feat):
-     Nsamples=feat.shape[0]
-     Nfeat=feat.shape[1]
-     
-     permF=random.permutation(feat[:,0].reshape((Nsamples,1)))
-     for f in range (1, Nfeat):
-          permF=hstack((permF, random.permutation(feat[:,f].reshape((Nsamples,1))) ))
-
-     return permF     
-     
-####################################################################
-# within cluster sum of distance 
-####################################################################
-
-def getCenters(clust,K):
-     i=0
-     cent=array([])
-     #print clust.size
-     while (cent.size < K):
-          c=clust[i]
-          if ((where(cent==c)[0]).size==0):
-               cent=append(cent,  array([int( c )]))
-          i+=1
-     return cent
-
-def wcDist(distance, clusterid, K, fact):
-     centers=getCenters(clusterid, K)
-     total=0
-     W=zeros(K)
-     Total=0.0
-     for l in range(K):
-          sum=0.0
-          indit=where(clusterid==centers[l])[0] #le tuple des indexs
-          for i in indit:
-               for j in indit:
-                    if (i<j):
-                         sum+=(distance[j][i]**fact)
-                    elif (j<i):
-                         sum+=(distance[i][j]**fact)
-          W[l]=sum/float(2.0*indit.size)
-          Total+=W[l]
-     return Total
-
-####################################################################
-# Main function
-# usage : python silllonsKMedoidsAndGapStat.py 2 se p /Users/olivier/dataLocal/SillonsVlad/S.F.inf./Left/spamGlobalLocalMontreal/SFinfFeatures.txt expeDir/
-####################################################################
-
-def main(arguments):
-    parser = OptionParser( 'blabla' )
-    parser.add_option( '-m', '--matrix', dest = 'matrix', metavar = 'FILE',
-                        help = 'input connectivity matrix')
-    parser.add_option( '-k', '--kmax', dest = 'kmax', type='int',
-                        help = 'K max')
-    parser.add_option( '-n', '--niter', dest = 'niter', type='int',
-                        help = 'number of iterations of same kmedoid')
-    parser.add_option( '-p', '--permutations', dest = 'permut', type='int',
-                        help = 'number of permutations')
-    parser.add_option( '-o', '--output', dest = 'output', metavar = 'FILE',
-                        help = 'output permutations file')
-    options, args = parser.parse_args(arguments)
-
-    wflag=0 # whitening of features or not ? (2 per feature, 1 per category, 0 no)
-    d='e' # distance : 'se'=squared euclidean, 'e'=euclidean, 'b'=city-block
-    re='p' # type of resampling: 'b'=bootstrap 'p'=permutations 'm' montecarlo
-    featFile=options.matrix
-    
-    NiterK=options.niter # nb iteration for k-medoids algorithm
-    #print 'WARNING VERY SLOW - NiterK has been set to 10000 !!! Go change it if that is not what you want'
-
-    Kmax=options.kmax # max nb of clusters
-    B=options.permut
-    vects=[]
-    print 'Opening and reading ', featFile
-    
-    vects=aims.read(featFile)
-    
-    feat=asarray(vects)[:,:,0,0].transpose()
-    
-    Nsample=feat.shape[0]
-    Ndim=feat.shape[1]
-    
-    print 'Number of samples: ', Nsample
-    print 'Dimension: ', Ndim
-    
-    
-    if d=='se':
-        fact=2
-        d='e'
-    else:
-        fact=1
-
-    #whiteFeat=cl.vq.whiten(feat)
-    if (wflag==2):
+    if (options.wflag == 2):
         print 'Per feature whitening'
-        whiteFeat=scipy.cluster.vq.whiten(feat)
-    elif (wflag==1):
+        features = scv.whiten(matrixar)
+    elif (options.wflag == 1):
         print 'Per category (dist and dir) whitening'
-        whiteFeat=partialWhiten(feat)
+        features = clcm.partialWhiten(matrixar)
     else:
         print 'No whitening'
-        whiteFeat=feat
-#     centers, disto=cl.vq.kmeans(whiteFeat, K, 100)
-#     code, dist = cl.vq.vq(whiteFeat, centers)
-
-    distance1=pc.distancematrix(whiteFeat, dist=d)
+        features = matrixar
     
-    # addition I should have made before : squaring the euclidean distances.
+    if (options.dist == 'sqeuclidean' ):
+        fact = 2
+    else:
+        fact = 1
     
-    distance=[array([])]
-    
-    if (d=='e'):
-        print 'Euclidean distance at power ', fact
-        for i in range(1, whiteFeat.shape[0]):
-              distance.append((distance1[i]**fact).copy())
-    elif (d=='b'):
-        print 'City-block distance'
-        distance=distance1
-
-    W=zeros(Kmax+1)
-    print 'Computing Wk for data'
-    for K in range(2, Kmax+1):
-        clusterid, error, nfound = pc.kmedoids(distance, K, NiterK)
-        wc=wcDist(distance1, clusterid, K, 2)
-        W[K]=math.log(wc)
-        print 'K =', K, ', error =', error, ', wcDist =', wc, 'W[K] =', W[K]
-    print 'OK'
-    print 'Wk =', W
-    
-    if (re=='m'):
+    if (options.typer == 'm'):
         print 'Generating uniform distribution with Monte-carlo'
-        uniform=GenerateUniform(whiteFeat, Nsample, Ndim)
-    elif (re=='b'):
+        uniform = clcm.GenerateUniform(features, n_sample, n_dim)
+    elif (options.typer == 'b'):
         print 'Generating uniform distribution that will be bootstrapped'
-        uniform=GenerateUniform(whiteFeat, Nsample, Ndim)
-    elif (re=='p'):
+        uniform = clcm.GenerateUniform(features, n_sample, n_dim)
+    elif (options.typer == 'p'):
         print 'Reference distribution will be sampled by permutations of the original one'
-        uniform=whiteFeat.copy()
+        uniform = features.copy()
     
-    WB=zeros((B, Kmax+1))
-    print 'Re-sampling ', B, ' times to estimate uniform Wk'
-    for iteration in range(B):
-        if ((iteration%1)==0):
-              print '        iteration ', iteration
-        if (re=='m'):
-              featuni=GenerateUniform(whiteFeat, Nsample, Ndim)
-        elif (re=='b'):
-              featuni, sampuni, suruni=caseResampling(uniform)
-        elif (re=='p'):
-              featuni=permutationResampling(uniform)
-              print '                permutation done'
+    WB = np.zeros((options.permut, options.kmax + 1))
+    print 'Re-sampling ', options.permut, ' times to estimate uniform Wk'
+    for iteration in range(options.permut):
+        if ((iteration%1) == 0):
+            print '  --> Iteration ', iteration
+        if (options.typer == 'm'):
+            featuni = clcm.GenerateUniform(features, n_sample, n_dim)
+        elif (options.typer == 'b'):
+            featuni, sampuni, suruni = clcm.caseResampling(uniform)
+        elif (options.typer == 'p'):
+            featuni = clcm.permutationResampling(uniform)
+            print '      Permutation done'
         
-        rdist1=pc.distancematrix(featuni, dist=d)
-        print '                distance matrix OK'
-        rdist=[array([])]
-        if (d=='e'):
-              for i in range(1, featuni.shape[0]):
-                  rdist.append((rdist1[i]**fact).copy())
-              #rdist=rdist1
-        elif (d=='b'):
-              rdist=rdist1
-        for K in range(1, Kmax+1):
-              uniclusterid, unierror, uninfound = pc.kmedoids(rdist, K, NiterK)
-              uniwc=wcDist(rdist1, uniclusterid, K, 2)
-              WB[iteration, K]=math.log(uniwc)
-        print '                clustering assessed'
+        rdist = ssd.squareform(ssd.pdist(featuni, options.dist))
+        print '      Distance matrix done'
+        for K in range(1, options.kmax + 1):
+            uniclusterid, unierror, uninfound = pc.kmedoids(rdist, K, options.niter)
+            uniwc = clcc.wcDist(rdist, uniclusterid, K, fact)
+            WB[iteration, K] = math.log(uniwc)
+        print '      Clustering assessed'
               
     print 'Resampling done'
-    save( options.output, WB )
+    save(options.output, WB)
 
 
 if __name__ == "__main__":
-     main(sys.argv)
+     main()
