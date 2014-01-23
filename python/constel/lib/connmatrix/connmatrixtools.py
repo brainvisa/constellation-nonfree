@@ -33,25 +33,27 @@ def caseResampling(feat):
   survive: list of items that survived the resampling
   '''
   N = feat.shape[0]
-  bootVect = random.random_integers(N, size = N)
+  bootVect = np.random.random_integers( N, size = N )
   bootVect = bootVect - 1
   newFeat = feat[bootVect[0], :]
   for i in range(1, bootVect.size):
-    newFeat = vstack((newFeat, feat[bootVect[i], :]))
-  survive = array([])
+    newFeat = np.vstack( ( newFeat, feat[bootVect[i], :] ) )
+  survive = np.array([])
   for i in bootVect:
-    if ((where(survive == i)[0]).size == 0):
-      survive = append(survive, array([int(i)]))
+    if ( ( np.where(survive == i)[0] ).size == 0 ):
+      survive = np.append(survive, np.array([int(i)]))
   return newFeat, bootVect, survive
   
 def GenerateUniform(whiteFeat, Nsample, Ndim):
-  n0=(whiteFeat[:,0].max()-whiteFeat[:,0].min())*random.random_sample((Nsample,1))+whiteFeat[:,0].min()
-  n1=(whiteFeat[:,1].max()-whiteFeat[:,1].min())*random.random_sample((Nsample,1))+whiteFeat[:,1].min()
-  s=hstack((n0,n1))
+  '''
+  Generate samples from uniform distrib with same shape than original samples.
+  '''
+  n0 = ( whiteFeat[:, 0].max() - whiteFeat[:, 0].min()) * np.random.random_sample( ( Nsample, 1 ) ) + whiteFeat[:, 0].min()
+  n1 = ( whiteFeat[:, 1].max() - whiteFeat[:, 1].min()) * np.random.random_sample( ( Nsample, 1 ) ) + whiteFeat[:, 1].min()
+  s = np.hstack( (n0, n1) )
   for i in range(2, Ndim):
-    ni=(whiteFeat[:,i].max()-whiteFeat[:,i].min())*random.random_sample((Nsample,1))+whiteFeat[:,i].min()
-    s=hstack((s, ni))
-          
+    ni = (whiteFeat[:,i].max() - whiteFeat[:, i].min()) * np.random.random_sample( ( Nsample, 1 ) ) + whiteFeat[:, i].min()
+    s = np.hstack( (s, ni) )
   print 'Generated uniform matrix of shape: ', s.shape
   return s
   
@@ -152,3 +154,16 @@ def contingency_matrix( labels1, labels2 ):
   contingency_matrix = np.array( [ zip(labels1, labels2 ).count(x) for x in itertools.product( classes, repeat = 2 ) ] ).reshape( n, n )
   #contingency_matrix = np.bincount( n * ( labels1 - 1 ) + ( labels2 - 1 ), minlength = n * n).reshape( n, n )
   return contingency_matrix
+  
+def partialWhiten(features):
+  '''
+  Normalize the data (sigma = 1) per category.
+  '''
+  dist = features[:, 0:6]
+  direc = features[:, 6:12]
+  sdist = np.std( dist )
+  sidrec = np.std( direc )
+  direc = direc / sidrec
+  dist = dist / sdist
+  white = hstack( ( dist, direc ) )
+  return white

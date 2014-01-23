@@ -35,3 +35,38 @@ def randIndex( list1, list2 ):
   
 def jacard( list1, list2 ):
   pass
+
+def dunn_index():
+  pass
+
+def db_index(distance_matrix, labels):
+  """
+  Davies-Bouldin clustering evaluation index.
+  matrix: n*dim
+  labels: cluster numbers corresponding to matrix sample n*1
+  """
+  pass
+
+def calinsky_harabasz_index():
+  pass
+
+def gap_index(matrix, b):
+  """
+  Gap clustering evaluation index.
+  data: samples along the rows
+  clusters: vector containing the number of clusters
+  """
+  matrix = matrix.transpose()
+  print 'Opening and reading: ', matrix
+  Nsample = matrix.shape[0]
+  x, y = matrix[:,0], matrix[:,1]
+  xmin = x.min()
+  xmax = x.max()
+  ymin = y.min()
+  ymax = y.max()
+  for i in xrange(b):
+    Xb = np.vstack([np.random.uniform(xmin, xmax, Nsample), 
+                    np.random.uniform(ymin, ymax, Nsample)]).T
+    clusterid, error, nfound = pc.kmedoids(matrix, K, 100)
+    
+  pass
