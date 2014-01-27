@@ -8,11 +8,12 @@ import Pycluster as pc
 from soma import aims
 import numpy as np
 import optparse
-import math
 import sys
 
 def parseOpts(argv):
-    desc = """blabla."""
+    desc = """(1) Cluster the observed data. 
+              (2) Compute the standard deviation. 
+              (3) Choose the number of clusters."""
     parser = optparse.OptionParser(desc)
     parser.add_option('-m', '--matrix', dest='matrix', metavar='FILE',
                        help='input connectivity matrix')
@@ -37,19 +38,19 @@ def main():
    
     print 'Opening and reading: ', options.matrix
     matrix = aims.read(options.matrix)
-    matrixar = np.asarray(matrix)[:, :, 0, 0].transpose()
-    n_sample, n_dim = matrixar.shape
+    mat = np.asarray(matrix)[:, :, 0, 0].transpose()
+    n_sample, n_dim = mat.shape
     print 'Number of samples: ', n_sample, 'Dimension: ', n_dim
 
     if (options.wflag == 2):
         print 'Per feature whitening'
-        features = scv.whiten(matrixar)
+        features = scv.whiten(mat)
     elif (options.wflag == 1):
         print 'Per category (dist and dir) whitening'
-        features = clcm.partialWhiten(matrixar)
+        features = clcm.partialWhiten(mat)
     else:
         print 'No whitening'
-        features = matrixar
+        features = mat
     
     if (options.dist == 'sqeuclidean' ):
         fact = 2
@@ -84,7 +85,8 @@ def main():
         for K in range(1, options.kmax + 1):
             uniclusterid, unierror, uninfound = pc.kmedoids(rdist, K, options.niter)
             uniwc = clcc.wcDist(rdist, uniclusterid, K, fact)
-            WB[iteration, K] = math.log(uniwc)
+            #WB[iteration, K] = np.log(uniwc)
+            WB[iteration, K] = uniwc
         print '      Clustering assessed'
               
     print 'Resampling done'

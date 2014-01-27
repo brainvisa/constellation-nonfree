@@ -9,11 +9,11 @@ from soma import aims
 import numpy as np
 import optparse
 import glob
-import math
 import sys
 
 def parseOpts(argv):
-    desc = """Computing Wk for data and gap."""
+    desc = """Step 1: cluster the observed data, varying the total number of clusters from k = 1:K, giving within-dispersion measures Wk.
+              Step 2: Compute Gap(k)"""
     parser = optparse.OptionParser(desc)
     parser.add_option('-i', '--input', dest='input', metavar='FILE', action='append',
                       help='input permutation files (list)')
@@ -38,53 +38,54 @@ def main():
 
     print 'Opening and reading: ', options.matrix
     matrix = aims.read(options.matrix)
-    matrixar = np.asarray(matrix)[:, :, 0, 0].transpose()
-    n_sample, n_dim = matrixar.shape
+    mat = np.asarray(matrix)[:, :, 0, 0].transpose()
+    n_sample, n_dim = mat.shape
     print 'Number of samples: ', n_sample, 'Dimension: ', n_dim
     
     if (options.wflag == 2):
         print 'Per feature whitening'
-        features = scv.whiten(matrixar)
+        features = scv.whiten(mat)
     elif (options.wflag == 1):
         print 'Per category (dist and dir) whitening'
-        features = clcm.partialWhiten(matrixar)
+        features = clcm.partialWhiten(mat)
     else:
         print 'No whitening'
-        features = matrixar
+        features = mat
         
     if (options.dist == 'sqeuclidean'):
         fact = 2
     else:
         fact = 1
-        
-    distance = ssd.squareform(ssd.pdist(features, options.dist))
+    
+    distmat = ssd.squareform(ssd.pdist(features, options.dist))
     W = np.zeros(options.kmax + 1)
     print 'Computing Wk for data'
     for K in range(1, options.kmax + 1):
-        clusterid, error, nfound = pc.kmedoids(distance, K, options.niter)
-        wc = clcc.wcDist(distance, clusterid, K, fact)
+        clusterid, error, nfound = pc.kmedoids(distmat, K, options.niter)
+        wc = clcc.wcDist(distmat, clusterid, K, fact)
         print 'K = ', K, ', error = ', error, ', wcDist = ', wc
-        W[K] = math.log(wc)
+        #W[K] = np.log(wc)
+        W[K] = wc
     print 'Wk = ', W
     
     inputs = glob.glob('*.npy')
-    WBparts = []
+    Wkbparts = []
     for infile in inputs:
-      WBparts.append(np.load(infile))
-    WB = np.vstack(WBparts)
-    del WBparts
+      Wkbparts.append(np.load(infile))
+    Wkb = np.vstack(Wkbparts)
+    del Wkbparts
               
     print 'Computing Gap'
-    meanWB = np.mean(WB, axis = 0)
-    sdWB = np.std(WB, axis = 0)
+    meanWkb = np.mean(Wkb, axis = 0)
+    sdWkb = np.std(Wkb, axis = 0)
     gap = np.zeros(options.kmax + 1)
     sW = np.zeros(options.kmax + 1)
     for K in range(1, options.kmax + 1):
-        gap[K] = (meanWB[K] - W[K])
-        sW[K] = sdWB[K] * math.sqrt(1 + 1.0 / float(options.permut))
+        gap[K] = (meanWkb[K] - W[K])
+        sW[K] = sdWkb[K] * np.sqrt(1 + 1.0 / float(options.permut))
     
-    print 'MeanWB =', meanWB
-    print 'sdWB =', sdWB 
+    print 'MeanWkb =', meanWkb
+    print 'sdWkb =', sdWkb 
     print 'Gap =', gap
     print 'STD =', sW  
     print 'Writing results to ', options.output
@@ -97,11 +98,11 @@ def main():
     lineS = ''
     for K in range(1, options.kmax + 1):
         lineW = lineW + str(W[K]) + ' '
-        lineMW = lineMW + str(meanWB[K]) + ' '
+        lineMW = lineMW + str(meanWkb[K]) + ' '
         lineG = lineG + str(gap[K]) + ' '
         lineS = lineS + str(sW[K]) + ' '
-    fileR.write('--> MeanWB: ' + lineW + '\n')
-    fileR.write('--> sdWB: ' + lineMW + '\n')
+    fileR.write('--> MeanWkb: ' + lineW + '\n')
+    fileR.write('--> sdWkb: ' + lineMW + '\n')
     fileR.write('--> Gap: ' + lineG + '\n')
     fileR.write('--> STD: ' + lineS + '\n')
 
