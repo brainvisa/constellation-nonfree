@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 import numpy as np
+import colorsys
+from soma import aims
 
 def generateIntPairsNames(elements_nb):
   """
@@ -96,4 +98,24 @@ def sameNbElements(listA, listB, NonZeroRealNb=True):
   if len(listA) != len(listB):
     print 'ERROR: The A size is different from the B.'
   return listA, listB
+
+
+def makeColormapGradients( cmap ):
+  # SV variants in HSV space
+  cols = [ [ 0.2,0.33 ], [ 0.2,.5], [ 0.2,0.66],
+    [ 0.6,0.33], [0.6,0.44], [0.6, 0.55], [ 0.6, .66],
+    [ 1., 0.33], [1., 0.5], [1., .66] ]
+  outcmap = aims.Volume_RGB( cmap.getSizeX() * len( cols ) )
+  index = 0
+  for i in xrange( cmap.getSizeX() ):
+    color = cmap.value( i )
+    hsv = colorsys.rgb_to_hsv( color[0]/255., color[1]/255., color[2]/255. )
+    col0 = hsv[0]
+    coltable = [ [ col0, s, v ] for s,v in cols ]
+    rgb = [ colorsys.hsv_to_rgb( *x ) for x in coltable ]
+    for i, x in enumerate( rgb ):
+      outcmap.setValue( aims.AimsRGB(
+        int(x[0]*256), int(x[1]*256), int(x[2]*256) ), index )
+      index += 1
+  return outcmap
 
