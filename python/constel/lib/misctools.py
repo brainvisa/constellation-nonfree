@@ -2,6 +2,7 @@
 import numpy as np
 import colorsys
 from soma import aims
+import random
 
 def generateIntPairsNames(elements_nb):
   """
@@ -118,4 +119,16 @@ def makeColormapGradients( cmap ):
         int(x[0]*256), int(x[1]*256), int(x[2]*256) ), index )
       index += 1
   return outcmap
+
+
+def makeDoubleRandomHueColormap( n = 36 ):
+  hue = list( numpy.arange( n ) / float(n) )
+  random.shuffle( hue )
+  hue2 = hue + hue
+  rgb = [ colorsys.hsv_to_rgb( x, 0.7, 0.7 ) for x in hue2 ]
+  vol = aims.Volume_RGB( n * 2 )
+  for i, x in enumerate( rgb ):
+    vol.setValue( aims.AimsRGB( int(x[0]*255.9), int(x[1]*255.9),
+      int(x[2]*255.9) ), i )
+  return vol
 
