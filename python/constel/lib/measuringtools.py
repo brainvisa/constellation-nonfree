@@ -5,36 +5,153 @@ from math import log
 from scipy.misc import comb
 import constel.lib.connmatrix.connmatrixtools as clccm
 
-def mutual_information( list1, list2 ):
-  contingency_matrix = clccm.contingency_matrix( list1, list2 )
-  contingency = np.array( contingency_matrix, dtype = 'float' ) 
-  contingency_sum = np.sum( contingency )
-  pi = np.sum( contingency, axis = 1 )
-  pj = np.sum( contingency, axis = 0 )
-  outer = np.outer( pi, pj )
-  nnz = contingency != 0.0
-  contingency_nm = contingency[nnz]
-  log_contingency_nm = np.log( contingency_nm )
-  contingency_nm /= contingency_sum
-  log_outer = -np.log( outer[nnz] ) + log( pi.sum() ) + log( pj.sum() )
-  mi = ( contingency_nm * ( log_contingency_nm - log( contingency_sum ) )
-        + contingency_nm * log_outer )
-  mi = mi.sum()
-  return mi
-  
-def randIndex( list1, list2 ):
-  contingency_matrix = clccm.contingency_matrix( list1, list2 )
-  Nsample = len(list1)
-  sum_c1 = sum( comb( n_c, 2, exact = 1 ) for n_c in contingency_matrix.sum( axis = 1 ) )
-  sum_c2 = sum( comb( n_k, 2, exact = 1 ) for n_k in contingency_matrix.sum( axis = 0 ) )
+def intersection(list1, list2):
+    """Allows to calculate the cardinal of the intersection of two regions.
+    
+    Args: 
+        sets of indexes corresponding to 2 input regions (lists):
+            list1
+            list2
+    Return:
+        cardinal of the intersection.
 
-  sum_ = sum( comb( nij, 2, exact = 1 ) for nij in contingency_matrix.flatten() )
-  prod_ = ( sum_c1 * sum_c2 ) / float( comb( Nsample, 2 ) )
-  mean_ = ( sum_c2 + sum_c1 ) / 2.
-  return ( ( sum_ - prod_ ) / ( mean_ - prod_ ) )
+    """
+    intersection = 0
+    for i in list2:
+        intersection += list1.count(i)
+    return intersection
   
-def jacard( list1, list2 ):
-  pass
+def union(list1, list2):
+    """Allows to calculate the cardianl of the union of two regions.
+    
+    Args:
+        sets of indexes corresponding to 2 input regions (lists):
+            list1
+            list2
+    Return:
+        cardinal of the union.
+
+    """
+    intersection = intersection(list1, list2)
+    union = len(list1) + len(list2) - intersection
+    return union
+
+def mutual_information(list1, list2):
+    """The mutual information is a measure of the variables mutual dependence.
+    
+    Args:
+        list1:
+        list2:
+    Return:
+        mi (float): mutual information
+    
+    """
+    contingency_matrix = clccm.contingency_matrix(list1, list2)
+    contingency = np.array(contingency_matrix, dtype = 'float') 
+    contingency_sum = np.sum(contingency)
+    pi = np.sum(contingency, axis = 1)
+    pj = np.sum(contingency, axis = 0)
+    outer = np.outer(pi, pj)
+    nnz = contingency != 0.0
+    contingency_nm = contingency[nnz]
+    log_contingency_nm = np.log(contingency_nm)
+    contingency_nm /= contingency_sum
+    log_outer = -np.log(outer[nnz]) + log(pi.sum()) + log(pj.sum())
+    mi = (contingency_nm * (log_contingency_nm - log(contingency_sum))
+           + contingency_nm * log_outer)
+    mi = mi.sum()
+    return mi
+  
+def rand_index(list1, list2):
+    """The Rand index is a measure of the similarity between two data clusterings.
+    
+    Args:
+        list1:
+        list2:
+    Return:
+        rand_id (float): rand index
+    """
+    contingency_matrix = clccm.contingency_matrix(list1, list2)
+    Nsample = len(list1)
+    sum_c1 = sum(comb( n_c, 2, exact = 1) for n_c in contingency_matrix.sum(axis = 1))
+    sum_c2 = sum(comb( n_k, 2, exact = 1) for n_k in contingency_matrix.sum(axis = 0))
+    sum_ = sum(comb(nij, 2, exact = 1) for nij in contingency_matrix.flatten())
+    prod_ = (sum_c1 * sum_c2) / float( comb( Nsample, 2 ) )
+    mean_ = (sum_c2 + sum_c1) / 2.
+    rand_id = ((sum_ - prod_) / (mean_ - prod_))
+    return rand_id
+
+def bohlandIndex(list1, list2):
+    """Probability that an element is in set1 given that it is on in set2
+    assymetric. Bohland, "The brain Atlas Concordance Problem", PlosOne, 2009
+    
+    Args:
+        sets of indexes corresponding to to input regions, type: lists
+            list1
+            list2
+    Return:
+        bohland_id (float): bohland index between 0 and 1.
+    
+    """
+    card_set2 = len(list2)
+    if card_set2 <= 0:
+        raise exceptions.ValueError("set2 is empty")
+    intersection = 0
+    for i in list2:
+        intersection += list1.count(i)
+    bohland_id = float(intersection) / card_set2
+    return bohland_id
+  
+def bohlandSymmetricIndex(list1, list2):
+    """Symmetrized bohland index.
+    
+    Args:
+        sets of indexes corresponding to to input regions, type: lists
+            list1
+            list2
+    Return:
+        bohland_sym_id (float): Symmetrized bohland index.
+    """
+    p12 = bohlandIndex(list1, list2)
+    p21 = bohlandIndex(list2, list1)
+    bohland_sym_id = sqrt(p12 * p21)
+    return bohland_sym_id
+    
+def jacard_index(list1, list2):
+    """ The Jaccard coefficient measures similarity between finite sample sets,
+    and is defined as the size of the intersection divided by the size of 
+    the union of the sample sets.
+    
+    Args:
+        sets of indexes corresponding to two input regions (lists):
+            list1
+            list2
+    Return:
+        Jaccard index (float)
+        
+    """
+    intersection = intersection(list1, list2)
+    union = union(list1, list2)
+    if union <= 0:
+        raise exceptions.ValueError("both sets are empty")
+    jaccard_id = float(intersection) / union
+    return jaccard_id
+  
+def jaccard_distance(list1, list2):
+    """The Jaccard distance measures dissimilarity between sample sets, 
+    by dividing the difference of the sizes of the union and the intersection 
+    of two sets by the size of the union
+    
+    Args:
+        sets of indexes corresponding to two input regions (lists):
+            list1
+            list2
+    Return:
+        Jaccard distance (float)
+    """
+    jaccard_id = jacard_index(list1, list2)
+    jaccard_dist = 1 - jaccard_id
+    return jaccard_dist
 
 def dunn_index():
   pass
