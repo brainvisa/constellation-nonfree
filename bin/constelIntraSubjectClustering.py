@@ -77,7 +77,7 @@ def main():
   #vertices_patch = vertices_patch.tolist()
   #print vertices_patch
   n=kmax-1
-  clusters = tt.textureTime(n, clusterID, nb_vertices, vertices_patch)
+  clusters = tt.texture_time(n, clusterID, nb_vertices, vertices_patch)
   
   #clusters, clus_avg_width_Time_tex = CK.texturesCreation(
 #subject_PatchCl_dict, nb_vertices, vertices_patch )

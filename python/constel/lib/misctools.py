@@ -122,7 +122,7 @@ def makeColormapGradients( cmap ):
 
 
 def makeDoubleRandomHueColormap( n = 36 ):
-  hue = list( numpy.arange( n ) / float(n) )
+  hue = list( np.arange( n ) / float(n) )
   random.shuffle( hue )
   hue2 = hue + hue
   rgb = [ colorsys.hsv_to_rgb( x, 0.7, 0.7 ) for x in hue2 ]

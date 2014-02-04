@@ -53,7 +53,7 @@ def clusteringResults(X, k_min, k_max, Rclustering_filename, diss=False,
   print "dico de clusterid: ", cl_dict
   return cl_dict, k_ordering_def
 
-### cette fonction est vouee a disparaitre:
+### WARNING: cette fonction est vouee a disparaitre:
 def texturesCreation(clusterings_dict, meshVertex_nb, seedVertex_index):
   """
   inputs:
@@ -80,7 +80,7 @@ def texturesCreation(clusterings_dict, meshVertex_nb, seedVertex_index):
 
   return clustersTime_tex, clus_avg_width_Time_tex
 
-### cette fonction est vouee a disparaitre:
+### WARNING: cette fonction est vouee a disparaitre:
 def texturesCreationMultiSubjects( clusterings_dict, meshVertex_nb, 
                                    seedVertex_index, labels_list_min_index, 
                                    labels_list_max_index ):

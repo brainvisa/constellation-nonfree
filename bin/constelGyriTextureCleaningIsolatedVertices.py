@@ -34,7 +34,7 @@ def main():
   count = 0
   while cont and count < 10:
     print "clean up number ", str( count+1 ), " :"
-    tex = TT.cleanGyriTexture( mesh, tex )
+    tex = TT.clean_gyri_texture( mesh, tex )
     wrong_labels = TT.findWrongLabels( mesh, tex )
     cont = False
     count += 1

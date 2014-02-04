@@ -8,7 +8,7 @@ import numpy as np
 import constel.lib.clustervalidity as cv
 
 def parseOpts(argv):
-  description = 'Compute cluster validity: David-Bouldin Index, Dunn Index and Calinski-Harabasz Index.'
+  description = 'Cluster criterion: David-Bouldin Index, Dunn Index and Calinski-Harabasz Index.'
 
   parser = OptionParser(description)
 
