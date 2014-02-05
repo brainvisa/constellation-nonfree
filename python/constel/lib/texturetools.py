@@ -155,3 +155,13 @@ def add_texture(tex, add_tex, add_value):
         elif v_tex_add > 0 and v_tex > 0:
             raise ValueError("tex and add_tex have a common non zero value")
     return tex
+    
+def normalized_texture(itex):
+  """
+  """
+  itex_ar = itex[0].arraydata()
+  dividende_coef = itex_ar.max()
+  if dividende_coef > 0:
+    z = 1./dividende_coef
+    itex_ar *= z
+  return itex
