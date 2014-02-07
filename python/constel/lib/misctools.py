@@ -132,3 +132,14 @@ def makeDoubleRandomHueColormap( n = 36 ):
       int(x[2]*255.9) ), i )
   return vol
 
+def crop(img, x1, x2, y1, y2):
+    """Return the cropped image at the x1, x2, y1, y2 coordinates
+    """
+    if x2 == -1:
+        x2 = img.shape[1]-1
+    if y2 == -1:
+        y2=img.shape[0]-1
+    mask = np.zeros(img.shape)
+    mask[y1:y2 + 1, x1:x2 + 1] = 1
+    m = mask > 0
+    return img[m].reshape((y2 + 1 - y1, x2 + 1 - x1))
