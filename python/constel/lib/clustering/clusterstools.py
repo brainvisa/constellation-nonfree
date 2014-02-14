@@ -2,6 +2,7 @@
 
 import numpy as np
 import scipy.spatial.distance as ssd
+import scipy.cluster.hierarchy as sch
 import Pycluster as pc
 import math
 
@@ -103,7 +104,7 @@ def gap(data, refs=None, nrefs=20, ks=range(1,11)):
     #centers = getCenters(clusterid, k)
     #kmc = centers
     (kmc,kml) = scipy.cluster.vq.kmeans2(data, k)
-    print "labels -->", kmc, "centers -->", kml
+    print "labels -->", kml, "centers -->", kmc
     disp = sum([dst(data[m,:],kmc[kml[m],:]) for m in range(shape[0])])
     
     refdisps = scipy.zeros((rands.shape[2],))
@@ -113,40 +114,34 @@ def gap(data, refs=None, nrefs=20, ks=range(1,11)):
     gaps[i] = scipy.log(scipy.mean(refdisps))-scipy.log(disp)
     
   return gaps
-
-def calculate_dispersion(data, clusters, compactness_dispersion):
-  """
-  W in the Tibshirani paper
-  """
-  W = np.zeros( len(clusters) + 1)
-  Nsamples = data.shape[0]
-  distmat = ssd.squareform( ssd.pdist( data, 'euclidean' ) )
-  for k in xrange( 1, len( clusters ) ):
-    if ( k == 1 ):
-      cluster_mean = np.mean( data )
-      if compactness_dispersion:
-        D = sum( sum( dissmat ) ) / ( 2 * Nsamples )
-      else:
-        D = sum( sum( data - np.tile( cluster_mean, ( Nsamples, 1) )**2 ) ) / (2 * Nsamples )
-      W[k] = math.log( D )
-    else:
-      clusterid, error, nfound = pc.kmedoids(distmat, k, 100)
-      clusterID = []
-      labels = 1
-      for i in np.unique(clusterid):
-        clusterid[clusterid == i] = labels
-        labels += 1
-      clusterID.append(clusterid)
-      clusterid = clusterID
-      for j in xrange( k ):
-        if compactness_dispersion:
-          D[j] = sum( sum( distmat[ np.where( clusterid[j] == k ) ] ) ) / (2 * len( np.where( clusterid == k ) ) )
-        else:
-          print "j", j
-          cluster_mean = np.mean( data[ np.where( clusterid[j] == k ) ] )
-          NsamplesC, varDim = ( data[ np.where( clusterid[j] == k ) ] ).shape
-          d = sum( ( data[ np.where( clusterid[j] == k) ] - np.tile( cluster_mean, ( NsamplesC, 1 ) ) ) ** 2 )
-          print "d", d
-          D = sum( d ) / ( 2.0 * NsamplesC )
-      W[k] = math.log( sum(D) )
-  return W
+  
+def ward_method(matrix, output_dir):
+   '''Ward's method is a criterion applied in hierarchical cluster analysis. 
+   Ward's minimum variance criterion minimizes the total within-cluster 
+   variance.
+   
+   Parameters:
+       matrix: (n_sample, n_feature)
+   
+   Returns:
+       Z: The hierarchical clustering encoded as a linkage matrix.
+          Performs Ward’s linkage on the observation matrix X using 
+          Euclidean distance as the distance metric.
+   
+   '''
+   # Load the matrix
+   matrix = aims.read(self.group_matrix.fullPath())
+   mat = np.asarray(matrix)[:, :, 0, 0]
+   n, p = s = mat.shape
+   # Compute linkage
+   Z = sch.linkage(mat, method='ward', metric='euclidean')
+   if not os.path.exists(output_dir):
+       os.makedirs(output_dir)
+   output_dir_Z = output_dir + '/dendrogram.npy'
+   np.save(output_dir_Z, Z)
+   clusterid = []
+   for nb in n_clusters:
+       print "Trying {nb} cluster(s)".format(nb=nb)
+       clusters = sch.fcluster(Z, criterion='maxclust', t=nb)
+       clusterid.append(clusters)
+   return TS
