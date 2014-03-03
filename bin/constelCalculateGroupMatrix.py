@@ -35,6 +35,8 @@ def main():
     subject_reducedConnMatrix = numpy.asarray( aims.read( str(matrixf) ) )
     subject_reducedConnMatrix = subject_reducedConnMatrix.reshape(
       subject_reducedConnMatrix.shape[0], subject_reducedConnMatrix.shape[1] )
+    subject_reducedConnMatrix = subject_reducedConnMatrix.transpose()
+    print 'matrix shape', subject_reducedConnMatrix.shape
     print 'averaging', matrixf, ', min/max:', numpy.min( subject_reducedConnMatrix ), numpy.max( subject_reducedConnMatrix )
     if options.study == 'Concatenate':
       if count == 0:
