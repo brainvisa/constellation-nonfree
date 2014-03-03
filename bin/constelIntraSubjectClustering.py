@@ -7,6 +7,7 @@ import numpy as np
 import Pycluster as pc
 import constel.lib.clustering.K_optimization as CK
 import constel.lib.texturetools as tt
+import scipy.spatial.distance as ssd
 
 def parseOpts(argv):
   desc="""
@@ -46,8 +47,9 @@ def main():
   reduced_matrix = np.transpose(np.asarray(reduced_matrix)[:,:,0,0])
   print "Reduced matrix of size (Nsample, Ndim): M", reduced_matrix.shape
   
-  distance = pc.distancematrix(reduced_matrix, dist='e')
- 
+  #distance = pc.distancematrix(reduced_matrix, dist='e')
+  distance = ssd.squareform(ssd.pdist(reduced_matrix, 'euclidean'))
+  
   nb_vertices = mesh.vertex().size()
   #mesh_patch = aims.SurfaceManip.meshExtract(mesh, gyri_seg, options.patch)[0]
   #area_patch = aims.SurfaceManip.meshArea(mesh_patch)
