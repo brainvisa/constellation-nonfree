@@ -98,7 +98,7 @@ def clean_gyri_texture(mesh, gyri_tex):
                                 mesh_neighbors_vector, cc_tex_label)
     return gyri_tex
 
-def texture_time(k_max, clusters_id, vertices_mesh, vertices_patch, mode, 
+def texture_time(k_max, vertices_patch, vertices_mesh, mode, 
     minid=None, maxid=None):
     """Gives a parcellation per clusters number in a given region.
     
