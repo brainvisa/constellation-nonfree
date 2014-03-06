@@ -66,15 +66,15 @@ def orderDataMatrix(mat, labels):
   output:   order_mat: ordered matrix, of shape (n,p)
             labels: ordered labels
   """
-  (n,p)=mat.shape
+  (n,p) = mat.shape
   obs_nb = labels.size
-  if n!=obs_nb:
+  if n != obs_nb:
     raise exceptions.ValueError("matrix dimensions and labels size are not compatible")
   labels_argsort = labels.argsort()
   order_mat = np.zeros((n,p),dtype = np.float32)
   for i in xrange(n):
-    order_mat[i,:]=mat[labels_argsort[i],:]
-  sortLabels= labels.copy()
+    order_mat[i,:] = mat[labels_argsort[i],:]
+  sortLabels = labels.copy()
   sortLabels.sort()
   return order_mat, sortLabels
 

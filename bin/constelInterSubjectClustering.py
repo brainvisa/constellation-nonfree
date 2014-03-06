@@ -43,10 +43,11 @@ def main():
   if options.study == 'Concatenate':
     reduced_matrix = np.asarray(reduced_matrix)[:,:,0,0]
   if options.study == 'Average':
-    reduced_matrix = np.transpose(np.asarray(reduced_matrix)[:,:,0,0])
+    reduced_matrix = np.asarray(reduced_matrix)[:,:,0,0]
   print "Reduced matrix of size (Nsample, Ndim): M", reduced_matrix.shape
   
-  distance = ssd.squareform(ssd.pdist(reduced_matrix, 'euclidean'))
+  distance = pc.distancematrix(reduced_matrix, dist='e')
+  #distance = ssd.squareform(ssd.pdist(reduced_matrix, 'euclidean'))
   
   nb_vertices = avg_mesh.vertex().size()
   
@@ -80,10 +81,10 @@ def main():
 
     if options.study == 'Concatenate':
       k = kmax-1
-      clusters = tt.texture_time(k, clusterID, nb_vertices, vertices_patch, 2, all_subjects_labels_list_index_min, all_subjects_labels_list_index_max)
+      clusters = tt.texture_time(k, clusterID, vertices_patch, nb_vertices, 2, all_subjects_labels_list_index_min, all_subjects_labels_list_index_max)
     if options.study == 'Average':
       k = kmax-1
-      clusters = tt.texture_time(k, clusterID, nb_vertices, vertices_patch, 1)
+      clusters = tt.texture_time(k, clusterID, vertices_patch, nb_vertices, 1)
 
     countProcessedVertex += subjectPatchVertex_nb
 
