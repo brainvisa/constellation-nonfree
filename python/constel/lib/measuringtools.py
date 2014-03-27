@@ -153,6 +153,68 @@ def jaccard_distance(list1, list2):
     jaccard_dist = 1 - jaccard_id
     return jaccard_dist
 
+def cramer_v(list1, list2):
+    """Cramer's V is a measure of association between two nominal variables 
+    and it is calculated based on chi-square statistic. Use the Cramer’s V 
+    statistic to assess the relative strength of the derived association.
+    Gives values within the interval [0, 1], 1 indicating a perfect match.
+    
+    Parameters:
+    ----------
+        - list1: clustering for a group of subject
+        - list2: clustering for an other group of subject
+    
+    Returns:
+    ------
+        - Cramer's value
+    """
+    
+    # count number of occurrences of each value in list1 or list2
+    # background is removed
+    nvalues_l1 = np.bincount(list1)[1:]
+    nvalues_l2 = np.bincount(list2)[1:]
+    
+    matrix = np.array([nvalues_l1,nvalues_l2])
+    
+    # depend on sample size
+    matrix = np.matrix(matrix)
+    col_sum = matrix.sum(0)
+    row_sum = matrix.sum(1)
+    n = matrix.sum()
+    
+    # matrix size
+    x, y = matrix.shape
+    
+    #col_sum = np.zeros((y, 1))
+    #row_sum = np.zeros((x, 1))
+    #matrix.sum(axis=0, out=col_sum)
+    #matrix.sum(axis=1, out=row_sum)
+    
+    # k is the number of rows or the number of columns, whichever is less
+    k = min(x, y)
+    
+    # degrees of freedom
+    df = (x - 1) * (y - 1)
+    
+    # expected frequency of occurrence in each cell:
+    # the probability that a cluster number represents a given class is 
+    # given by the cluster’s proportion of the row total.
+    ef = (row_sum * col_sum) / float(n)
+    
+    # chi square stats:
+    # determine whether an association exists
+    # do not measure the strength of the association
+    chi2 = (np.array((matrix - ef)) ** 2) / ef
+    chi2 = chi2.sum()
+    
+    # Cramer's V:
+    # Measuring strength of an association, is independent of the order of 
+    # cluster labelling in the cross-matching of one cluster allocation 
+    # against another
+    # Cramer’s V ranges from -1 to 1 for 2X2 tables
+    es = np.sqrt(chi2 / (n * (k - 1)))
+    
+    
 def dunn_index():
   pass
 
