@@ -169,26 +169,20 @@ def cramer_v(list1, list2):
         - Cramer's value
     """
     
-    # count number of occurrences of each value in list1 or list2
     # background is removed
-    nvalues_l1 = np.bincount(list1)[1:]
-    nvalues_l2 = np.bincount(list2)[1:]
+    l1 = [i for i in list1 if i != 0]
+    l2 = [i for i in list2 if i != 0]
     
-    matrix = np.array([nvalues_l1,nvalues_l2])
+    # contingency table
+    matrix = clccm.contingency_matrix(l1, l2) 
     
     # depend on sample size
-    matrix = np.matrix(matrix)
     col_sum = matrix.sum(0)
     row_sum = matrix.sum(1)
     n = matrix.sum()
     
-    # matrix size
+    # matrix dimension
     x, y = matrix.shape
-    
-    #col_sum = np.zeros((y, 1))
-    #row_sum = np.zeros((x, 1))
-    #matrix.sum(axis=0, out=col_sum)
-    #matrix.sum(axis=1, out=row_sum)
     
     # k is the number of rows or the number of columns, whichever is less
     k = min(x, y)
@@ -214,6 +208,7 @@ def cramer_v(list1, list2):
     # Cramer’s V ranges from -1 to 1 for 2X2 tables
     es = np.sqrt(chi2 / (n * (k - 1)))
     
+    return es    
     
 def dunn_index():
   pass
