@@ -198,7 +198,10 @@ def cramer_v(list1, list2):
     # chi square stats:
     # determine whether an association exists
     # do not measure the strength of the association
-    chi2 = (np.array((matrix - ef)) ** 2) / ef
+    if x == 2 and y == 2:
+        chi2 = (abs(matrix - ef) - 0.5) ** 2 / ef
+    else:
+        chi2 = (np.array((matrix - ef)) ** 2) / ef
     chi2 = chi2.sum()
     
     # Cramer's V:
