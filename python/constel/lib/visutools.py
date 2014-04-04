@@ -5,20 +5,21 @@ import numpy as np
 import glob
 import os
 
-def plot_randindex(rand_index_files, k_max):
-    '''Rand Index curves. 
-    For each gyrus, plot rand index values according to k clusters, 
+def plot_measures(measures_files, k_max, name):
+    '''Measures curves. 
+    For each gyrus, plot measures values according to k clusters, 
     and the average. In each directory, a curves has been saved, 
     so for each gyrus.
     
     Parameters:
     ----------
-        - rand_index_files (directory): contain .npy files for on gyrus
+        - measures_files (directory): contain .npy files for on gyrus
         - k_max (integer): the max number of cluster in the clustering
+        - name (string): measure name
     '''
-    for i in range(len(rand_index_files)):
+    for i in range(len(measures_files)):
         # finds all the pathnames matching a specified pattern
-        inputs = glob.glob(str(rand_index_files[i]) + '/*.npy')
+        inputs = glob.glob(str(measures_files[i]) + '/*' + name + '.npy')
         
         # usual colors
         colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
@@ -29,15 +30,17 @@ def plot_randindex(rand_index_files, k_max):
         listof_inputs = []
         rand_index_fig = plt.figure()
         j = 0
-        # plot rand index values for each partition for one gyrus
+        # plot measures values for each partition for one gyrus
         for infile in inputs:
             listof_inputs.append(np.loadtxt(infile))
-            plt.plot(range(2, k_max + 1), np.loadtxt(infile), colors[j], label=("partition_" + partition[j]))
-            plt.plot(range(2, k_max + 1), np.loadtxt(infile), colors[j] + 'o')
-            plt.ylabel('Rand Index')
+            plt.plot(range(2, k_max + 1), np.loadtxt(infile), colors[j], 
+                     label=("partition_" + partition[j]))
+            plt.plot(range(2, k_max + 1), np.loadtxt(infile), 
+                     colors[j] + 'o')
+            plt.ylabel(name)
             plt.xlabel('Clusters (K)')
             # Mieux quand il y aura la table de correspondance
-            gyrus = os.path.basename(str(rand_index_files[i]))
+            gyrus = os.path.basename(str(measures_files[i]))
             rand_index_fig.suptitle(gyrus)
             plt.legend()
             j += 1
@@ -52,8 +55,8 @@ def plot_randindex(rand_index_files, k_max):
         # plot the average
         plt.plot(range(2, k_max + 1), mean_fig, 'k--', label="average")
         plt.plot(range(2, k_max + 1), mean_fig, 'ko')
-        plt.legend()
+        plt.legend(loc='lower right')
         
         # save to svg image
-        output_fig = os.path.join(str(rand_index_files[i]), "rand_index.svg")
+        output_fig = os.path.join(str(measures_files[i]), name + ".svg")
         rand_index_fig.savefig(output_fig)
