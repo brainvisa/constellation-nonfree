@@ -3,6 +3,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import glob
+import os
 
 def plot_randindex(rand_index_files, k_max):
     '''Rand Index curves. 
@@ -17,7 +18,7 @@ def plot_randindex(rand_index_files, k_max):
     '''
     for i in range(len(rand_index_files)):
         # finds all the pathnames matching a specified pattern
-        inputs = glob.glob(rand_index_files[i] + '/*.npy')
+        inputs = glob.glob(str(rand_index_files[i]) + '/*.npy')
         
         # usual colors
         colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
@@ -36,7 +37,7 @@ def plot_randindex(rand_index_files, k_max):
             plt.ylabel('Rand Index')
             plt.xlabel('Clusters (K)')
             # Mieux quand il y aura la table de correspondance
-            gyrus = os.path.basename(rand_index_files[i].fullPath())
+            gyrus = os.path.basename(str(rand_index_files[i]))
             rand_index_fig.suptitle(gyrus)
             plt.legend()
             j += 1
@@ -54,5 +55,5 @@ def plot_randindex(rand_index_files, k_max):
         plt.legend()
         
         # save to svg image
-        output_fig = os.path.join(rand_index_files[i].fullPath(), "rand_index.svg")
+        output_fig = os.path.join(str(rand_index_files[i]), "rand_index.svg")
         rand_index_fig.savefig(output_fig)
