@@ -4,7 +4,7 @@ from soma import aims
 from roca import rocasip
 import anatomist.cpp as anatomist
 from soma.aims.meshSplit import meshSplit2
-from roca.lib.mergeMeshAndROIsToGraph import mergeBundlesGraphAndROIsGraph
+from constel.lib.graphtools import mergeBundlesGraphAndROIsGraph
 
 class MeshFusionMeshRoiGraphModule(anatomist.Module):
     def name(self):
