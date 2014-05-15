@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
-import sys
+
+# Anatomist module
 import anatomist.direct.api as anatomist
+
+# BrainVisa module
 from soma import aims
+
 from PyQt4 import QtGui, QtCore
 import os, sip
-import numpy
 import selection
 
-
-class BundlesSelectionAction( selection.SelectionAction ):
+class BundlesSelectionAction( anatomist.cpp.Action ):
   def __init__(self):
-    selection.SelectionAction.__init__(self)
+    anatomist.cpp.Action.__init__(self)
     self.scaling = 0.1
     self.decal = 20#mm
 
@@ -108,32 +110,37 @@ class BundlesSelectionAction( selection.SelectionAction ):
       else: print 'graph not found'
     self._stored = []
 
-  def edgeSelection( self ):
-    try:
-      recursion = getattr( self, '_recursion' )
-      if recursion:
-        # print "recursion"
-        return
-    except:
-      pass
-    selection.SelectionAction.edgeSelection( self )
-    self._recursion = True
-    selectedEdges_set = set()
-    self.cleanup()
-    sf = anatomist.cpp.SelectFactory.factory()
-    sel = sf.selected()
+  def initSmallBrains( self ):
     window = self.view().aWindow()
-    group = window.Group()
-    gsel = sel.get( group )
     vertexlist = set()
-    edgeslist = set()
-    a = anatomist.Anatomist()
-    if gsel:
-      for obj in gsel:
-        print 'selected:', obj
-        if obj.type() == anatomist.cpp.AObject.GRAPHOBJECT:
+    for obj in window.Objects():
+        if obj.type() == anatomist.cpp.AObject.GRAPH:
+          vertexlist = vertexlist.union( [ x.attributed() for x in obj \
+            if isinstance( x.attributed(), aims.Vertex ) ] )
+    self.displayObjects( vertexlist )
+    
+  def getClickedObject( self, x, y ):
+    window = self.view().aWindow()
+    obj = window.objectAtCursorPosition( x, y )
+    if obj is None:
+      return None
+    parents = [ obj ]
+    while parents:
+      parent = parents.pop( 0 )
+      if parent.type() == anatomist.cpp.AObject.GRAPHOBJECT:
+        return parent
+      parents += list( parent.parents() )
+    return None
+
+  def smallBrainClick( self, x, y, globX, globY ):
+    sel_object = self.getClickedObject( x, y )
+    window = self.view().aWindow()
+    vertexlist = set()
+    if sel_object:
+        print 'selected:', sel_object
+        if sel_object.type() == anatomist.cpp.AObject.GRAPHOBJECT:
           print 'is a GRAPHOBJECT'
-          go = obj.attributed()
+          go = sel_object.attributed()
           if isinstance( go, aims.Vertex ):
             print 'is a Vertex'
             vertexlist.add( go )
@@ -151,9 +158,15 @@ class BundlesSelectionAction( selection.SelectionAction ):
             if isinstance( x.attributed(), aims.Vertex ) ] )
     print 'vertexlist:', len( vertexlist )
     print vertexlist
+    self.displayObjects( vertexlist )
+    
+  def displayObjects( self, vertexlist ):
+    self.cleanup()
     self.releaseObjectsRefs()
     self._storedrefs = []
     obj_to_display = []
+    a = anatomist.Anatomist()
+    window = self.view().aWindow()
     for aimsvertex in vertexlist:
       vertex = aimsvertex['ana_object']
       obj_to_display.append( vertex )
@@ -179,7 +192,6 @@ class BundlesSelectionAction( selection.SelectionAction ):
             print 'add small edge object', obj.name()
             obj_to_display.append(self.addReducedObjectToView(obj, nref, rot_center, tr, a, window, diffuse_list))
 
-    del self._recursion
     if hasattr( self, 'secondaryView' ):
       secondview = self.secondaryView
       print 'secondaryView:', secondview
@@ -192,14 +204,12 @@ class BundlesSelectionAction( selection.SelectionAction ):
       print 'no secondaryView in', self
 
   def cleanup( self ):
-    self._recursion = True
     if hasattr( self, '_stored' ):
       self.releaseObjectsRefs()
     if hasattr( self, '_storedrefs' ):
       a = anatomist.cpp.Anatomist()
       a.theProcessor().execute( 'DeleteElement', elements=self._storedrefs )
       del self._storedrefs
-    self._recursion = False
 
 
 class BundlesRotationSelectionAction( anatomist.cpp.TrackOblique ):
@@ -241,32 +251,28 @@ class BundlesRotationSelectionAction( anatomist.cpp.TrackOblique ):
       del self.tr_dict
 
 
-class BundlesSelectionControl( selection.SelectionControl ):
+class BundlesSelectionControl( anatomist.cpp.Control3D ):
   def __init__( self ):
-    selection.SelectionControl.__init__( self, 'BundlesSelectionControl' )
+    super(BundlesSelectionControl, self).__init__( 30, 'BundlesSelectionControl' )
 
   def eventAutoSubscription( self, pool ):
-    anatomist.cpp.Select3DControl.eventAutoSubscription( self, pool )
-    self.selectionChangedEventSubscribe( pool.action( 'BundlesSelectionAction' ).edgeSelection )
-    self.mouseLongEventUnsubscribe( QtCore.Qt.MidButton, QtCore.Qt.ShiftModifier )
-    self.mouseLongEventSubscribe( \
-    QtCore.Qt.MidButton, QtCore.Qt.ShiftModifier, pool.action( 'BundlesRotationSelectionAction' ).beginTrackball, pool.action( 'BundlesRotationSelectionAction' ).moveTrackball, pool.action( 'BundlesRotationSelectionAction' ).endTrackball , True )
+    super(BundlesSelectionControl, self).eventAutoSubscription( pool )
+    self.mouseLongEventUnsubscribe( QtCore.Qt.LeftButton, QtCore.Qt.NoModifier )
+    self.mousePressButtonEventSubscribe( QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, pool.action( 'BundlesSelectionAction' ).smallBrainClick )
+    self.mouseLongEventSubscribe(
+        QtCore.Qt.MidButton, QtCore.Qt.ShiftModifier, pool.action( 'BundlesRotationSelectionAction' ).beginTrackball, pool.action( 'BundlesRotationSelectionAction' ).moveTrackball, pool.action( 'BundlesRotationSelectionAction' ).endTrackball , True )
 
   def doAlsoOnSelect( self, actionpool ):
-    actionpool.action( 'BundlesSelectionAction' ).edgeSelection()
+    actionpool.action( 'BundlesSelectionAction' ).initSmallBrains()
 
   def doAlsoOnDeselect( self, actionpool ):
     actionpool.action("BundlesRotationSelectionAction").cleanup()
     actionpool.action("BundlesSelectionAction").cleanup()
-    selection.SelectionControl.doAlsoOnDeselect( self, actionpool )
-
-
-a = anatomist.Anatomist()
 
 iconname = __file__
 if iconname.endswith( '.pyc' ) or iconname.endswith( '.pyo' ):
   iconname = iconname[:-1]
-iconname = os.path.join(os.path.dirname(os.path.realpath(iconname)),'bundlesSelectionIcon.png')
+iconname = os.path.join(os.path.dirname(os.path.realpath(iconname)),'bundles_small_brains.png')
 pix = QtGui.QPixmap( iconname )
 anatomist.cpp.IconDictionary.instance().addIcon( 'BundlesSelectionControl',
   pix )
