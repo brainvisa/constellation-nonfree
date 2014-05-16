@@ -11,6 +11,7 @@ if( PYTHON_FOUND )
   find_package( Numpy )
 endif()
 find_package( Doxygen )
+find_package( anatomist-free )
 
 include( "${OLD_CONNECTOMIST-PRIVATE_USE_FILE}" )
 
@@ -25,6 +26,14 @@ add_subdirectory( doxygen )
 
 BRAINVISA_COPY_PYTHON_DIRECTORY( "${CMAKE_CURRENT_SOURCE_DIR}/python"
                                  ${PROJECT_NAME} )
+if( anatomist-free_FOUND )
+  BRAINVISA_COPY_PYTHON_DIRECTORY(
+    "${CMAKE_CURRENT_SOURCE_DIR}/share/anatomist"
+    ${PROJECT_NAME}
+    "share/anatomist-${anatomist-free_VERSION_MAJOR}.${anatomist-free_VERSION_MINOR}"
+  )
+endif()
+
 BRAINVISA_COPY_DIRECTORY( "${CMAKE_CURRENT_SOURCE_DIR}/bin"
                           bin
                           ${PROJECT_NAME} )
