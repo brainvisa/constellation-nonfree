@@ -1,4 +1,4 @@
-#include <roca/mergeMeshAndROIs.h>
+#include <constellation/mergeMeshAndROIs.h>
 #include <connectomist/fibertracking/bundleRegroup.h>
 #include <constellation/selectFiberListenerFromMesh.h>
 #include <constellation/bundleTools.h>
