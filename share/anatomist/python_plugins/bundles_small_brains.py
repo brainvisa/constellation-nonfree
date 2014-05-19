@@ -159,7 +159,7 @@ class BundlesSelectionAction( anatomist.cpp.Action ):
     print 'vertexlist:', len( vertexlist )
     print vertexlist
     self.displayObjects( vertexlist )
-    
+
   def displayObjects( self, vertexlist ):
     self.cleanup()
     self.releaseObjectsRefs()
@@ -217,7 +217,8 @@ class BundlesRotationSelectionAction( anatomist.cpp.TrackOblique ):
     return 'BundlesRotationSelectionAction'
 
   def beginTrackball( self, x, y, globalX, globalY ):
-    anatomist.cpp.TrackOblique.beginTrackball(self, x, y, globalX, globalY )
+    super(BundlesRotationSelectionAction, self).beginTrackball(x, y,
+      globalX, globalY )
     self.tr_dict = {}
     action = self.view().controlSwitch().getAction( 'BundlesSelectionAction' )
     try:
@@ -227,7 +228,7 @@ class BundlesRotationSelectionAction( anatomist.cpp.TrackOblique ):
     for obj, rot_center, tr in stored:
       if not self.tr_dict.has_key(tr):
         self.tr_dict[tr] = aims.Motion(tr.motion()), rot_center
-  
+
   def moveTrackball( self, x, y, globalX, globalY ):
     rot = self.rotation(x, y)
     v = rot.vector()
@@ -260,12 +261,14 @@ class BundlesSelectionControl( anatomist.cpp.Control3D ):
     self.mouseLongEventUnsubscribe( QtCore.Qt.LeftButton, QtCore.Qt.NoModifier )
     self.mousePressButtonEventSubscribe( QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, pool.action( 'BundlesSelectionAction' ).smallBrainClick )
     self.mouseLongEventSubscribe(
-        QtCore.Qt.MidButton, QtCore.Qt.ShiftModifier, pool.action( 'BundlesRotationSelectionAction' ).beginTrackball, pool.action( 'BundlesRotationSelectionAction' ).moveTrackball, pool.action( 'BundlesRotationSelectionAction' ).endTrackball , True )
+        QtCore.Qt.LeftButton, QtCore.Qt.ShiftModifier, pool.action( 'BundlesRotationSelectionAction' ).beginTrackball, pool.action( 'BundlesRotationSelectionAction' ).moveTrackball, pool.action( 'BundlesRotationSelectionAction' ).endTrackball , True )
 
   def doAlsoOnSelect( self, actionpool ):
+    super(BundlesSelectionControl, self).doAlsoOnSelect(actionpool)
     actionpool.action( 'BundlesSelectionAction' ).initSmallBrains()
 
   def doAlsoOnDeselect( self, actionpool ):
+    super(BundlesSelectionControl, self).doAlsoOnDeselect(actionpool)
     actionpool.action("BundlesRotationSelectionAction").cleanup()
     actionpool.action("BundlesSelectionAction").cleanup()
 
