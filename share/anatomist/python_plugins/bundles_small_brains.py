@@ -28,38 +28,39 @@ class BundlesSelectionAction(anatomist.cpp.Action):
     def viewableAction(self):
         return False
 
-    def addReducedObjectToView(self, obj, nref, rot_center, tr, a, window, diffuse_list):
-      dup = obj.clone(True) # shallow copy
-      if dup is not None:
-          a.registerObject(dup, False)
-          dup.setReferential(nref)
-          a.theProcessor().execute('SetMaterial', objects=[dup],
-                    diffuse=diffuse_list)
-          window.registerObject(dup)
-          self._stored.append((anatomist.cpp.rc_ptr_AObject(dup), rot_center, tr))
-          a.releaseObject(dup)
-          return dup
-      else:
-          if obj.objectTypeName( obj.type() ) == 'TEXTURED SURF.':
-              mesh = [ x for x in obj \
-                if x.objectTypeName( x.type() ) == 'SURFACE' ][0]
-          else:
-              mesh = obj
-          mesh.setReferential( nref )
-          a.theProcessor().execute( 'SetMaterial', objects=[mesh],
-                    diffuse=diffuse_list )
-          mesh.notifyObservers()
-          self._stored.append( (anatomist.cpp.rc_ptr_AObject( obj ), rot_center, tr) )
-          return obj
+    def addReducedObjectToView(self, obj, nref, rot_center, tr, a, window,
+            diffuse_list):
+        dup = obj.clone(True) # shallow copy
+        if dup is not None:
+            a.registerObject(dup, False)
+            dup.setReferential(nref)
+            a.theProcessor().execute('SetMaterial', objects=[dup],
+                diffuse=diffuse_list)
+            window.registerObject(dup)
+            self._stored.append((anatomist.cpp.rc_ptr_AObject(dup), rot_center,
+                tr))
+            a.releaseObject(dup)
+            return dup
+        else:
+            if obj.objectTypeName( obj.type() ) == 'TEXTURED SURF.':
+                mesh = [ x for x in obj \
+                  if x.objectTypeName( x.type() ) == 'SURFACE' ][0]
+            else:
+                mesh = obj
+            mesh.setReferential( nref )
+            a.theProcessor().execute( 'SetMaterial', objects=[mesh],
+                diffuse=diffuse_list )
+            mesh.notifyObservers()
+            self._stored.append( (anatomist.cpp.rc_ptr_AObject( obj ),
+                rot_center, tr) )
+            return obj
 
     def computeRefAndTransformation(self, graph, vertex):
         bb = graph.boundingbox()
         gcent = (bb[0] + bb[1])/2
         nref = anatomist.cpp.Referential()
         if vertex.attributed().has_key('center'):
-            print 'using existing center'
             cent = aims.Point3df(vertex.attributed()['center'])
-            print 'center:', cent
         else:
             bb = vertex.boundingbox()
             cent = (bb[0] + bb[1])/2
@@ -69,7 +70,6 @@ class BundlesSelectionAction(anatomist.cpp.Action):
         tr = anatomist.cpp.Transformation(nref, graph.getReferential())
         m = tr.motion()
         rot_center = cent + vdir * self.decal
-        print 'rot_center:', rot_center
         m.setTranslation(rot_center)
         m *= aims.Motion([self.scaling, 0, 0, 0,
                           0, self.scaling, 0, 0,
@@ -89,27 +89,19 @@ class BundlesSelectionAction(anatomist.cpp.Action):
         for obj, rot_center, tr in self._stored:
             graph = None
             parents = list(obj.parents())
-            print 'parents:', parents
             while parents:
                 p = parents.pop()
-                print 'test parent:', p
                 if p.type() == anatomist.cpp.AObject.GRAPH:
-                    print 'parent graph found'
                     graph = p
                     break
                 parents += p.parents()
             if graph:
-                print 'reset ref of graph', graph
                 if obj.objectTypeName(obj.type()) == 'TEXTURED SURF.':
-                    print 'obj:', obj.name()
-                    print 'children:', [x for x in obj.get()]
                     mesh = [x for x in obj.get() \
                         if x.objectTypeName(x.type()) == 'SURFACE'][0]
                 else:
                     mesh = obj
-                print 'mesh:', mesh
                 mesh.setReferential(graph.getReferential())
-            else: print 'graph not found'
         self._stored = []
 
     def initSmallBrains(self):
@@ -120,7 +112,7 @@ class BundlesSelectionAction(anatomist.cpp.Action):
                 vertexlist = vertexlist.union([x.attributed() for x in obj \
                     if isinstance(x.attributed(), aims.Vertex)])
         self.displayObjects(vertexlist)
-    
+
     def getClickedObject(self, x, y):
         window = self.view().aWindow()
         obj = window.objectAtCursorPosition(x, y)
@@ -207,7 +199,8 @@ class BundlesSelectionAction(anatomist.cpp.Action):
             self.releaseObjectsRefs()
         if hasattr(self, '_storedrefs'):
             a = anatomist.cpp.Anatomist()
-            a.theProcessor().execute('DeleteElement', elements=self._storedrefs)
+            a.theProcessor().execute('DeleteElement',
+                elements=self._storedrefs)
             del self._storedrefs
 
 
@@ -216,10 +209,11 @@ class BundlesRotationSelectionAction(anatomist.cpp.TrackOblique):
         return 'BundlesRotationSelectionAction'
 
     def beginTrackball(self, x, y, globalX, globalY):
-    super(BundlesRotationSelectionAction, self).beginTrackball(x, y,
-      globalX, globalY )
+        super(BundlesRotationSelectionAction, self).beginTrackball(x, y,
+            globalX, globalY )
         self.tr_dict = {}
-        action = self.view().controlSwitch().getAction('BundlesSelectionAction')
+        action = self.view().controlSwitch().getAction(
+            'BundlesSelectionAction')
         try:
             stored = action._stored
         except:
@@ -239,7 +233,8 @@ class BundlesRotationSelectionAction(anatomist.cpp.TrackOblique):
             rot_motion.setTranslation(-rot_center)
             rot_center_translation = aims.Motion()
             rot_center_translation.setTranslation(rot_center)
-            rot_motion = rot_center_translation*aims.Motion(rot)*rot_motion*begin_tr_Motion
+            rot_motion = rot_center_translation * aims.Motion(rot) \
+                * rot_motion * begin_tr_Motion
             tr.motion().fromMatrix(rot_motion.toMatrix())
         if tr:
             tr.unregisterTrans()
@@ -253,21 +248,29 @@ class BundlesRotationSelectionAction(anatomist.cpp.TrackOblique):
 
 class BundlesSelectionControl(anatomist.cpp.Control3D):
     def __init__(self):
-        super(BundlesSelectionControl, self).__init__(30, 'BundlesSelectionControl')
+        super(BundlesSelectionControl, self).__init__(30,
+            'BundlesSelectionControl')
 
     def eventAutoSubscription(self, pool):
         super(BundlesSelectionControl, self).eventAutoSubscription(pool)
-        self.mouseLongEventUnsubscribe(QtCore.Qt.LeftButton, QtCore.Qt.NoModifier)
-        self.mousePressButtonEventSubscribe(QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, pool.action('BundlesSelectionAction').smallBrainClick)
+        self.mouseLongEventUnsubscribe(
+            QtCore.Qt.LeftButton, QtCore.Qt.NoModifier)
+        self.mousePressButtonEventSubscribe(
+            QtCore.Qt.LeftButton, QtCore.Qt.NoModifier,
+            pool.action('BundlesSelectionAction').smallBrainClick)
         self.mouseLongEventSubscribe(
-        QtCore.Qt.LeftButton, QtCore.Qt.ShiftModifier, pool.action( 'BundlesRotationSelectionAction' ).beginTrackball, pool.action( 'BundlesRotationSelectionAction' ).moveTrackball, pool.action( 'BundlesRotationSelectionAction' ).endTrackball , True )
+            QtCore.Qt.LeftButton, QtCore.Qt.ShiftModifier,
+            pool.action('BundlesRotationSelectionAction').beginTrackball,
+            pool.action('BundlesRotationSelectionAction').moveTrackball,
+            pool.action('BundlesRotationSelectionAction').endTrackball ,
+            True)
 
     def doAlsoOnSelect(self, actionpool):
-    super(BundlesSelectionControl, self).doAlsoOnSelect(actionpool)
+        super(BundlesSelectionControl, self).doAlsoOnSelect(actionpool)
         actionpool.action('BundlesSelectionAction').initSmallBrains()
 
     def doAlsoOnDeselect(self, actionpool):
-    super(BundlesSelectionControl, self).doAlsoOnDeselect(actionpool)
+        super(BundlesSelectionControl, self).doAlsoOnDeselect(actionpool)
         actionpool.action("BundlesRotationSelectionAction").cleanup()
         actionpool.action("BundlesSelectionAction").cleanup()
 
