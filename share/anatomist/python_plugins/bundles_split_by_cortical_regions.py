@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 from soma import aims
-from roca import rocasip
 import anatomist.cpp as anatomist
 from soma.aims.meshSplit import meshSplit2
 from constel.lib.graphtools import mergeBundlesGraphAndROIsGraph
+import constel
 
 class MeshFusionMeshRoiGraphModule(anatomist.Module):
     def name(self):
@@ -79,10 +79,12 @@ class FusionTexMeshImaAndBundlesToROIsAndBundlesGraphMethod(anatomist.FusionMeth
         
         # number of vertices
         n = int(aims_tex.nItem())
-        
+
         if n != 0:
-            aims_bundles_graph = rocasip.constel.texMeshAndBundles_to_BundlesGraph(aims_mesh, aims_tex, "Name1_Name2", bundles_graph.fileName(), motion)
-                        
+            aims_bundles_graph = constel.texMeshAndBundles_to_BundlesGraph(
+                aims_mesh, aims_tex, "Name1_Name2", bundles_graph.fileName(),
+                motion)
+
             # creating a roi graph: voxel size and mesh corresponding
             aims_roi_graph = aims.Graph('RoiArg')
             aims_roi_graph['voxel_size'] = voxel_size
