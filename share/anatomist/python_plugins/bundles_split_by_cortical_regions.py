@@ -81,9 +81,13 @@ class FusionTexMeshImaAndBundlesToROIsAndBundlesGraphMethod(anatomist.FusionMeth
         n = int(aims_tex.nItem())
 
         if n != 0:
+            filter_proportion = 0
+            if bundles_graph.graph().has_key('fibers_proportion_filter'):
+                filter_proportion \
+                    = bundles_graph.graph()['fibers_proportion_filter']
             aims_bundles_graph = constel.texMeshAndBundles_to_BundlesGraph(
                 aims_mesh, aims_tex, "Name1_Name2", bundles_graph.fileName(),
-                motion)
+                motion, '', filter_proportion)
 
             # creating a roi graph: voxel size and mesh corresponding
             aims_roi_graph = aims.Graph('RoiArg')

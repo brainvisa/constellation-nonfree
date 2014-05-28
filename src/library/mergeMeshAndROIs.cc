@@ -2,6 +2,7 @@
 #include <connectomist/fibertracking/bundleRegroup.h>
 #include <constellation/selectFiberListenerFromMesh.h>
 #include <constellation/bundleTools.h>
+#include <connectomist/fibertracking/bundleSampler.h>
 #include <cartobase/config/verbose.h>
 
 using namespace aims;
@@ -202,7 +203,11 @@ namespace constel {
     
   }//fusionMeshFoldGraph_to_Texture
 
-  Graph * texMeshAndBundles_to_BundlesGraph( const AimsSurfaceTriangle & inAimsMesh, rc_ptr<TimeTexture<short> > tex, string namesMode, string bundlesFile_name, Motion motion, const string & BundlesNamesfile_name)
+  Graph * texMeshAndBundles_to_BundlesGraph(
+    const AimsSurfaceTriangle & inAimsMesh, rc_ptr<TimeTexture<short> > tex,
+    string namesMode, string bundlesFile_name,
+    Motion motion, const string & BundlesNamesfile_name,
+    float filter_proportion )
   {
     //Converting AimsMesh to Cathier format (neighbouring points)
     rc_ptr<Mesh> mesh( new Mesh );
@@ -225,11 +230,21 @@ namespace constel {
       bundleRegroup->setStream( osBundlesNamesfile_name );
     bundle2.addBundleListener(*bundleRegroup);
 
+    rc_ptr< BundleSampler > bundleSampler;
+    if( filter_proportion != 0. )
+    {
+      bundleSampler.reset( new BundleSampler(filter_proportion * 100, "toto",
+                                             "tutu", 0) );
+      bundleRegroup->addBundleListener( *bundleSampler );
+    }
     Graph *result = new Graph("RoiArg");
     BundleToGraph bundleToGraph(*result);
-    bundleRegroup->addBundleListener( bundleToGraph );
+    if( filter_proportion != 0. )
+      bundleSampler->addBundleListener( bundleToGraph );
+    else
+      bundleRegroup->addBundleListener( bundleToGraph );
     bundle2.read();
-    
+
     return result;
   }//texMeshAndROIs_to_BundlesGraph
 
