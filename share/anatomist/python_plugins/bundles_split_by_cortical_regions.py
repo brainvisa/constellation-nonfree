@@ -6,6 +6,7 @@ from soma.aims.meshSplit import meshSplit2
 from constel.lib.graphtools import mergeBundlesGraphAndROIsGraph
 import constel
 
+
 class MeshFusionMeshRoiGraphModule(anatomist.Module):
     def name(self):
         return 'Mesh RoiGraph Fusion Module'
@@ -13,7 +14,9 @@ class MeshFusionMeshRoiGraphModule(anatomist.Module):
     def description(self):
         return 'Merge a Mesh and a ROI Graph and create the associated Graph'
 
-class FusionTexMeshImaAndBundlesToROIsAndBundlesGraphMethod(anatomist.FusionMethod):
+
+class FusionTexMeshImaAndBundlesToROIsAndBundlesGraphMethod(
+        anatomist.FusionMethod):
     def __init__(self):
         anatomist.FusionMethod.__init__(self)
 
@@ -34,10 +37,9 @@ class FusionTexMeshImaAndBundlesToROIsAndBundlesGraphMethod(anatomist.FusionMeth
                 ima = obj
             else:
                 raise TypeError('Objects must be an Anatomist instance')
-        
+
         # fusion check
         if (mesh and bundles_graph) and tex:
-            print 'Fusion OK'
             return True
         else:
             raise TypeError('Could not fusion objects')
@@ -53,30 +55,29 @@ class FusionTexMeshImaAndBundlesToROIsAndBundlesGraphMethod(anatomist.FusionMeth
                 tex = obj
             elif obj.type() == anatomist.AObject.VOLUME:
                 ima = obj
-        
+
         # instance of Anatomist
         a = anatomist.Anatomist()
-        
+
         # get referential
         ref_bundles = bundles_graph.getReferential()
         ref_anat = mesh.getReferential()
-           
+
         # converts an Anatomist object to an AIMS object
         aims_tex = anatomist.AObjectConverter.aims(tex)
         aims_ima = anatomist.AObjectConverter.aims(ima)
         aims_mesh = anatomist.AObjectConverter.aims(mesh)
-    
+
         # load an existing transformation
         dw_to_t1 = a.getTransformation(ref_bundles, ref_anat)
         if dw_to_t1:
-            print "dw_to_t1 OK"
             motion = dw_to_t1.motion()
         else:
             raise TypeError('Non valid transformation matrix: dw to t1')
-        
+
         # 3D resolution
         voxel_size = aims_ima.header()['voxel_size']
-        
+
         # number of vertices
         n = int(aims_tex.nItem())
 
@@ -96,24 +97,26 @@ class FusionTexMeshImaAndBundlesToROIsAndBundlesGraphMethod(anatomist.FusionMeth
 
             # roi_mesh and aims_roi (bucket) are added in aims_roi_graph
             meshSplit2(aims_mesh, aims_tex, aims_roi_graph, voxel_size)
-            
+
             # merge Aims ROIs graph with Aims bundles graph (based on the same transformation matrix)
-            mergeBundlesGraphAndROIsGraph(aims_roi_graph, aims_bundles_graph, motion)
-                   
+            mergeBundlesGraphAndROIsGraph(aims_roi_graph, aims_bundles_graph, 
+                motion)
+
             # converts an Aims object to an Anatomist object
-            roi_graph = anatomist.AObjectConverter.anatomist(aims_roi_graph)       
-                   
+            roi_graph = anatomist.AObjectConverter.anatomist(aims_roi_graph)
+
             # color for roi_mesh and roi_mesh_junction (label and filename)
-            aims.GraphManip.setAttributeColor(aims_roi_graph,'roi_mesh', [128, 0, 255, 20])
-            aims.GraphManip.setAttributeColor(aims_roi_graph,'roi_mesh_junction', [10, 0, 255, 128])
+            aims.GraphManip.setAttributeColor(aims_roi_graph, 'roi_mesh',
+                [128, 0, 255, 20])
+            aims.GraphManip.setAttributeColor(aims_roi_graph, 
+                'roi_mesh_junction', [10, 0, 255, 128])
             aims_roi_graph["aims_reader_loaded_objects"] = 3
-            
-            # property           
+
+            # property
             roi_graph.setName("ROIs And Bundles Graph")
             roi_graph.setReferential(ref_anat)
             roi_graph.updateAfterAimsChange()
             roi_graph.notifyObservers()
-            print "final ROIS_and_Bundles graph created"
             del aims_bundles_graph
             del aims_roi_graph
 
@@ -123,7 +126,6 @@ class FusionTexMeshImaAndBundlesToROIsAndBundlesGraphMethod(anatomist.FusionMeth
 
         # remove python references to anatomist objects before closing
         del bundles_graph, tex, obj
-        print 'roi', roi_graph
         return roi_graph
 
     def ID(self):
