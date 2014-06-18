@@ -4,7 +4,9 @@ import numpy as np
 import scipy.spatial.distance as ssd
 import scipy.cluster.hierarchy as sch
 import Pycluster as pc
+from soma import aims
 import math
+import os
 
 def getCenters(clust, K):
   i = 0
@@ -115,7 +117,7 @@ def gap(data, refs=None, nrefs=20, ks=range(1,11)):
     
   return gaps
   
-def ward_method(matrix, output_dir):
+def ward_method(matrix, output_dir, n_clusters):
    '''Ward's method is a criterion applied in hierarchical cluster analysis. 
    Ward's minimum variance criterion minimizes the total within-cluster 
    variance.
@@ -125,23 +127,24 @@ def ward_method(matrix, output_dir):
    
    Returns:
        Z: The hierarchical clustering encoded as a linkage matrix.
-          Performs Ward’s linkage on the observation matrix X using 
+          Performs Wards linkage on the observation matrix X using 
           Euclidean distance as the distance metric.
    
    '''
    # Load the matrix
-   matrix = aims.read(self.group_matrix.fullPath())
+   matrix = aims.read(matrix)
    mat = np.asarray(matrix)[:, :, 0, 0]
-   n, p = s = mat.shape
-   # Compute linkage
-   Z = sch.linkage(mat, method='ward', metric='euclidean')
+   n, p = mat.shape
+   
+   # Compute linkage.
+   Z = sch.linkage(matrix, method='ward', metric='euclidean')
    if not os.path.exists(output_dir):
        os.makedirs(output_dir)
    output_dir_Z = output_dir + '/dendrogram.npy'
    np.save(output_dir_Z, Z)
    clusterid = []
-   for nb in n_clusters:
+   for nb in range(1, n_clusters + 1):
        print "Trying {nb} cluster(s)".format(nb=nb)
        clusters = sch.fcluster(Z, criterion='maxclust', t=nb)
        clusterid.append(clusters)
-   return TS
+   return clusterid
