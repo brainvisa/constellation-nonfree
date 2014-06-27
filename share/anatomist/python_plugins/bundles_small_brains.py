@@ -252,9 +252,13 @@ class BundlesSelectionControl(anatomist.cpp.Control3D):
             'BundlesSelectionControl')
 
     def eventAutoSubscription(self, pool):
+        # plug parent control actions
         super(BundlesSelectionControl, self).eventAutoSubscription(pool)
+        # unplug the left mouse button action (normally used for linked cursor)
+        # so that we can reuse the left button
         self.mouseLongEventUnsubscribe(
             QtCore.Qt.LeftButton, QtCore.Qt.NoModifier)
+        # now plug our new actions
         self.mousePressButtonEventSubscribe(
             QtCore.Qt.LeftButton, QtCore.Qt.NoModifier,
             pool.action('BundlesSelectionAction').smallBrainClick)
@@ -262,8 +266,7 @@ class BundlesSelectionControl(anatomist.cpp.Control3D):
             QtCore.Qt.LeftButton, QtCore.Qt.ShiftModifier,
             pool.action('BundlesRotationSelectionAction').beginTrackball,
             pool.action('BundlesRotationSelectionAction').moveTrackball,
-            pool.action('BundlesRotationSelectionAction').endTrackball ,
-            True)
+            pool.action('BundlesRotationSelectionAction').endTrackball, True)
 
     def doAlsoOnSelect(self, actionpool):
         super(BundlesSelectionControl, self).doAlsoOnSelect(actionpool)
