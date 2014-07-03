@@ -1,14 +1,23 @@
 #!/usr/bin/env python
 
-import constel.lib.connmatrix.connmatrixtools as clcm
-import constel.lib.clustering.clusterstools as clcc
-import scipy.spatial.distance as ssd
-import scipy.cluster.vq as scv
-import Pycluster as pc
-from soma import aims
+# python system modules
 import numpy as np
 import optparse
 import sys
+
+# pycluster
+import Pycluster as pc
+
+# constellation
+import constel.lib.connmatrix.connmatrixtools as clcm
+from constel.lib.clustering.clusterstools import wcDist
+
+# scipy
+import scipy.spatial.distance as ssd
+import scipy.cluster.vq as scv
+
+# soma
+from soma import aims
 
 def parseOpts(argv):
     desc = """(1) Cluster the observed data. 
@@ -26,11 +35,20 @@ def parseOpts(argv):
     parser.add_option('-o', '--output', dest='output', metavar='FILE',
                        help='output permutations file')
     parser.add_option('-r', '--re', dest='typer', type='str',
-                      help='Type of resampling: b=bootstrap p=permutations m=montecarlo ')                 
+                      help='Type of resampling:' 
+                           'b=bootstrap' 
+                           'p=permutations' 
+                           'm=montecarlo ')                 
     parser.add_option('-e', '--distance', dest='dist', type='str',
-                      help='Distance : sqeuclidean, euclidean, cityblock')
+                      help='Distance:' 
+                           'sqeuclidean' 
+                           'euclidean' 
+                           'cityblock')
     parser.add_option('-f', '--wflag', dest='wflag', type='int',
-                      help='Whitening of features or not ? 2 per feature, 1 per category, 0 no')                    
+                      help='Whitening of features or not ?' 
+                           '2 per feature' 
+                           '1 per category' 
+                           '0 no')                    
     return parser, parser.parse_args(argv)
      
 def main():
@@ -84,7 +102,7 @@ def main():
         print '      Distance matrix done'
         for K in range(1, options.kmax + 1):
             uniclusterid, unierror, uninfound = pc.kmedoids(rdist, K, options.niter)
-            uniwc = clcc.wcDist(rdist, uniclusterid, K, fact)
+            uniwc = wcDist(rdist, uniclusterid, K, fact)
             #WB[iteration, K] = np.log(uniwc)
             WB[iteration, K] = uniwc
         print '      Clustering assessed'
