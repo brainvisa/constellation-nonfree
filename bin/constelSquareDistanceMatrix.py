@@ -46,60 +46,65 @@ def main():
         # computes the Euclidean distance
         distance_matrix = pdist(matrix, metric='euclidean')
     else:
-        # generate the upper triangular distance matrix bounded by
+        # generate the upper distance matrix bounded by
         # starting_iteration and  max iteration required
-        distance_matrix = []
-        for i in xrange(0, (m-1)):
-            for j in xrange(i + 1, m):
-                distance_matrix.append(
-                    np.sqrt(sum((matrix[i, :] - matrix[j, :]) * 
-                                (matrix[i, :] - matrix[j, :]))))
+        square_distance_matrix = np.zeros((options.nb_iteration,m))
+        ii = 0
+        for i in xrange(options.starting_iteration, options.nb_iteration + 
+                    options.starting_iteration):
+            for j in xrange(m):
+                square_distance_matrix[ii,j] = np.sqrt(
+                                       sum((matrix[i, :] - matrix[j, :]) * 
+                                       (matrix[i, :] - matrix[j, :])))
+            ii += 1
             
     # open the file to construct the square distance matrix    
     f = open(options.indir, 'r+')
-    
-    # initialization of the square distance matrix
-    square_distance_matrix = np.zeros((m, m), 'd')
     
     #######################################################################
     # complete the square distance matrix bounded by starting_iteration and 
     # max iteration required
     #######################################################################
-    
-    # upper/right triangular matrix
-    k = int(options.id_distmat)
-    for i in xrange(options.starting_iteration, options.nb_iteration + 
-                    options.starting_iteration):
-        for j in xrange(i + 1, m):
-            square_distance_matrix[i][j] = distance_matrix[k]
-            k += 1
-            
-    # lower/left triangular matrix
-    kk = 0
-    for jj in xrange(m):
-        for ii in xrange(jj, m):
-            print kk
-            if jj == ii:
-                pass
-            elif ii <= (options.starting_iteration - 1):
-                kk += 1
-            else:
-                square_distance_matrix[ii][jj] = distance_matrix[kk]
-                kk += 1
-    
+    if options.method == 'scipy':
+        # initialization of the square distance matrix
+        square_distance_matrix = np.zeros((m, m), 'd')
+        
+        # upper/right triangular matrix
+        k = int(options.id_distmat)
+        for i in xrange(options.starting_iteration, options.nb_iteration + 
+                        options.starting_iteration):
+            for j in xrange(i + 1, m):
+                square_distance_matrix[i][j] = distance_matrix[k]
+                k += 1
+                
+        # lower/left triangular matrix
+        kk = 0
+        for jj in xrange(m):
+            for ii in xrange(jj, m):
+                if jj == ii:
+                    pass
+                elif ii <= (options.starting_iteration - 1):
+                    kk += 1
+                else:
+                    square_distance_matrix[ii][jj] = distance_matrix[kk]
+                    kk += 1    
+        del distance_matrix
+        
     # initial position to complete the square distance matrix in the file       
     f.seek(options.starting_iteration * m)
     
     # write the square distance matrix bounded by starting_iteration and 
     # max iteration required
-    f.write(square_distance_matrix[options.starting_iteration:options.nb_iteration + 
-                    options.starting_iteration][:].ravel())
-    print square_distance_matrix[options.starting_iteration:options.nb_iteration + 
-                    options.starting_iteration][:].ravel()
+    if options.method == 'scipy':
+        f.write(square_distance_matrix[options.starting_iteration:options.nb_iteration + 
+                options.starting_iteration][:].ravel())
+    else:
+        f.write(square_distance_matrix.ravel())
+    
+    print square_distance_matrix.ravel()
 
     # remove the square distance matrix to free the memory
     del square_distance_matrix
-    del distance_matrix
     f.close()
                     
 if __name__ == "__main__":
