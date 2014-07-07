@@ -45,7 +45,7 @@ def main():
         # generate a triangular distance matrix as vector, with scipy
         # computes the Euclidean distance
         distance_matrix = pdist(matrix, metric='euclidean')
-    else:
+    elif options.method == 'perso':
         # generate the upper distance matrix bounded by
         # starting_iteration and  max iteration required
         square_distance_matrix = np.zeros((options.nb_iteration,m))
@@ -57,7 +57,20 @@ def main():
                                        sum((matrix[i, :] - matrix[j, :]) * 
                                        (matrix[i, :] - matrix[j, :])))
             ii += 1
-            
+    else:
+        size = 0
+        count = 0
+        for i in xrange(options.starting_iteration, options.nb_iteration + 
+                    options.starting_iteration):
+            size += m - i - 1  
+        square_distance_matrix = np.zeros((size,))
+        for i in xrange(options.starting_iteration, options.nb_iteration + 
+                    options.starting_iteration):
+            for j in xrange(i + 1, m):
+                square_distance_matrix[count] = (np.sqrt(
+                                       sum((matrix[i, :] - matrix[j, :]) * 
+                                       (matrix[i, :] - matrix[j, :]))))
+                count +=1
     # open the file to construct the square distance matrix    
     f = open(options.indir, 'r+')
     
@@ -90,8 +103,17 @@ def main():
                     kk += 1    
         del distance_matrix
         
-    # initial position to complete the square distance matrix in the file       
-    f.seek(options.starting_iteration * m)
+    # initial position to complete the distance matrix in the file 
+    if options.method == 'perso':
+        # square distance matrix
+        f.seek(options.starting_iteration * m * 8)
+    else:
+        # distance matrix as vector
+        k = m - options.starting_iteration
+        small_matrix = k*(k-1)/2
+        large_matrix = m*(m-1)/2
+        f.seek( (large_matrix - small_matrix) * 8)
+        print (large_matrix - small_matrix)
     
     # write the square distance matrix bounded by starting_iteration and 
     # max iteration required

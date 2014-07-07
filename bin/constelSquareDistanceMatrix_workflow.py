@@ -27,7 +27,8 @@ def parseOpts(argv):
                       help='two methods to generate the distance matrix:'
                            '(1) scipy --> risk of Memory Error,' 
                            '(2) perso --> partition of distance matrix,'
-                           '[default: %default]')
+                           '[default: %default]'
+                           '(3) vector --> to use kmedoid algorithm')
     return parser, parser.parse_args(argv)             
 
 def main():
@@ -38,9 +39,18 @@ def main():
     m, n = matrix.shape
     
     # create the file to receive the elements of the square distance matrix
-    f = open(options.indir, 'w')
-    f.seek(m)
-    f.close()
+    if options.method == 'perso':
+        # square distance matrix
+        f = open(options.indir, 'w')
+        f.seek((m*m*8) - 1)
+        f.write('x')
+        f.close()
+    else:
+        # distance matrix as vector
+        f = open(options.indir, 'w')
+        f.seek(m*(m-1)/2*8-1)
+        f.write('x')
+        f.close()
 
     # determines the numbers of iterations by job
     jobs = []
