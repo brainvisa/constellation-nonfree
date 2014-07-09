@@ -69,11 +69,19 @@ class BundlesSelectionAction(anatomist.cpp.Action):
             vdir.normalize()
         tr = anatomist.cpp.Transformation(nref, graph.getReferential())
         m = tr.motion()
-        rot_center = cent + vdir * self.decal
+        aimsgraph = graph.attributed()
+        distance = self.decal
+        if aimsgraph.has_key('small_brains_distance'):
+            distance = aimsgraph['small_brains_distance']
+        rot_center = cent + vdir * distance
         m.setTranslation(rot_center)
-        m *= aims.Motion([self.scaling, 0, 0, 0,
-                          0, self.scaling, 0, 0,
-                          0, 0, self.scaling, 0])
+        scaling = self.scaling
+        if aimsgraph.has_key('small_brains_scaling'):
+            scaling = aimsgraph['small_brains_scaling']
+
+        m *= aims.Motion([scaling, 0, 0, 0,
+                          0, scaling, 0, 0,
+                          0, 0, scaling, 0])
         m2 = aims.Motion()
         m2.setTranslation(-gcent)
         m *= m2
