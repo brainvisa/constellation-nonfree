@@ -58,18 +58,43 @@ class BundlesSelectionAction(anatomist.cpp.Action):
     def computeRefAndTransformation(self, graph, vertex):
         bb = graph.boundingbox()
         gcent = (bb[0] + bb[1])/2
+        aimsgraph = graph.attributed()
         nref = anatomist.cpp.Referential()
+        if vertex.attributed().has_key('normal'):
+            normal = vertex.attributed()['normal']
+            use_normal = True
+        else:
+            use_normal = False
+        if not use_normal and aimsgraph.has_key('lateralized_view'):
+            lateralized = True
+            gcent_r = bb[0] + bb[1]
+            gcent_r[0] *= 0.25
+            gcent_r[1] /= 2
+            gcent_r[2] /= 2
+            gcent_l = bb[0] + bb[1]
+            gcent_l[0] *= 0.75
+            gcent_l[1] /= 2
+            gcent_l[2] /= 2
+        else:
+            lateralized = False
         if vertex.attributed().has_key('center'):
             cent = aims.Point3df(vertex.attributed()['center'])
         else:
             bb = vertex.boundingbox()
             cent = (bb[0] + bb[1])/2
-        vdir = cent - gcent
-        if vdir.norm2() != 0:
-            vdir.normalize()
+        if not use_normal:
+            if lateralized:
+                if (cent - gcent_l).norm2() > (cent - gcent_r).norm2():
+                    gcent = gcent_r
+                else:
+                    gcent = gcent_l
+            vdir = cent - gcent
+            if vdir.norm2() != 0:
+                vdir.normalize()
+        else:
+            vdir = normal
         tr = anatomist.cpp.Transformation(nref, graph.getReferential())
         m = tr.motion()
-        aimsgraph = graph.attributed()
         distance = self.decal
         if aimsgraph.has_key('small_brains_distance'):
             distance = aimsgraph['small_brains_distance']
