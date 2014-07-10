@@ -24,6 +24,7 @@ def silhouette_sample(X, K):
     a[i] = np.mean( [distance[i][ind] for ind in kIndices[clusterid[i]] if ind!=i] )
     b[i] = np.min( [np.mean(distance[i][ind]) for k,ind in enumerate(kIndices) if clusterid[i] != k] )
   s = (b - a)/np.maximum(a, b)
+  print s
   #p.silhouette_plot(X, s, clusterid)
   return s
   
