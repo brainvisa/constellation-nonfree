@@ -20,12 +20,13 @@ def parseOpts(argv):
     parser.add_option('-k', '--idk', dest='id_distmat', type='int',
                       help='position in the distance matrix')
     parser.add_option('-i', '--input', dest='indir', metavar='FILE',
-                      help='file to construct the square distance matrix')
+                      help='file to construct the distance matrix')
     parser.add_option('-d', '--method', dest='method', default='scipy',
-                      help='two methods to generate the distance matrix:'
-                           '(1) scipy --> risk of Memory Error,' 
-                           '(2) perso --> partition of distance matrix,'
-                           '[default: %default]')
+                      help='three methods to generate the distance matrix:'
+                          '(1) scipy --> risk of Memory Error,' 
+                          '(2) square --> partition of square distance matrix,'
+                          '(3) vector --> partition of distance matrix as vector'
+                          '[default: %default]')
     return parser, parser.parse_args(argv)
 
 def main():
@@ -36,17 +37,19 @@ def main():
     m, n = matrix.shape
 
     #######################################################################
-    #        Two methods to generate the distance matrix
+    #        Three methods to generate the distance matrix
     #          (1) scipy: generate all matrix, risk of Memory Error 
-    #          (2) perso: generate a portion of matrix (required)
+    #          (2) square: generate a portion of square distance matrix
+    #          (3) vector: generate a portion of distance matrix as vector
     #######################################################################
 
     if options.method == 'scipy':
         # generate a triangular distance matrix as vector, with scipy
         # computes the Euclidean distance
+        # WARNING: risk of Memory Error
         distance_matrix = pdist(matrix, metric='euclidean')
-    elif options.method == 'perso':
-        # generate the upper distance matrix bounded by
+    elif options.method == 'square':
+        # generate the distance matrix bounded by
         # starting_iteration and  max iteration required
         square_distance_matrix = np.zeros((options.nb_iteration,m))
         ii = 0
@@ -58,6 +61,9 @@ def main():
                                        (matrix[i, :] - matrix[j, :])))
             ii += 1
     else:
+        # generate a triangular distance matrix as vector
+        # bounded by starting_iteration and  max iteration required
+        # advantage over the scipy: noy Memory Error
         size = 0
         count = 0
         for i in xrange(options.starting_iteration, options.nb_iteration + 
@@ -71,12 +77,13 @@ def main():
                                        sum((matrix[i, :] - matrix[j, :]) * 
                                        (matrix[i, :] - matrix[j, :]))))
                 count +=1
+                
     # open the file to construct the square distance matrix    
     f = open(options.indir, 'r+')
     
     #######################################################################
     # complete the square distance matrix bounded by starting_iteration and 
-    # max iteration required
+    # max iteration required (It's not that big a deal)
     #######################################################################
     if options.method == 'scipy':
         # initialization of the square distance matrix
@@ -104,7 +111,7 @@ def main():
         del distance_matrix
         
     # initial position to complete the distance matrix in the file 
-    if options.method == 'perso':
+    if options.method == 'square':
         # square distance matrix
         f.seek(options.starting_iteration * m * 8)
     else:
@@ -115,7 +122,7 @@ def main():
         f.seek( (large_matrix - small_matrix) * 8)
         print (large_matrix - small_matrix)
     
-    # write the square distance matrix bounded by starting_iteration and 
+    # write the distance matrix bounded by starting_iteration and 
     # max iteration required
     if options.method == 'scipy':
         f.write(square_distance_matrix[options.starting_iteration:options.nb_iteration + 

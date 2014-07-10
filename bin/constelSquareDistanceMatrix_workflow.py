@@ -13,20 +13,20 @@ import soma_workflow.client as swf
 from soma.path import find_in_path
 
 def parseOpts(argv):
-    desc = """Workflow to generate the square distance matrix in parallel"""
+    desc = """Workflow to generate the distance matrix in parallel"""
     parser = optparse.OptionParser(desc)
     parser.add_option('-m', '--matrix', dest='matrix',
                       help='input reduced connectivity matrix')                
     parser.add_option('-j', '--jobs', dest='jobs', type='int',
                       help='number of jobs')
     parser.add_option('-i', '--input', dest='indir', metavar='FILE',
-                      help='file to construct the square distance matrix')                 
+                      help='file to construct the distance matrix')                 
     parser.add_option('-o', '--output', dest='output', metavar='FILE',
                       help='workflow file')
     parser.add_option('-d', '--method', dest='method', default='scipy',
                       help='two methods to generate the distance matrix:'
                            '(1) scipy --> risk of Memory Error,' 
-                           '(2) perso --> partition of distance matrix,'
+                           '(2) square --> partition of distance matrix,'
                            '[default: %default]'
                            '(3) vector --> to use kmedoid algorithm')
     return parser, parser.parse_args(argv)             
@@ -38,17 +38,17 @@ def main():
     matrix = np.load(options.matrix)
     m, n = matrix.shape
     
-    # create the file to receive the elements of the square distance matrix
-    if options.method == 'perso':
+    # create the file to receive the elements of the distance matrix
+    if options.method == 'square':
         # square distance matrix
         f = open(options.indir, 'w')
-        f.seek((m*m*8) - 1)
+        f.seek((m * m * 8) - 1)
         f.write('x')
         f.close()
     else:
         # distance matrix as vector
         f = open(options.indir, 'w')
-        f.seek(m*(m-1)/2*8-1)
+        f.seek(m * (m - 1) / 2 * 8 - 1)
         f.write('x')
         f.close()
 
