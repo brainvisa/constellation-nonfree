@@ -396,9 +396,21 @@ class SmallBrainsTranslateAction(anatomist.cpp.Action):
         self.y = y
         action = self.view().controlSwitch().getAction(
             'SmallBrainSelectionAction')
+        # what is the initial distance ? If specified in graphs, it should
+        # be taken there, but what if several graphs have different distances
+        # otherwise, default to the action distance
         self.initial_distance = action.distance
+        graphs = [obj for obj in self.view().aWindow().Objects() \
+            if obj.objectTypeName(obj.type()) == 'GRAPH']
+        for graph in graphs:
+            if graph.attributed().has_key('small_brains_distance'):
+                self.initial_distance \
+                    = graph.attributed()['small_brains_distance']
+                break # take just the first for now.
 
     def moveTranslate(self, x, y, globalX, globalY):
+        # Warning: this action modifies /sets the graphs
+        # 'small_brains_distance' attribute.
         trans_model = aims.Point3df()
         bbmin = self.view().windowBoundingMin()
         bbmax = self.view().windowBoundingMax()
@@ -407,13 +419,13 @@ class SmallBrainsTranslateAction(anatomist.cpp.Action):
             * bby
         action = self.view().controlSwitch().getAction(
             'SmallBrainSelectionAction')
-        action.distance = self.initial_distance + ydiff
+        distance = self.initial_distance + ydiff
         tr = None
         done = {}
         for vertex, vert_objs in action._displayed_vertices.iteritems():
             ana_vertex = vertex['ana_object']
             graph = list(ana_vertex.parents())[0]
-            graph.attributed()['small_brains_distance'] = action.distance
+            graph.attributed()['small_brains_distance'] = distance
             stored = vert_objs.get('objects', [])
             for robj in stored:
                 obj, rot_center, tr = robj
