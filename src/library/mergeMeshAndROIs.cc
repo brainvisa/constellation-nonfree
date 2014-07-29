@@ -200,14 +200,15 @@ namespace constel {
       std::cout << "error on ROI arg voxel_size" << std::endl;
       return 0;
     }
-    
+
   }//fusionMeshFoldGraph_to_Texture
+
 
   Graph * texMeshAndBundles_to_BundlesGraph(
     const AimsSurfaceTriangle & inAimsMesh, rc_ptr<TimeTexture<short> > tex,
     string namesMode, string bundlesFile_name,
     Motion motion, const string & BundlesNamesfile_name,
-    float filter_proportion )
+    float filter_proportion, int texture_time_step )
   {
     //Converting AimsMesh to Cathier format (neighbouring points)
     rc_ptr<Mesh> mesh( new Mesh );
@@ -216,7 +217,8 @@ namespace constel {
     *mesh = addNeighborsToMesh(mesh0);
     //int addInt = 0; don't use
     stringstream osBundlesNamesfile_name;
-    SelectFiberListenerFromMesh fiberBundle(mesh,tex,namesMode,0,motion,BundlesNamesfile_name);
+    SelectFiberListenerFromMesh fiberBundle( mesh, tex, namesMode, 0, motion,
+      BundlesNamesfile_name, texture_time_step );
     if( BundlesNamesfile_name.empty() )
       fiberBundle.setStream( osBundlesNamesfile_name );
     BundleReader bundle(bundlesFile_name);
@@ -247,6 +249,7 @@ namespace constel {
 
     return result;
   }//texMeshAndROIs_to_BundlesGraph
+
 
   Graph * texMeshAndBundles_to_BundlesGraph_WithIntersectionComputing( const AimsSurfaceTriangle & inAimsMesh, const TimeTexture<short> & tex, string bundlesFile_name, Motion motion, string BundlesNamesfile_name)
   {

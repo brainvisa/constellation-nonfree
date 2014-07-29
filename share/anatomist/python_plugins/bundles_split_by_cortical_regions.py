@@ -78,8 +78,15 @@ class FusionTexMeshImaAndBundlesToROIsAndBundlesGraphMethod(
         # 3D resolution
         voxel_size = aims_ima.header()['voxel_size']
 
+        # handle texture timestep
+        tex_hdr = aims_tex.header()
+        if tex_hdr.has_key('time_step'):
+            time_step = tex_hdr['time_step']
+        else:
+            time_step = 0
+
         # number of vertices
-        n = int(aims_tex.nItem())
+        n = int(aims_tex[time_step].nItem())
 
         if n != 0:
             filter_proportion = 0
@@ -88,19 +95,24 @@ class FusionTexMeshImaAndBundlesToROIsAndBundlesGraphMethod(
                     = bundles_graph.graph()['fibers_proportion_filter']
             aims_bundles_graph = constel.texMeshAndBundles_to_BundlesGraph(
                 aims_mesh, aims_tex, "Name1_Name2", bundles_graph.fileName(),
-                motion, '', filter_proportion)
+                motion, '', filter_proportion, time_step)
 
             # creating a roi graph: voxel size and mesh corresponding
             aims_roi_graph = aims.Graph('RoiArg')
             aims_roi_graph['voxel_size'] = voxel_size
             aims_roi_graph['global_mesh'] = mesh
 
+            tex_time_step = None
             # roi_mesh and aims_roi (bucket) are added in aims_roi_graph
-            meshSplit2(aims_mesh, aims_tex, aims_roi_graph, voxel_size)
+            meshSplit2(aims_mesh, aims_tex, aims_roi_graph, voxel_size,
+                time_step)
 
-            # merge Aims ROIs graph with Aims bundles graph (based on the same transformation matrix)
-            mergeBundlesGraphAndROIsGraph(aims_roi_graph, aims_bundles_graph, 
-                motion)
+            # merge Aims ROIs graph with Aims bundles graph (based on the same
+            # transformation matrix)
+            # Note: the "background" node is "other" in aims_bundles_graph
+            #   and "0" in aims_roi_graph
+            mergeBundlesGraphAndROIsGraph(aims_roi_graph, aims_bundles_graph,
+                motion, nodes_names_mapping={'others': 0})
 
             # converts an Aims object to an Anatomist object
             roi_graph = anatomist.AObjectConverter.anatomist(aims_roi_graph)

@@ -20,7 +20,7 @@ namespace constel {
     std::string bundlesFile_name,
     Motion motion,
     const std::string & BundlesNamesfile_name = std::string(),
-    float fibers_filter_proportion = 0. );
+    float fibers_filter_proportion = 0., int texture_time_step = 0 );
 
   Graph * texMeshAndBundles_to_BundlesGraph_WithIntersectionComputing( const AimsSurfaceTriangle & inAimsMesh, const TimeTexture<short> & tex, std::string bundlesFile_name, Motion motion, std::string BundlesNamesfile_name);
 

@@ -29,7 +29,8 @@ public:
                                carto::rc_ptr<TimeTexture<short> > tex,
                                const std::string & namesMode, int addInt,
                                const Motion & motion,
-                               const std::string & bundlesNamesFileName );
+                               const std::string & bundlesNamesFileName,
+                               int texture_time_step = 0 );
   virtual ~SelectFiberListenerFromMesh();
   void setStream( std::ostream & );
 

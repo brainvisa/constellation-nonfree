@@ -127,8 +127,9 @@ class SmallBrainSelectionAction(anatomist.cpp.Action):
         a = anatomist.cpp.Anatomist()
         if hasattr(self, 'secondaryView'):
             secondview = self.secondaryView
-            objects = secondview.objects
-            secondview.removeObjects(objects)
+            if secondview:
+                objects = secondview.objects
+                secondview.removeObjects(objects)
         refs = []
         for vertex, values in self._displayed_vertices.iteritems():
             if keep and vertex in keep:
@@ -276,7 +277,8 @@ class SmallBrainSelectionAction(anatomist.cpp.Action):
 
         if hasattr(self, 'secondaryView'):
             secondview = self.secondaryView
-            objects = secondview.objects
+            if secondview:
+                objects = secondview.objects
             if mode == 'set':
                 secondview.removeObjects(objects)
                 secondview.addObjects(obj_to_display)
