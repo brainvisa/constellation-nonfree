@@ -4,6 +4,7 @@
 from tempfile import mkdtemp
 import os.path as path
 import numpy as np
+import struct
 import math
 import os
 
@@ -45,7 +46,7 @@ def wcDist(distance, clusterid, K, fact):
                     sum += (distance[i][j] ** fact)
         W[l] = sum / float(2.0 * centerid.size)
         addW += W[l]
-  return addW
+    return addW
 
 def centroid(dist):
     s = dist.sum(axis = 0)
@@ -88,8 +89,7 @@ import scipy.spatial.distance
 dst = scipy.spatial.distance.euclidean
 
 def gap(data, refs=None, nrefs=20, ks=range(1,11)):
-    """
-    Compute the Gap statistic for an nxm dataset in data.
+    """Compute the Gap statistic for an nxm dataset in data.
     
     Either give a precomputed set of reference distributions in refs as an (n,m,k) scipy array,
     or state the number k of reference distributions in nrefs for automatic generation with a
@@ -121,38 +121,66 @@ def gap(data, refs=None, nrefs=20, ks=range(1,11)):
         print "labels -->", kml, "centers -->", kmc
         disp = sum([dst(data[m,:],kmc[kml[m],:]) for m in range(shape[0])])
     
-      refdisps = scipy.zeros((rands.shape[2],))
-      for j in range(rands.shape[2]):
-          (kmc,kml) = scipy.cluster.vq.kmeans2(rands[:,:,j], k)
-          refdisps[j] = sum([dst(rands[m,:,j],kmc[kml[m],:]) for m in range(shape[0])])
-      gaps[i] = scipy.log(scipy.mean(refdisps))-scipy.log(disp)
+        refdisps = scipy.zeros((rands.shape[2],))
+        for j in range(rands.shape[2]):
+            (kmc,kml) = scipy.cluster.vq.kmeans2(rands[:,:,j], k)
+            refdisps[j] = sum([dst(rands[m,:,j],kmc[kml[m],:]) for m in range(shape[0])])
+        gaps[i] = scipy.log(scipy.mean(refdisps))-scipy.log(disp)
     
     return gaps
   
-def ward_method(dist_mat_file, n, output_dir, n_clusters):
-    '''Ward's method is a criterion applied in hierarchical cluster analysis. 
+def ward_method(dmat_file, n, output_dir, n_clusters):
+    """Performs Ward’s linkage on the distance matrix.
+    
+    Ward's method is a criterion applied in hierarchical cluster analysis. 
     Ward's minimum variance criterion minimizes the total within-cluster 
     variance.
-   
-    Parameters:
-        dist_mat_file: binary file of the distance matrix
-        n: shape[0] of the reduced matrix
-        output_dir_Z: directory to save the dendrogram
-        n_clusters: k max for the clustering
+    
+    For disjoint clusters C_i, C_j, and C_k with sizes n_i, n_j, and n_k.
+    
+                             (n_i + n_k)
+    D(C_i U C_j, C_k) =  ----------------- D(C_i, C_k) +
+                         (n_i + n_j + n_k)         
+                            (n_i + n_k)
+                         ----------------- D(C_j, C_k) -
+                         (n_i + n_j + n_k)
+                                n_k
+                         ----------------- D(C_i, C_j)
+                         (n_i + n_j + n_k)
+    Parameters
+    ----------
+        dmat_file (array[..., ]): binary file of the distance matrix
+        n (int): shape[0] of the reduced matrix
+        output_dir (str): directory to save the dendrogram
+        n_clusters (int): number of clusters (kmax) for the clustering
         
-    Returns:
-        clusterid: for each vertex, a label is attributed
-                   between 1 to k max
-   
-    '''
+    Returns
+    -------
+        clusterid (array[..., ]): 
+                  From 1 to kmax, a label is attributed for each vertex,
+                  defining clusters.
+    
+    **References**
+        .. [1] Ward, J. H.
+               Hierarchical grouping to optimize an objective function.
+               Journal of the American Statistical Association,
+               58:238-244, 1963.
+        .. [2] Wishart, D.
+               An algorithm for hierarchical classification.
+               Biometrics 25:165-170, 1969.
+        .. [3] Cormack, R. M. 
+               A Review of Classification.
+               Journal of the Royal Statistical Society, 
+               Series A, 134(3), 321-367, 1971.
+    """
    
     # distance matrix file loading
-    f = open(dist_mat_file, "r")
+    f = open(dmat_file, "r")
     
-    # initialization distance matrix as vector
+    # initialization of the distance matrix as vector
     filename = path.join(mkdtemp(), 'newfile.dat')
-    dist_mat = np.memmap(filename, dtype='float32', mode='w+', shape=(n*(n-1)/2,))
-    #dist_mat = np.zeros((n*(n-1)/2,))
+    #dist_mat = np.memmap(filename, dtype='float32', mode='w+', shape=(n*(n-1)/2,))
+    dist_mat = np.zeros((n*(n-1)/2,))
     
     # number of iteration to generate the distance matrix
     n_iter = 100000 # not perfect
@@ -160,6 +188,8 @@ def ward_method(dist_mat_file, n, output_dir, n_clusters):
     nb_add = dist_mat.shape[0] % n_iter
     list_iteration = [nb_iteration] * n_iter
     idx = 0
+    
+    # generate the distance matrix from dmat_file to dist_mat (as array) 
     for j in xrange(n_iter):
         if j < nb_add:
             list_iteration[j] += 1
@@ -168,14 +198,14 @@ def ward_method(dist_mat_file, n, output_dir, n_clusters):
         idx += list_iteration[j]
     f.close()
 
-    # compute linkage ward  
+    # compute linkage ward
     Z = fastcluster.linkage(dist_mat, method='ward', preserve_input=False)
     
     # save the dendrogram
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    output_dir_Z = output_dir + '/dendrogram.npy'
-    np.save(output_dir_Z, Z)
+    output_Z = output_dir + '/dendrogram.npy'
+    np.save(output_Z, Z)
     
     # labelization between 1 to nb
     clusterid = []
