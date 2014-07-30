@@ -83,7 +83,10 @@ class SmallBrainSelectionAction(anatomist.cpp.Action):
             cent = aims.Point3df(vertex.attributed()['center'])
         else:
             bb = vertex.boundingbox()
-            cent = (bb[0] + bb[1])/2
+            if bb:
+                cent = (bb[0] + bb[1])/2
+            else:
+                cent = aims.Point3df(128, 128, 64)
         if not use_normal:
             if lateralized:
                 if (cent - gcent_l).norm2() > (cent - gcent_r).norm2():
@@ -197,6 +200,9 @@ class SmallBrainSelectionAction(anatomist.cpp.Action):
             if parent.type() == anatomist.cpp.AObject.GRAPHOBJECT:
                 return parent
             parents += list(parent.parents())
+        for vertex, objs in self._displayed_vertices.iteritems():
+            if obj in [o[0]._get() for o in objs['objects']]:
+                return vertex['ana_object']
         return None
 
     def smallBrainClick(self, x, y, globX, globY):
@@ -217,7 +223,7 @@ class SmallBrainSelectionAction(anatomist.cpp.Action):
                 go = sel_object.attributed()
                 if isinstance(go, aims.Vertex):
                     vertexlist.add(go)
-        else:
+        if len(vertexlist) == 0:
           for obj in window.Objects():
               if obj.type() == anatomist.cpp.AObject.GRAPH:
                   vertexlist = vertexlist.union([x.attributed() for x in obj \

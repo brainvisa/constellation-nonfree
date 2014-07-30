@@ -64,6 +64,4 @@ def mergeBundlesGraphAndROIsGraph(roi_graph, bundles_graph,
                                             bundles_to_ROIs_motion)
             aims.GraphManip.storeAims(roi_graph, edge.get(), 
                                       'roi_mesh_junction', fiber_mesh)
-    # remove brain mesh in node 0
-    del roi_vertices_labels[0]['roi_mesh']
 
