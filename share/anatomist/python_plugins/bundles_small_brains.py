@@ -238,12 +238,12 @@ class SmallBrainSelectionAction(anatomist.cpp.Action):
         for aimsvertex in vertexlist:
             vmemo = self._displayed_vertices.setdefault(aimsvertex, {})
             vertex = aimsvertex['ana_object']
-            obj_to_display.append(vertex)
+            # obj_to_display.append(vertex)
             objs = vmemo.get('objects', [])
             if len(objs) != 0:
                 # vertex already done and available: just reuse it
                 print 'vertex in cache.'
-                new_objects = [vertex] + [obj[0].get() for obj in objs]
+                new_objects = [obj[0].get() for obj in objs]
                 if not self.display_all:
                     # if display_all this will be done after the loop
                     for obj in new_objects:
