@@ -264,8 +264,10 @@ class SmallBrainSelectionAction(anatomist.cpp.Action):
                     obj, nref, rot_center, tr, a, window, diffuse_list))
             if global_mesh is not None:
                 diffuse_list = [0.8, 0.8, 0.8, 0.2]
-                self.addReducedObjectToView(aimsvertex, global_mesh, nref,
-                    rot_center, tr, a, window, diffuse_list)
+                rmesh = self.addReducedObjectToView(aimsvertex, global_mesh,
+                    nref, rot_center, tr, a, window, diffuse_list)
+                a.execute('SetMaterial', objects=[rmesh],
+                    selectable_mode='always_selectable')
             for edge in aimsvertex.edges():
                 if edge.has_key('ana_object'):
                     aedge = edge['ana_object']
