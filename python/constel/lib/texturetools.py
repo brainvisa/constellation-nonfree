@@ -2,6 +2,7 @@
 import soma.aims.texturetools as MTT
 from soma import aims
 import numpy as np
+import numpy
 
 def remove_labels(tex, labels):
     """Allows to remove labels in a texture from a given labels list.
@@ -69,6 +70,32 @@ def change_wrong_labels(cc_label, label, gyri_tex, mesh_neighbors_vector,
     for i in indexes:
         gyri_tex[0][i] = winnner_label
     return gyri_tex, winnner_label
+
+def find_wrong_labels( mesh, gyriTex ):
+    """
+    inputs:
+        mesh
+        gyriTex: gyri texture
+    outputs:
+        wrong_labels: list of wrong labels
+        [cctex: connectedComponentTex: aimsTimeTexture_S16, 
+         time step = LabelsNb, for each time step (label in the tex), 
+         texture of the connected components corresponding to this label 
+         (background = -1, and connected components = values between 1 and ccNb)
+         areas_measures = python dictionary, 
+         areas_measures[label] = [16.5, 6.0] (numpy array) 
+         if label (in tex) has two connected Components 1 and 2 with 
+         area = 16.5 and 6.0 respectively, areas are in square mm ]
+    """
+
+    meshNeighborsVector = aims.SurfaceManip.surfaceNeighbours(mesh)
+    cctex, areas_measures = MTT.connectedComponents(mesh, gyriTex, areas_mode=1)
+    wrong_labels = []
+    for label in areas_measures.keys():
+        if areas_measures[label].size != 1:
+            wrong_labels.append(label)
+    return wrong_labels
+
 
 def clean_gyri_texture(mesh, gyri_tex):
     """Cleaning a gyri texture by using connected components.
@@ -165,3 +192,51 @@ def normalized_texture(itex):
     z = 1./dividende_coef
     itex_ar *= z
   return itex
+
+def geodesic_gravity_center(mesh, parcellated_texture, region_name,
+                            time_step=0):
+    """Compute the gravity center of the cluster or given region.
+    
+    Parameters
+    ----------
+        mesh: (AimsTimeSurface_3)
+        parcellated_texture: (TimeTexture_S16)
+        region_name: (int)
+        time_step: (int)
+      
+    Returns
+    -------
+        gravity_center_index: (int)
+        
+    .. note::
+        (Approximated)
+        For circular geodesic region it works, otherwise the max 
+        of distance_texture is not single.
+    """
+    
+    # get the number of vertices of the mesh
+    number_of_vertices = mesh.vertex().size()
+    
+    # create a texture of type TimeTexture_S16 (soma.aims)
+    # with an equal amount of vertices as the mesh
+    texture = aims.TimeTexture_S16()
+    texture[0].resize(number_of_vertices, 1)
+ 
+    # get a list of vertices linked to the given region, not the entire mesh
+    vertices_index = numpy.where(
+        parcellated_texture[time_step].arraydata() == region_name)[0]
+    
+    # each elements of vertices_index is remplaced by 0, 
+    # the others are at 1 in texture
+    for (index, vertex) in enumerate(vertices_index):
+        texture[0][vertex] = 0
+
+    # compute geodesic depth of a triangulation,
+    # the texture define the object and the background,
+	# the radius-*are morphological parameter*
+    distance_texture = aims.meshdistance.MeshDistance(mesh, texture, False)
+    
+    # get the max to define the gravity center of the given region
+    gravity_center_index = distance_texture[0].arraydata().argmax()
+    
+    return gravity_center_index
