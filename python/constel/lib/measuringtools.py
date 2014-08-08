@@ -1,5 +1,5 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#!/usr/bin/env python
 import numpy as np
 from math import log
 from scipy.misc import comb
@@ -66,12 +66,18 @@ def rand_index(list1, list2):
     """The Rand index is a measure of the similarity between two data clusterings.
     
     Args:
-        list1:
-        list2:
+        list1: clustering of one group of subjects
+        list2: clustering of another group of subjects
     Return:
         rand_id (float): rand index
     """
-    contingency_matrix = clccm.contingency_matrix(list1, list2)
+    
+    # background is removed
+    l1 = [i for i in list1 if i != 0]
+    l2 = [i for i in list2 if i != 0]
+    
+    contingency_matrix = clccm.contingency_matrix(l1, l2)
+    
     Nsample = len(list1)
     sum_c1 = sum(comb( n_c, 2, exact = 1) for n_c in contingency_matrix.sum(axis = 1))
     sum_c2 = sum(comb( n_k, 2, exact = 1) for n_k in contingency_matrix.sum(axis = 0))
@@ -157,16 +163,16 @@ def cramer_v(list1, list2):
     """Cramer's V is a measure of association between two nominal variables 
     and it is calculated based on chi-square statistic. Use the Cramer’s V 
     statistic to assess the relative strength of the derived association.
-    Gives values within the interval [0, 1], 1 indicating a perfect match.
     
     Parameters:
     ----------
-        - list1: clustering for a group of subject
-        - list2: clustering for an other group of subject
+        - list1 (array): clustering for a group of subject
+        - list2 (array): clustering for an other group of subject
     
     Returns:
     ------
-        - Cramer's value
+        - Cramer's value (int): Gives values within the interval [0, 1], 
+                                1 indicating a perfect match.
     """
     
     # background is removed
