@@ -1,21 +1,26 @@
 #!/usr/bin/env python
-from soma import aims
+
+# 
 import numpy as np
 import itertools
 
-def writeConnMatrixAsIma(mat, filename, lines_length = 100.0, cols_length = 80.0):
-  print "Writing Matrix As .ima"
-  (n,p)=mat.shape
-  mat_ima = aims.Volume_FLOAT(n,p,1,1)
-  mat_ima_array = mat_ima.arraydata()
-  mat_ima_array[0, 0, :, :] = mat.transpose()
-  if n==p:
-    mat_ima.header()['voxel_size'] = aims.vector_FLOAT([lines_length/n, lines_length/p, 1,1])
-  else:
-    mat_ima.header()['voxel_size'] = aims.vector_FLOAT([lines_length/n, cols_length/p, 1,1])
+#soma
+from soma import aims
+   
     
-  aims.write(mat_ima, filename)
-  print "done."
+def matrix_converter(matrix, lines_length=100.0, cols_length=80.0):
+    """Writing a matrix as .ima
+    """
+    n, p = matrix.shape
+    matrix_ima = aims.Volume_FLOAT(n, p, 1, 1)
+    if n == p:
+      matrix_ima.header()['voxel_size'] = aims.vector_FLOAT(
+          [lines_length / n, lines_length / p, 1,1])
+    else:
+      matrix_ima.header()['voxel_size'] = aims.vector_FLOAT(
+          [lines_length / n, cols_length / p, 1,1])
+    
+    return matrix_ima
 
 def permutationResampling(feat):
   '''Resampling by permutation of the features'''
@@ -101,8 +106,8 @@ def euclidianDistanceMatrix(matrix):
       euclidian_dist_matrix[i][j] = dist_value
       euclidian_dist_matrix[j][i] = dist_value
   return euclidian_dist_matrix
-  
-def connMatrixParcelsToTargets(reducedmatrix, parcels, timestep = 0, mode = "meanOfProfiles"):
+
+def compute_mclusters_by_nbasins_matrix(reducedmatrix, parcels, timestep = 0, mode = "meanOfProfiles"):
   """
   Compute the mean connectivity profile of each parcels and create the associated matrix:
   inputs:
