@@ -48,11 +48,11 @@ def main():
     # (2) averaged matrix
     if options.study == 'concat':
         concatenated_matrix = numpy.concatenate(list_matrices)
-        matrix_converter(concatenated_matrix, options.matrix)
+        options.matrix = matrix_converter(concatenated_matrix)
     else:
         sum_matrix = [sum(i) for i in zip(*list_matrices)]
         averaged_matrix = numpy.array(sum_matrix) / len(list_matrices)
-        matrix_converter(averaged_matrix, options.matrix)
+        options.matrix = matrix_converter(averaged_matrix)
 
 if __name__ == "__main__":
     main()
