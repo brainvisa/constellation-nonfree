@@ -1,62 +1,58 @@
 #!/usr/bin/env python
 
-import optparse
-from soma import aims
-import numpy
+# python system modules
 import sys
-import os
+import numpy
+import optparse
 
-def validation():
-  try:
-    import constel
-  except:
-    raise ValidationError( 'constellation module is not here.' )
+# soma
+from soma import aims
 
-import constel.lib.connmatrix.connmatrixtools as TTS
+# Constel
+from constel.lib.connmatrix.connmatrixtools import matrix_converter
+
 
 def parseOpts(argv):
-  desc = """Calculate Group Matrix: average or concatenated."""
-  
-  parser = optparse.OptionParser(desc)
+    desc = """usage: %prog [options] filename"
+    Calculate concatenated or averaged matrix.
+    """
 
-  parser.add_option( '-m', '--matrices', dest='individual_matrix', action='append', help='All individual matrices reduced to the correct group.' )
-  parser.add_option( '-o', '--output', dest='matrix', help='matrix group' )
-  parser.add_option( '-s', '--study', dest= 'study', help='It\'s a String. Choice "Average" or "Concatenate".' )
+    parser = optparse.OptionParser(desc)
 
-  return parser, parser.parse_args(argv)
+    parser.add_option("-m", "--matrices", 
+                      dest="list_matrices",
+                      action="append", 
+                      help="list of matrices")
+    parser.add_option("-o", "--output", 
+                      dest="matrix", 
+                      help="output matrix (averaged or concatenated)")
+    parser.add_option("-s", "--study", 
+                      dest="study",
+                      help="Choice 'avg' or 'concat'")
+
+    return parser, parser.parse_args(argv)
+
 
 def main():
-  parser, (options, args) = parseOpts(sys.argv)
+    parser, (options, args) = parseOpts(sys.argv)
+ 
+    # generate a list of asarray
+    list_matrices = []
+    for matrix in options.list_matrices:
+        reduced_matrix = aims.read(matrix)
+        reduced_matrix = numpy.asarray(reduced_matrix)[:, :, 0, 0]
+        list_matrices.append(numpy.transpose(reduced_matrix))
 
-  files = options.individual_matrix
-  
-  count = 0
-  for matrixf in files:
-    subject_reducedConnMatrix = numpy.asarray( aims.read( str(matrixf) ) )
-    subject_reducedConnMatrix = subject_reducedConnMatrix.reshape(
-      subject_reducedConnMatrix.shape[0], subject_reducedConnMatrix.shape[1] )
-    subject_reducedConnMatrix = subject_reducedConnMatrix.transpose()
-    print 'matrix shape', subject_reducedConnMatrix.shape
-    print 'averaging', matrixf, ', min/max:', numpy.min( subject_reducedConnMatrix ), numpy.max( subject_reducedConnMatrix )
-    if options.study == 'Concatenate':
-      if count == 0:
-        subjectsReducedConnMatrix = subject_reducedConnMatrix
-      else:
-        subjectsReducedConnMatrix = numpy.concatenate( ( subjectsReducedConnMatrix, subject_reducedConnMatrix ) )
-      count += 1
-      TTS.writeConnMatrixAsIma(subjectsReducedConnMatrix, options.matrix )
-    if options.study == 'Average':
-      if count == 0:
-        avgsubjectsReducedConnMatrix = subject_reducedConnMatrix
-      else:
-        avgsubjectsReducedConnMatrix = avgsubjectsReducedConnMatrix + subject_reducedConnMatrix
-      count += 1
-  if options.study == 'Average':
-    avgsubjectsReducedConnMatrix = (1./count)*avgsubjectsReducedConnMatrix
-    avgReducedConnMatrix = TTS.writeConnMatrixAsIma( avgsubjectsReducedConnMatrix, options.matrix )
-  #print 'matrix : ', options.matrix 
-  #print 'count : ', count
-  #print 'sum min/max:', numpy.min( avgsubjectsReducedConnMatrix ), numpy.max( avgsubjectsReducedConnMatrix )
-  #print 'average min/max:', numpy.min( avgsubjectsReducedConnMatrix ), numpy.max( avgsubjectsReducedConnMatrix )
+    # two cases: 
+    # (1) concatenated matrix
+    # (2) averaged matrix
+    if options.study == 'concat':
+        concatenated_matrix = numpy.concatenate(list_matrices)
+        matrix_converter(concatenated_matrix, options.matrix)
+    else:
+        sum_matrix = [sum(i) for i in zip(*list_matrices)]
+        averaged_matrix = numpy.array(sum_matrix) / len(list_matrices)
+        matrix_converter(averaged_matrix, options.matrix)
 
-if __name__ == "__main__" : main()
+if __name__ == "__main__":
+    main()
