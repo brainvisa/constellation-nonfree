@@ -1,60 +1,76 @@
 #!/usr/bin/env python
+
+# python system modules
 from optparse import OptionParser
-from soma import aims
 import numpy as np
-import Pycluster as pc
-import constel.lib.clustering.K_optimization as CK
-import constel.lib.texturetools as tt
-import scipy.spatial.distance as ssd
-import sys
 import time
+import sys
+
+# soma
+from soma import aims
+
+# pycluster
+from Pycluster import kmedoids
+
+# constellation
+from constel.lib.texturetools import texture_time
+
+# scipy
+from scipy.spatial.distance import pdist, squareform
 
 def parseOpts(argv):
-  description = 'Clustering of the subject : The gyrus vertices connectivity profiles of all the subjects are concatenated into a big matrix. The clustering is performed with the classical kmedoids algorithm and the Euclidean distance between profiles as dissimilarity measure...'
+    description = """
+    Clustering of subjects:
+    --------------------------
+    The gyrus vertices connectivity profiles of all the subjects are 
+    concatenated or averaged into a big matrix. The clustering is performed 
+    with the classical kmedoids algorithm and the Euclidean distance between
+    profiles as dissimilarity measure...
+    """
 
-  parser = OptionParser(description)
+    parser = OptionParser(description)
 
-  #parser.add_option( '-r', '--codeR', dest = 'code', help = 'R clustering filename' )
-  parser.add_option( '-m', '--avgmesh', dest = 'avg_mesh', help = 'Input average mesh to the correct group' )
-  parser.add_option( '-l', '--label', dest = 'patch', help = 'region of interest\'s, between 1 to parcelRegionsNb' )
-  parser.add_option( '-t', '--avggyri', dest = 'avg_gyri_texture', action='append', help = 'Input average gyri segmentation' )
-  parser.add_option( '-a', '--kmax', dest='kmax', type='int' )
-  #parser.add_option( '-a', '--areamin', dest = 'areaMin_threshold', type='int', help = 'minimum area for parcells in the resulting parcellation, in mm2' )
-  parser.add_option( '-s', '--study', dest = 'study', help = 'study : Average or Concatenate' )
-  parser.add_option( '-g', '--avgmatrix', dest = 'avg_matrix', help = 'output average matrix' )
-  #parser.add_option( '-x', '--text', dest = 'clustering_result', help = 'output clustering result' )
-  #parser.add_option( '-o', '--silhouette', dest = 'clustering_silhouette', action='append', )
-  parser.add_option( '-p', '--time', dest = 'clustering_time',  action='append' )
-  #parser.add_option( '-q', '--kopt', dest = 'clustering_Kopt', action='append' )
+    parser.add_option('-m', '--avgmesh', dest='avg_mesh', 
+        help='Input average mesh to the correct group')
+    parser.add_option('-l', '--label', dest='patch', 
+        help='region of interest\'s, between 1 to parcelRegionsNb')
+    parser.add_option('-t', '--avggyri', dest='avg_gyri_texture', 
+        action='append', help = 'Input average gyri segmentation' )
+    parser.add_option('-a', '--kmax', dest='kmax', type='int')
+    parser.add_option('-s', '--study', dest='study', 
+        help='study : Average or Concatenate')
+    parser.add_option('-g', '--avgmatrix', dest='avg_matrix', 
+        help='output average matrix')
+    parser.add_option('-p', '--time', dest='clustering_time',  
+        action='append')
 
-  return parser, parser.parse_args(argv)
+    return parser, parser.parse_args(argv)
 
 def main():
   parser, (options, args) = parseOpts(sys.argv)
 
   kmin = 2
-  avg_mesh = aims.read( options.avg_mesh )
+  avg_mesh = aims.read(options.avg_mesh)
   subjectsNb = len(options.clustering_time)
 
   kmax = options.kmax
   print 'kmax = ', kmax
 
   reduced_matrix = aims.read(options.avg_matrix)
-  if options.study == 'Concatenate':
+  if options.study == 'concat':
     reduced_matrix = np.asarray(reduced_matrix)[:,:,0,0]
-  if options.study == 'Average':
+  if options.study == 'avg':
     reduced_matrix = np.asarray(reduced_matrix)[:,:,0,0]
   print "Reduced matrix of size (Nsample, Ndim): M", reduced_matrix.shape
   
-  distance = pc.distancematrix(reduced_matrix, dist='e')
-  #distance = ssd.squareform(ssd.pdist(reduced_matrix, 'euclidean'))
+  distance = squareform(pdist(reduced_matrix, metric='euclidean'))
   
   nb_vertices = avg_mesh.vertex().size()
   
   NiterK = 100
   clusterID = []
   for K in range(2, kmax+1):
-    clusterid, err, nfound = pc.kmedoids(distance, K, NiterK)
+    clusterid, err, nfound = kmedoids(distance, K, NiterK)
     labels = 1
     for i in np.unique(clusterid):
       clusterid[clusterid == i] = labels
@@ -67,24 +83,25 @@ def main():
   n = 0
 
   for subject in xrange(subjectsNb):
-    if options.study == 'Concatenate':
-      tex = aims.read( options.avg_gyri_texture[n] )
+    if options.study == 'concat':
+      tex = aims.read(options.avg_gyri_texture[n])
     else:
-      tex = aims.read( options.avg_gyri_texture[0] )
+      tex = aims.read(options.avg_gyri_texture[0])
     vertices_patch = []
-    for i in xrange( tex[0].nItem() ):
+    for i in xrange(tex[0].nItem()):
+      print options.patch
       if tex[0][i] == int(options.patch):
         vertices_patch.append(i)
     subjectPatchVertex_nb = len(vertices_patch)
     all_subjects_labels_list_index_min = countProcessedVertex
     all_subjects_labels_list_index_max = countProcessedVertex + subjectPatchVertex_nb
 
-    if options.study == 'Concatenate':
+    if options.study == 'concat':
       k = kmax-1
-      clusters = tt.texture_time(k, clusterID, vertices_patch, nb_vertices, 2, all_subjects_labels_list_index_min, all_subjects_labels_list_index_max)
-    if options.study == 'Average':
+      clusters = texture_time(k, clusterID, vertices_patch, nb_vertices, 2, all_subjects_labels_list_index_min, all_subjects_labels_list_index_max)
+    if options.study == 'avg':
       k = kmax-1
-      clusters = tt.texture_time(k, clusterID, vertices_patch, nb_vertices, 1)
+      clusters = texture_time(k, clusterID, vertices_patch, nb_vertices, 1)
 
     countProcessedVertex += subjectPatchVertex_nb
 
