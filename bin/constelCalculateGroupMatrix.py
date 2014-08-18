@@ -8,9 +8,8 @@ import optparse
 # soma
 from soma import aims
 
-# Constel
-from constel.lib.connmatrix.connmatrixtools import matrix_converter
-
+# constel
+from constel.lib.connmatrix.connmatrixtools import resize_matrix
 
 def parseOpts(argv):
     desc = """usage: %prog [options] filename"
@@ -41,18 +40,20 @@ def main():
     for matrix in options.list_matrices:
         reduced_matrix = aims.read(matrix)
         reduced_matrix = numpy.asarray(reduced_matrix)[:, :, 0, 0]
-        list_matrices.append(numpy.transpose(reduced_matrix))
+        list_matrices.append(reduced_matrix.astype('float32'))
 
     # two cases: 
-    # (1) concatenated matrix
-    # (2) averaged matrix
+    # (1) concatenated matrix: M(target_regions, group_vertices_patch)
+    # (2) averaged matrix: M(target_regions, vertices_patch)
     if options.study == 'concat':
-        concatenated_matrix = numpy.concatenate(list_matrices)
-        options.matrix = matrix_converter(concatenated_matrix)
-    else:
+        concatenated_matrix = numpy.concatenate(list_matrices, axis=1)
+        concatenated_matrix = resize_matrix(aims.Volume(concatenated_matrix))
+        aims.write(concatenated_matrix, options.matrix)
+    else: #avg
         sum_matrix = [sum(i) for i in zip(*list_matrices)]
         averaged_matrix = numpy.array(sum_matrix) / len(list_matrices)
-        options.matrix = matrix_converter(averaged_matrix)
+        averaged_matrix = resize_matrix(aims.Volume(averaged_matrix))
+        aims.write(averaged_matrix, options.matrix)
 
 if __name__ == "__main__":
     main()

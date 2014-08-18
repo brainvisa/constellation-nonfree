@@ -8,19 +8,29 @@ import itertools
 from soma import aims
    
     
-def matrix_converter(matrix, lines_length=100.0, cols_length=80.0):
-    """Writing a matrix as .ima
-    """
-    n, p = matrix.shape
-    matrix_ima = aims.Volume_FLOAT(n, p, 1, 1)
-    if n == p:
-      matrix_ima.header()['voxel_size'] = aims.vector_FLOAT(
-          [lines_length / n, lines_length / p, 1,1])
-    else:
-      matrix_ima.header()['voxel_size'] = aims.vector_FLOAT(
-          [lines_length / n, cols_length / p, 1,1])
+def resize_matrix(matrix, rows_length=100.0, cols_length=80.0):
+    """Resize a matrix.
     
-    return matrix_ima
+    The visual effect may be easier.    
+    
+    Parameters
+    ----------
+        matrix: (aims.Volume)
+        rows_length: fixed value
+        cols_length: fixed value
+        
+    Return
+    ------
+        matrix: (aims.Volume)
+    """
+    if matrix.getSizeX() == matrix.getSizeY():
+      matrix.header()['voxel_size'] = aims.vector_FLOAT(
+          [rows_length / matrix.getSizeX(), rows_length / matrix.getSizeY(), 1,1])
+    else:
+      matrix.header()['voxel_size'] = aims.vector_FLOAT(
+          [rows_length / matrix.getSizeX(), cols_length / matrix.getSizeY(), 1,1])
+    
+    return matrix
 
 def permutationResampling(feat):
   '''Resampling by permutation of the features'''
