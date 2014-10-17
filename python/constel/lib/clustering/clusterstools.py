@@ -410,6 +410,39 @@ def davies_bouldin_index(distance_matrix, cluster_id, kmax_clusters):
     return db_index
 
 
+def dunn_index(distance_matrix, clusters_id):
+    """Evaluate the optimal number of clusters.
+
+    Parameters
+    ----------
+    distance_matrix: ()
+        The distance matrix is symmetric and has zeros on the diagonal
+    clusters_id: (array)
+        This array stores the cluster number to which each item was assigned
+        by the clustering algorithm
+
+    Return
+    ------
+    dunn_index: ()
+        the minimal observed index indicates the best cluster solution
+        maximum value of the index
+    """
+    distance_intra = numpy.array([])
+    distance_inter = numpy.array([])
+
+    n_sample = distance_matrix.shape[0]
+
+    for i in range(n_sample):
+        for j in range(i + 1, n_sample):
+            if (clusters_id[i] != clusters_id[j]):
+                distance_inter = numpy.append(
+                    distance_inter, distance_matrix[i, j])
+            else:
+                distance_intra = numpy.append(
+                    distance_intra, distance_matrix[i, j])
+    dunn_index = distance_inter.min() / distance_intra.max()
+    return dunn_index
+
 def krzanowski_lai_index(distance_matrix, clusters_id, kmax_clusters):
     """Evaluate the optimal number of clusters.
 
