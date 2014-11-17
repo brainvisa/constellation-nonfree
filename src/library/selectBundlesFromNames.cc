@@ -3,7 +3,6 @@
 using namespace std;
 using namespace carto;
 using namespace aims;
-using namespace comist;
 
 
 namespace constel
@@ -225,4 +224,4 @@ void SelectBundlesFromNames::noMoreBundle( const BundleProducer & )
       << endl << flush;
 }
 
-} // namespace comist
+} // namespace constel

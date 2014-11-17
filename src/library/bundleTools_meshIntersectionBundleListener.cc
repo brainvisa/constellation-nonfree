@@ -4,9 +4,9 @@
 // includes from CATHIER
 #include <cathier/triangle_mesh_geodesic_map.h>
 
-using namespace std;
-using namespace comist;
 using namespace constel;
+using namespace aims;
+using namespace std;
 
 
 namespace constel {
@@ -64,9 +64,9 @@ namespace constel {
   {
   }
 
-  void MeshIntersectionBundleListener::fiberStarted( const comist::BundleProducer &,
-                                  const comist::BundleInfo &,
-                                  const comist::FiberInfo & )
+  void MeshIntersectionBundleListener::fiberStarted( const BundleProducer &,
+                                  const BundleInfo &,
+                                  const FiberInfo & )
   {
     _fiberPointCount = 0;
     _antFiberPoint_ExistingMeshIntersection = false;
@@ -74,13 +74,13 @@ namespace constel {
 //     _bundleInteractionReader->_listenedFiberInfo.setAntFiberPointExistingMeshIntersection(false);
   }
 
-  void MeshIntersectionBundleListener::newFiberPoint( const comist::BundleProducer &,
-    const comist::BundleInfo &,
-    const comist::FiberInfo &,
-    const comist::FiberPoint & fiberPoint)
+  void MeshIntersectionBundleListener::newFiberPoint( const BundleProducer &,
+    const BundleInfo &,
+    const FiberInfo &,
+    const FiberPoint & fiberPoint)
   {
     ++_fiberPointCount;
-    comist::FiberPoint antFiberPoint = _bundleInteractionReader->_listenedFiberInfo.getAntFiberPoint();
+    FiberPoint antFiberPoint = _bundleInteractionReader->_listenedFiberInfo.getAntFiberPoint();
     std::size_t meshClosestPoint_index;
     float meshClosestPoint_dist;
     bool fiberPoint_ExistingMeshIntersection = false;
@@ -147,7 +147,7 @@ namespace constel {
     _antFiberPoint_ExistingMeshIntersection = fiberPoint_ExistingMeshIntersection;
   }
   
-  void MeshIntersectionBundleListener::fiberTerminated( const comist::BundleProducer &, const comist::BundleInfo &, const comist::FiberInfo & )
+  void MeshIntersectionBundleListener::fiberTerminated( const BundleProducer &, const BundleInfo &, const FiberInfo & )
   {
     if ( _antFiberPoint_ExistingMeshIntersection == false)//if no intersection with cortex, test if dist(fiberPoint, cortexMeshClosestPoint) < dist_min, if it is the case, add polygones around the meshClosestPoint, according to distanceThreshold, if the previous fiber point has not taken part of an (nearly or not) intersection
     {

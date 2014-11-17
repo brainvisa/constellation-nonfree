@@ -39,16 +39,16 @@
 /* Extracted from code from Pascal Cathier
  */
 
-#include <connectomist/fibertracking/bundles.h>
+#include <aims/fibers/bundles.h>
 
 namespace constel
 {
 
-  class BundleLoader : public comist::BundleListener
+  class BundleLoader : public aims::BundleListener
   {
   public: // typedefs
 
-    typedef comist::FiberPoint Point;
+    typedef aims::FiberPoint Point;
     typedef std::vector<Point> Fiber;
     typedef std::vector<Fiber> Bundle;
 
@@ -63,36 +63,36 @@ namespace constel
 
   private: // functions
 
-    void bundleStarted( const comist::BundleProducer &,
-                        const comist::BundleInfo & )
+    void bundleStarted( const aims::BundleProducer &,
+                        const aims::BundleInfo & )
     {
     }
 
-    void bundleTerminated( const comist::BundleProducer &,
-                           const comist::BundleInfo & )
+    void bundleTerminated( const aims::BundleProducer &,
+                           const aims::BundleInfo & )
     {
     }
 
-    void fiberStarted( const comist::BundleProducer &,
-                       const comist::BundleInfo &, const comist::FiberInfo & )
+    void fiberStarted( const aims::BundleProducer &,
+                       const aims::BundleInfo &, const aims::FiberInfo & )
     {
       m_fibers->push_back(Fiber());
     }
 
-    void fiberTerminated( const comist::BundleProducer &,
-                          const comist::BundleInfo &,
-                          const comist::FiberInfo & )
+    void fiberTerminated( const aims::BundleProducer &,
+                          const aims::BundleInfo &,
+                          const aims::FiberInfo & )
     {
     }
 
-    void newFiberPoint( const comist::BundleProducer &,
-                        const comist::BundleInfo &, const comist::FiberInfo &,
-                        const comist::FiberPoint & point )
+    void newFiberPoint( const aims::BundleProducer &,
+                        const aims::BundleInfo &, const aims::FiberInfo &,
+                        const aims::FiberPoint & point )
     {
       m_fibers->back().push_back(point);
     }
 
-    void noMoreBundle( const comist::BundleProducer & )
+    void noMoreBundle( const aims::BundleProducer & )
     {
     }
 

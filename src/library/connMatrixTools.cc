@@ -5,7 +5,6 @@
 #include <til/numeric_array_tools.h>
 #include <float.h>
 
-using namespace comist;
 using namespace aims;
 using namespace carto;
 using namespace std;

@@ -19,7 +19,7 @@ namespace constel
     with a label texture.
 */
 class SelectFiberListenerFromMesh
-  : public comist::BundleProducer, public comist::BundleListener
+  : public aims::BundleProducer, public aims::BundleListener
 {
 public:
   /** namesMode sould be in "NameFront_NameEnd", "Name1_Name2",
@@ -37,21 +37,21 @@ public:
 protected:
 
 
-  virtual void bundleStarted( const comist::BundleProducer &,
-                              const comist::BundleInfo & );
-  virtual void bundleTerminated( const comist::BundleProducer &,
-                                 const comist::BundleInfo & );
-  virtual void fiberStarted( const comist::BundleProducer &,
-                             const comist::BundleInfo &,
-                             const comist::FiberInfo & );
-  virtual void fiberTerminated( const comist::BundleProducer &,
-                                const comist::BundleInfo &,
-                                const comist::FiberInfo & );
-  virtual void newFiberPoint( const comist::BundleProducer &,
-                              const comist::BundleInfo &,
-                               const comist::FiberInfo &,
-                              const comist::FiberPoint & );
-  virtual void noMoreBundle( const comist::BundleProducer & );
+  virtual void bundleStarted( const aims::BundleProducer &,
+                              const aims::BundleInfo & );
+  virtual void bundleTerminated( const aims::BundleProducer &,
+                                 const aims::BundleInfo & );
+  virtual void fiberStarted( const aims::BundleProducer &,
+                             const aims::BundleInfo &,
+                             const aims::FiberInfo & );
+  virtual void fiberTerminated( const aims::BundleProducer &,
+                                const aims::BundleInfo &,
+                                const aims::FiberInfo & );
+  virtual void newFiberPoint( const aims::BundleProducer &,
+                              const aims::BundleInfo &,
+                               const aims::FiberInfo &,
+                              const aims::FiberPoint & );
+  virtual void noMoreBundle( const aims::BundleProducer & );
 
   std::string fiberName( const Point3df & p1, const Point3df & p2 );
 

@@ -4,7 +4,6 @@
 #include <aims/sparsematrix/sparseordensematrix.h>
 
 
-using namespace comist;
 using namespace aims;
 using namespace carto;
 using namespace std;

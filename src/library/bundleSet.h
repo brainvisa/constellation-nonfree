@@ -1,11 +1,11 @@
 #ifndef CONSTELLATION_BUNDLESET_H
 #define CONSTELLATION_BUNDLESET_H
 
-#include <connectomist/fibertracking/bundles.h>
+#include <aims/fibers/bundles.h>
 
 namespace constel
 {
-  typedef std::vector< comist::FiberPoint > Fiber;
+  typedef std::vector< aims::FiberPoint > Fiber;
   typedef std::vector< Fiber > Fibers;
   typedef std::vector< Fibers > BundlesSet;
 }

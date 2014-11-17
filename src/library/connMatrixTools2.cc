@@ -5,7 +5,6 @@
 #include <cathier/triangle_mesh_geodesic_map.h>
 
 
-using namespace comist;
 using namespace aims;
 using namespace carto;
 using namespace std;

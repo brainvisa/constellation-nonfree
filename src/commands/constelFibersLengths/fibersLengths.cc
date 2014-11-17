@@ -4,7 +4,6 @@
 using namespace aims;
 using namespace carto;
 using namespace std;
-using namespace comist;
 using namespace constel;
 
 int main( int argc, const char* argv[] )

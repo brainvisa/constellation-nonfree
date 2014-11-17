@@ -1,14 +1,21 @@
 #include <constellation/bundleTools.h>
+
+using namespace aims;
 using namespace std;
 
 namespace constel {
 
-  FiberNameAccordingToMeshTextureIntersectionBundleListener::FiberNameAccordingToMeshTextureIntersectionBundleListener(BundleInteractionReader &bundleInteractionReader, const TimeTexture<short> & labeled_tex, std::string fileName ): _fileName(fileName), _labeledTex0(labeled_tex.begin()->second)
+  FiberNameAccordingToMeshTextureIntersectionBundleListener::FiberNameAccordingToMeshTextureIntersectionBundleListener(
+    BundleInteractionReader &bundleInteractionReader,
+    const TimeTexture<short> & labeled_tex,
+    const std::string &fileName )
+    : _fileName(fileName), _labeledTex0(labeled_tex.begin()->second)
   {
     _bundleInteractionReader = &bundleInteractionReader;
 //     _labeledTex0 = labeled_tex.begin()->second;
     _file.open(_fileName.c_str(), fstream::out);
-    if (_file.is_open()) cout << "MeshIntersection storing file opened: " << _fileName << endl;
+    if (_file.is_open())
+      cout << "MeshIntersection storing file opened: " << _fileName << endl;
   }
 
   FiberNameAccordingToMeshTextureIntersectionBundleListener::~FiberNameAccordingToMeshTextureIntersectionBundleListener()
@@ -16,17 +23,19 @@ namespace constel {
     _file.close();
   }
 
-  void FiberNameAccordingToMeshTextureIntersectionBundleListener::fiberStarted( const comist::BundleProducer & bundleProducer,
-  const comist::BundleInfo & bundleInfo,
-  const comist::FiberInfo & fiberInfo)
+  void FiberNameAccordingToMeshTextureIntersectionBundleListener::fiberStarted(
+    const BundleProducer & bundleProducer,
+    const BundleInfo & bundleInfo,
+    const FiberInfo & fiberInfo )
   {
     _intersectionPointsMeshClosestPointsTexLabels_set.clear();
   }
 
-  void FiberNameAccordingToMeshTextureIntersectionBundleListener::newFiberPoint( const comist::BundleProducer & bundleProducer, 
-  const comist::BundleInfo & bundleInfo,
-  const comist::FiberInfo & fiberInfo, 
-  const comist::FiberPoint &point )
+  void FiberNameAccordingToMeshTextureIntersectionBundleListener::newFiberPoint(
+    const BundleProducer & bundleProducer,
+    const BundleInfo & bundleInfo,
+    const FiberInfo & fiberInfo,
+    const FiberPoint &point )
   {
     if ( (_bundleInteractionReader->_listenedFiberInfo.getAntFiberPointExistingMeshIntersection()) )
     {
@@ -36,7 +45,9 @@ namespace constel {
   }
 
 
-  void FiberNameAccordingToMeshTextureIntersectionBundleListener::fiberTerminated( const comist::BundleProducer &, const comist::BundleInfo &, const comist::FiberInfo & )
+  void
+  FiberNameAccordingToMeshTextureIntersectionBundleListener::fiberTerminated(
+    const BundleProducer &, const BundleInfo &, const FiberInfo & )
   {
 
     if (_bundleInteractionReader->_listenedFiberInfo.getAntFiberPointExistingMeshIntersection())

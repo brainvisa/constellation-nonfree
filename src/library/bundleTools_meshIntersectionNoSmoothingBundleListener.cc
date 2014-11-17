@@ -2,14 +2,20 @@
 #include <constellation/connMatrixTools.h>
 #include <constellation/textureAndMeshTools.h>
 
-using namespace std;
-using namespace comist;
 using namespace constel;
+using namespace aims;
+using namespace std;
 
 namespace constel
 {
 
-  MeshIntersectionNoSmoothingBundleListener::MeshIntersectionNoSmoothingBundleListener(const AimsSurfaceTriangle & aimsMesh, BundleInteractionReader &bundleInteractionReader, double meshClosestPointMaxDistance, bool verbose ): _aimsMesh(aimsMesh), _meshClosestPointMaxDistance(meshClosestPointMaxDistance), _verbose(verbose)
+  MeshIntersectionNoSmoothingBundleListener::MeshIntersectionNoSmoothingBundleListener(
+    const AimsSurfaceTriangle & aimsMesh,
+    BundleInteractionReader &bundleInteractionReader,
+    double meshClosestPointMaxDistance, bool verbose )
+    : _aimsMesh(aimsMesh),
+    _meshClosestPointMaxDistance(meshClosestPointMaxDistance),
+    _verbose(verbose)
   {
     _bundleInteractionReader = &bundleInteractionReader;
     _meshPolygonsByVertex_Index  = constel::surfacePolygonsIndex( _aimsMesh );
@@ -27,9 +33,10 @@ namespace constel
   {
   }
 
-  void MeshIntersectionNoSmoothingBundleListener::fiberStarted( const comist::BundleProducer &,
-                                  const comist::BundleInfo &,
-                                  const comist::FiberInfo & )
+  void MeshIntersectionNoSmoothingBundleListener::fiberStarted(
+    const BundleProducer &,
+    const BundleInfo &,
+    const FiberInfo & )
   {
     _fiberPointCount = 0;
     _fiberCount += 1;
@@ -38,13 +45,14 @@ namespace constel
 //     _bundleInteractionReader->_listenedFiberInfo.setAntFiberPointExistingMeshIntersection(false);
   }
 
-  void MeshIntersectionNoSmoothingBundleListener::newFiberPoint( const comist::BundleProducer &,
-    const comist::BundleInfo &,
-    const comist::FiberInfo &,
-    const comist::FiberPoint & fiberPoint)
+  void MeshIntersectionNoSmoothingBundleListener::newFiberPoint(
+    const BundleProducer &,
+    const BundleInfo &,
+    const FiberInfo &,
+    const FiberPoint & fiberPoint)
   {
     ++_fiberPointCount;
-    comist::FiberPoint antFiberPoint = _bundleInteractionReader->_listenedFiberInfo.getAntFiberPoint();
+    FiberPoint antFiberPoint = _bundleInteractionReader->_listenedFiberInfo.getAntFiberPoint();
     std::size_t meshClosestPoint_index;
     float meshClosestPoint_dist;
     bool fiberPoint_ExistingMeshIntersection = false;
@@ -116,7 +124,8 @@ namespace constel
     _antFiberPoint_ExistingMeshIntersection = fiberPoint_ExistingMeshIntersection;
   }
   
-  void MeshIntersectionNoSmoothingBundleListener::fiberTerminated( const comist::BundleProducer &, const comist::BundleInfo &, const comist::FiberInfo & )
+  void MeshIntersectionNoSmoothingBundleListener::fiberTerminated(
+    const BundleProducer &, const BundleInfo &, const FiberInfo & )
   {
     if ( _antFiberPoint_ExistingMeshIntersection == false)//if no intersection with cortex, test if dist(fiberPoint, cortexMeshClosestPoint) < dist_min, if it is the case, add polygones around the meshClosestPoint, according to distanceThreshold, if the previous fiber point has not taken part of an (nearly or not) intersection
     {

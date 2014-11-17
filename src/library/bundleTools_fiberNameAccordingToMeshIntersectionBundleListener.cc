@@ -1,13 +1,18 @@
 #include <constellation/bundleTools.h>
+using namespace aims;
 using namespace std;
 
 namespace constel {
 
-  FiberNameAccordingToMeshIntersectionBundleListener::FiberNameAccordingToMeshIntersectionBundleListener(BundleInteractionReader &bundleInteractionReader, std::string fileName ): _fileName(fileName)
+  FiberNameAccordingToMeshIntersectionBundleListener::FiberNameAccordingToMeshIntersectionBundleListener(
+    BundleInteractionReader &bundleInteractionReader,
+    const std::string & fileName )
+    : _fileName(fileName)
   {
     _bundleInteractionReader = &bundleInteractionReader;
     _file.open(_fileName.c_str(), fstream::out);
-    if (_file.is_open()) cout << "MeshIntersection storing file opened: " << _fileName << endl;
+    if (_file.is_open())
+      cout << "MeshIntersection storing file opened: " << _fileName << endl;
   }
 
   FiberNameAccordingToMeshIntersectionBundleListener::~FiberNameAccordingToMeshIntersectionBundleListener()
@@ -15,7 +20,8 @@ namespace constel {
     _file.close();
   }
 
-  void FiberNameAccordingToMeshIntersectionBundleListener::fiberTerminated( const comist::BundleProducer &, const comist::BundleInfo &, const comist::FiberInfo & )
+  void FiberNameAccordingToMeshIntersectionBundleListener::fiberTerminated(
+    const BundleProducer &, const BundleInfo &, const FiberInfo & )
   {
     std::set<int> intersectionMeshIdentity_set;
     std::vector<int> fiberMeshIntersectionMeshIdentityVector = _bundleInteractionReader->_listenedFiberInfo.getFiberMeshIntersectionMeshIdentityVector();

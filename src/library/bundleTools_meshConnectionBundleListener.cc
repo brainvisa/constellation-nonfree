@@ -1,18 +1,30 @@
 #include <constellation/bundleTools.h>
 
+using namespace aims;
+
 namespace constel
 {
 
-  MeshConnectionBundleListener::MeshConnectionBundleListener(BundleInteractionReader &bundleInteractionReader, int meshIdentity, bool verbose): _meshIdentity(meshIdentity), _bundleMeshConnections(new BundleConnections() ), _bundleMeshConnectionsLength(new ConnectionsLength() ), _verbose(verbose)
+  MeshConnectionBundleListener::MeshConnectionBundleListener(
+    BundleInteractionReader &bundleInteractionReader, int meshIdentity,
+    bool verbose)
+    : _meshIdentity(meshIdentity),
+      _bundleMeshConnections(new BundleConnections() ),
+      _bundleMeshConnectionsLength(new ConnectionsLength() ),
+      _verbose(verbose)
   {
     _bundleInteractionReader = &bundleInteractionReader;
     _bundleMeshConnectionsCount = 0;
   }
+
+
   MeshConnectionBundleListener::~MeshConnectionBundleListener()
   {
   }
-  
-  void MeshConnectionBundleListener::fiberTerminated( const comist::BundleProducer &, const comist::BundleInfo &, const comist::FiberInfo & )
+
+
+  void MeshConnectionBundleListener::fiberTerminated(
+    const BundleProducer &, const BundleInfo &, const FiberInfo & )
   {
     std::vector<constel::QuickMap > fiberIntersectionNeighDistMapVector = _bundleInteractionReader->_listenedFiberInfo.getFiberIntersectionNeighDistMapVector();
     std::vector<float> fiberMeshIntersectionCurvilinearAbscissaVector = _bundleInteractionReader->_listenedFiberInfo.getFiberMeshIntersectionCurvilinearAbscissaVector();
