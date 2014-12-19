@@ -12,7 +12,7 @@ def parseOpts(argv):
     desc = """Generate a square distance matrix in parallel."""
     parser = optparse.OptionParser(desc)
     parser.add_option('-m', '--matrix', dest='matrix',
-                      help='input reduced connectivity matrix')   
+                      help='input reduced connectivity matrix (.npy)')   
     parser.add_option('-s', '--startiter', dest='starting_iteration', 
                       type='int', help='starting of iteration')                   
     parser.add_option('-t', '--nbiter', dest='nb_iteration', type='int',
@@ -117,9 +117,9 @@ def main():
     else:
         # distance matrix as vector
         k = m - options.starting_iteration
-        small_matrix = k*(k-1)/2
-        large_matrix = m*(m-1)/2
-        f.seek( (large_matrix - small_matrix) * 8)
+        small_matrix = k*(k - 1) / 2
+        large_matrix = m*(m - 1) / 2
+        f.seek((large_matrix - small_matrix) * 8)
         print (large_matrix - small_matrix)
     
     # write the distance matrix bounded by starting_iteration and 

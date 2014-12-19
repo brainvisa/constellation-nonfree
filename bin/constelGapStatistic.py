@@ -77,10 +77,10 @@ def main():
     
     if (options.typer == 'm'):
         print 'Generating uniform distribution with Monte-carlo'
-        uniform = clcm.GenerateUniform(features, n_sample, n_dim)
+        uniform = clcm.generate_uniform_matrix(features)
     elif (options.typer == 'b'):
         print 'Generating uniform distribution that will be bootstrapped'
-        uniform = clcm.GenerateUniform(features, n_sample, n_dim)
+        uniform = clcm.generate_uniform_matrix(features)
     elif (options.typer == 'p'):
         print 'Reference distribution will be sampled by permutations of the original one'
         uniform = features.copy()
@@ -91,11 +91,11 @@ def main():
         if ((iteration%1) == 0):
             print '  --> Iteration ', iteration
         if (options.typer == 'm'):
-            featuni = clcm.GenerateUniform(features, n_sample, n_dim)
+            featuni = clcm.generate_uniform_matrix(features)
         elif (options.typer == 'b'):
-            featuni, sampuni, suruni = clcm.caseResampling(uniform)
+            featuni, sampuni, suruni = clcm.bootstrap_resampling(uniform)
         elif (options.typer == 'p'):
-            featuni = clcm.permutationResampling(uniform)
+            featuni = clcm.permutation_resampling(uniform)
             print '      Permutation done'
         
         rdist = ssd.squareform(ssd.pdist(featuni, options.dist))

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import numpy as np
 from soma import aims
 import anatomist.cpp as anatomist
 import anatomist.direct.api as ana
@@ -160,7 +159,7 @@ class FusionBundlesSplitByCorticalROIsMethod(
 
     def ID(self):
         return "FusionBundlesSplitByCorticalROIsMethod"
-
+#FusionBundlesSplitByCorticalRegions
 
 f = anatomist.FusionFactory.factory()
 m = FusionBundlesSplitByCorticalROIsMethod()

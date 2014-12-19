@@ -1,13 +1,19 @@
 #!/usr/bin/env python
 
-from brainvisa.processes import *
 from soma import aims
+
+# python system module
 import optparse
 import numpy as np
-import Pycluster as pc
-import constel.lib.clustering.K_optimization as CK
-import constel.lib.texturetools as tt
-import scipy.spatial.distance as ssd
+
+# pycluster
+from Pycluster import kmedoids
+
+# constellation
+from constel.lib.texturetools import texture_time
+
+# scipy
+from scipy.spatial.distance import pdist, squareform
 
 def parseOpts(argv):
   desc="""
@@ -47,8 +53,7 @@ def main():
   reduced_matrix = np.transpose(np.asarray(reduced_matrix)[:,:,0,0])
   print "Reduced matrix of size (Nsample, Ndim): M", reduced_matrix.shape
   
-  #distance = pc.distancematrix(reduced_matrix, dist='e')
-  distance = ssd.squareform(ssd.pdist(reduced_matrix, 'euclidean'))
+  distance = squareform(pdist(reduced_matrix, metric='euclidean'))
   
   nb_vertices = mesh.vertex().size()
   #mesh_patch = aims.SurfaceManip.meshExtract(mesh, gyri_seg, options.patch)[0]
@@ -61,7 +66,7 @@ def main():
   NiterK = 1000
   clusterID = []
   for K in range(2, kmax+1):
-    clusterid, err, nfound = pc.kmedoids(distance, K, NiterK)
+    clusterid, err, nfound = kmedoids(distance, K, NiterK)
     labels = 1
     for i in np.unique(clusterid):
       clusterid[clusterid == i] = labels
@@ -78,8 +83,8 @@ def main():
   #vertices_patch = np.array(vertices_patch)
   #vertices_patch = vertices_patch.tolist()
   #print vertices_patch
-  n=kmax-1
-  clusters = tt.texture_time(n, clusterID, nb_vertices, vertices_patch)
+  n = kmax-1
+  clusters = texture_time(n, clusterID, nb_vertices, vertices_patch)
   
   #clusters, clus_avg_width_Time_tex = CK.texturesCreation(
 #subject_PatchCl_dict, nb_vertices, vertices_patch )

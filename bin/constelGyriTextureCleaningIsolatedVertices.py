@@ -1,14 +1,23 @@
 #!/usr/bin/env python
+
+# Aims module
 from soma import aims
+
+# system module
 import optparse
 import sys
-import constel.lib.texturetools as tt
+try:
+    from constel.lib.texturetools import clean_gyri_texture, find_wrong_labels
+except:
+    pass
+
 
 def validation():
     try:
-        import constel.lib.texturetools as tt
+        from constel.lib.texturetools import clean_gyri_texture, find_wrong_labels
     except:
         raise ValidationError('constellation module is not here.')
+
 
 def parseOpts(argv):
     description = 'Threshold an aimsTimeTexture' \
@@ -17,13 +26,14 @@ def parseOpts(argv):
     parser.add_option('-i', '--itex', dest='tex', metavar='FILE',
                       help='input gyri texture')
     parser.add_option('-m', '--mesh', dest='mesh', metavar='FILE',
-                      help='input mesh' )
+                      help='input mesh')
     parser.add_option('-o', '--otex', dest='otex', metavar='FILE',
                       action='store', default=None,
                       help='output gyri texture with one connected component' \
                            'per gyrus' \
                            '(default : don\'t store resulting texture)')
     return parser, parser.parse_args(argv)
+
 
 def main():
     parser, (options, args) = parseOpts(sys.argv)
@@ -33,12 +43,13 @@ def main():
     count = 0
     while cont and count < 10:
         print "clean up number ", str(count + 1), " :"
-        tex = tt.clean_gyri_texture(mesh, tex)
-        wrong_labels = tt.find_wrong_labels(mesh, tex)
+        tex = clean_gyri_texture(mesh, tex)
+        wrong_labels = find_wrong_labels(mesh, tex)
         cont = False
         count += 1
         if len(wrong_labels) > 0:
             cont = True
     aims.write(tex, options.otex)
 
-if __name__ == "__main__" : main()
+if __name__ == "__main__":
+    main()
