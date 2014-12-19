@@ -56,8 +56,8 @@ def draw_line(x, y, marker1, xm, ym, marker2):
     plot the curves on the same graphic
     """
     plt.title('Moving Average')
-    plt.ylabel('Coordinates on isomap axis')
-    plt.xlabel('Subjects')
+    plt.xlabel('Coordinates on isomap axis')
+    plt.ylabel('Subjects')
     plt.plot(x, y, marker1, xm, ym, marker2)
     return plt.show()
 
@@ -68,7 +68,7 @@ def moving_average(x, y, k):
     Parameters
     ----------
     x:
-        list of obscissa
+        list of abscissa
     y:
         list of ordinate
     k:
@@ -76,8 +76,8 @@ def moving_average(x, y, k):
 
     Return
     ------
-    mavg:
-        values of the moving average
+    xm, ym:
+        values coordinates of the moving average
     """
     xm = []
     ym = []
@@ -94,3 +94,22 @@ def moving_average(x, y, k):
             ym += [(sum_list(y, j - p, j + p)) / k]
             xm += [x[j]]
     return xm, ym
+
+
+
+def overlap(x, y):
+    i = 0
+    j = 0
+    c = 0
+    len_x = len(x)
+    len_y = len(y)
+    while i < len_x and j < len_y:
+        if x[i] > y[j]:
+            j += 1
+        elif x[i] < y[j]:
+            i += 1
+        else: # x[i] == y[j]
+            c += 1
+            i += 1
+            j += 1
+    return c

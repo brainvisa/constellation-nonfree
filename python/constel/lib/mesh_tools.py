@@ -4,7 +4,52 @@
 """
 
 import numpy
-import matplotlib.pyplot as plt
+
+def frame(data):
+    #data=numpy.array(data)
+    x = data.shape[1] + 2
+    y = data.shape[0] + 2
+    new = [x * [0]] * y
+    new = numpy.array(new)
+    
+    for i in range(1, y - 1):
+        for j in range(1, x - 1):
+            new[i][j] = data[i - 1][j - 1]
+            
+    return new 
+
+
+def dilatation(img):
+    dilate = [0] * (img.shape[1] - 2) * (img.shape[0] - 2)
+    h = 0
+    for i in range(1, img.shape[0] - 1):
+        for j in range(1, img.shape[1] - 1):
+            # max value (3*3) for the point(x, y)
+            dilate[h] = max(
+                [img[i - 1][j - 1], img[i][j - 1], img[i + 1][j - 1],
+                 img[i - 1][j], img[i][j], img[i + 1][j], img[i - 1][j + 1],
+                 img[i][j + 1], img[i + 1][j + 1]]) 
+            h += 1
+    
+    dilate = numpy.array(dilate)
+    dilate = numpy.reshape(dilate,(img.shape[0] - 2, img.shape[1] - 2)) 
+    return dilate
+
+
+def erosion(img):
+    erode = [0] * (img.shape[1] - 2) * (img.shape[0] - 2)
+    h = 0
+    for i in range(1, img.shape[0] - 1):
+        for j in range(1,img.shape[1] - 1):
+            erode[h]=min(
+                [img[i - 1][j - 1], img[i][j - 1], img[i + 1][j - 1],
+                 img[i - 1][j], img[i][j], img[i + 1][j], img[i - 1][j + 1],
+                 img[i][j + 1], img[i + 1][j + 1]]) 
+            h += 1
+    
+    erode = numpy.array(erode)
+    erode = numpy.reshape(erode, (img.shape[0] - 2, img.shape[1] - 2))
+    return erode
 
 
 def verts_to_bbox(verts):
@@ -56,9 +101,21 @@ def transform_mesh_to_volume(white_meshes):
         p -= (a[0])
         p = numpy.round(p)
         t[p[0], p[1], p[2]] = 1
-
+    
     print t[numpy.where(t > 0)]
+    
+    # 2D
+    t = numpy.max(t, axis=2)  
 
-    fig, ax = plt.subplots()
-    ax.imshow(numpy.max(t, axis=2), cmap=plt.cm.gray, interpolation='nearest')
-    plt.show()
+    # add frame
+    t_frame = frame(t)
+    # erosion
+    erose = erosion(t_frame)
+    # dilatation
+    dilate = dilatation(t_frame)
+    # opening
+    opening = dilatation(erose)
+    # closing    
+    closing = erosion(dilate)
+    
+    return t, t_frame, dilate, erose, opening, closing

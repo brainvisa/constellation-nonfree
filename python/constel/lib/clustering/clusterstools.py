@@ -37,6 +37,7 @@ def get_centers(clusters_id, kmax_clusters):
     i = 0
     centers = numpy.array([])
     while (centers.size < kmax_clusters):
+        print i
         c = clusters_id[i]
         if ((numpy.where(centers == c)[0]).size == 0):
             centers = numpy.append(centers, numpy.array([int(c)]))
@@ -201,7 +202,7 @@ def gap(data, refs=None, nrefs=20, ks=range(1, 11)):
 
 
 def ward_method(dmat_file, n, output_dir, n_clusters):
-    """Performs Ward’s linkage on the distance matrix.
+    """Performs Wards linkage on the distance matrix.
 
     Ward's method is a criterion applied in hierarchical cluster analysis.
     Ward's minimum variance criterion minimizes the total within-cluster
@@ -250,12 +251,10 @@ def ward_method(dmat_file, n, output_dir, n_clusters):
 
     # initialization of the distance matrix as vector
     # memory map
-    # filename = path.join(mkdtemp(), 'newfile.dat')
-    # dist_mat = numpy.memmap(filename,
-    # dtype='float32',
-    # mode='w+',
-    # shape=(n*(n-1)/2,))
-    dist_mat = numpy.zeros((n*(n-1)/2,))
+#    a = numpy.memmap('test.mymemmap', dtype=numpy.single, mode='w+', shape=(n*(n-1)/2,))
+#    del a
+#    dist_mat = numpy.memmap('test.mymemmap', dtype=numpy.single, mode='r+', shape=(n*(n-1)/2,))
+    dist_mat = numpy.zeros((n*(n-1)/2,), dtype=numpy.float16)
 
     # number of iteration to generate the distance matrix
     n_iter = 100000  # not perfect
@@ -270,8 +269,8 @@ def ward_method(dmat_file, n, output_dir, n_clusters):
             list_iteration[j] += 1
         x = f.read(list_iteration[j] * 8)
         dist_mat.ravel()[
-            idx:idx + list_iteration[j]] = struct.unpack(
-                'd' * list_iteration[j], x)
+            idx:idx + list_iteration[j]] = numpy.asarray(struct.unpack(
+                'd' * list_iteration[j], x), dtype=numpy.float16)
         idx += list_iteration[j]
     f.close()
 

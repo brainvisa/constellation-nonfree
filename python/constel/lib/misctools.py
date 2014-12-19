@@ -144,3 +144,4 @@ def crop(img, x1, x2, y1, y2):
     mask[y1:y2 + 1, x1:x2 + 1] = 1
     m = mask > 0
     return img[m].reshape((y2 + 1 - y1, x2 + 1 - x1))
+    
