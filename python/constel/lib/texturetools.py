@@ -2,7 +2,50 @@
 import soma.aims.texturetools as MTT
 from soma import aims
 import numpy as np
+
+# System import
+import logging
 import numpy
+import re
+
+# Define logger
+logger = logging.getLogger(__name__)
+
+
+def management_internal_connections(mask, profile, internal_connections=False):
+    """Remove or keep the patch internal connections.
+    
+    Parameters
+    ----------
+    mask: str (mandatory)
+        a labeling of gyri cortical segmentation
+    profile: str (mandatory)
+        a cortical connectivity profile
+    internal_connections: bool
+        False if the patch internal connections don't keep
+        True otherwise
+    
+    Return
+    ------
+    aims_profile: numpy.ndarray
+        a cortical connectivity profile 
+        with or without the path internal connections
+    """
+    # load files
+    aims_mask = aims.read(mask)[0].arraydata()
+    aims_profile = aims.read(profile)[0].arraydata()
+    
+    if not internal_connections:
+        # provides the patch name
+        logger.info("You remove the patch internal connections.")
+        patch = re.findall("G[0-9]+", profile)[0]
+        patch_nb = int(re.findall("[0-9]+", patch)[0])
+        for i in xrange(len(aims_profile)):
+            aims_profile[aims_mask == patch_nb] = 0
+    else:# keep internal connections
+        logger.info("You keep the patch internal connections.")
+
+    return aims_profile
 
 
 def remove_labels(tex, labels):
@@ -208,17 +251,28 @@ def add_texture(tex, add_tex, add_value):
     return tex
 
 
-def normalized_texture(texture):
+def normalize_profile(profile):
+    """Normalization of connectivity profile by its total number of
+    connections. 
+    
+    Parameter
+    ---------
+    profile: numpy.ndarray (mandatory)
+       a cortical connectivity profile
+
+    Return
+    ------
+    profile: numpy.ndarray
+       normalized profile
     """
-    """
-    tex = texture[0].arraydata()
-    dividende_coef = tex.max()
-    if dividende_coef > 0:
-        z = 1./dividende_coef
-        for i in xrange(texture[0].nItem()):
-            value = texture[0][i]
-            tex[0][i] = z*value
-    return texture
+    max_value = profile.max()
+    if max_value > 0:
+        z = 1. / max_value
+        profile *= z
+    logger.info("The profile is normalized.")
+
+    return profile
+    
 
 
 def geodesic_gravity_center(mesh, parcellated_texture, region_name,
