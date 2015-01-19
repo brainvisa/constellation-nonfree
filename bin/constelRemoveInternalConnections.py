@@ -8,7 +8,7 @@
 # CEA, CNRS and INRIA at the following URL "http://www.cecill.info".
 ###############################################################################
 
-# System module
+# System modules
 import optparse
 import sys
 
@@ -43,9 +43,15 @@ def parseOpts(argv):
 if __name__ == "__main__":
     parser, (options, args) = parseOpts(sys.argv)
     
+    # load files
+    aims_mask = aims.read(options.gyriseg)
+    numpy_mask = aims_mask[0].arraydata()
+    aims_profile = aims.read(options.profile)
+    numpy_profile = aims_profile[0].arraydata()
+    
     new_profile = management_internal_connections(
-        options.gyriseg, options.profile, options.internal_connections)
+        options.profile, numpy_mask, numpy_profile, options.internal_connections)
     
-    normalized_profile = normalize_profile(new_profile)
+    normalize_profile(new_profile)
     
-    aims.write(normalized_profile, options.normprofile)
+    aims.write(aims_profile, options.normprofile)

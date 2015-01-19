@@ -1,4 +1,13 @@
 #!/usr/bin/env python
+###############################################################################
+# This software and supporting documentation are distributed by CEA/NeuroSpin,
+# Batiment 145, 91191 Gif-sur-Yvette cedex, France. This software is governed
+# by the CeCILL license version 2 under French law and abiding by the rules of
+# distribution of free software. You can  use, modify and/or redistribute the
+# software under the terms of the CeCILL license version 2 as circulated by
+# CEA, CNRS and INRIA at the following URL "http://www.cecill.info".
+###############################################################################
+
 import soma.aims.texturetools as MTT
 from soma import aims
 import numpy as np
@@ -10,16 +19,47 @@ import re
 
 # Define logger
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# Create formatter (time and level of each message)
+formatter = logging.Formatter('%(asctime)s :: %(levelname)s :: %(message)s')
+
+# Create handler (console)
+steam_handler = logging.StreamHandler()
+steam_handler.setLevel(logging.INFO)
+# steam_handler.setFormatter(formatter)
+logger.addHandler(steam_handler)
 
 
-def management_internal_connections(mask, profile, internal_connections=False):
+def identify_patch_number(fname):
+    """Identify the number of the patch from a filename.
+    
+    Parameter
+    ---------
+    fname: str (mandatory)
+        the name of profile containing the patch number
+
+    Return
+    ------
+    patch_nb: int
+        the patch number
+    """
+    patch = re.findall("G[0-9]+", fname)[0]
+    patch_nb = int(re.findall("[0-9]+", patch)[0])
+    return patch_nb
+
+
+def management_internal_connections(
+    profilename, mask, profile, internal_connections=False):
     """Remove or keep the patch internal connections.
     
     Parameters
     ----------
-    mask: str (mandatory)
+    profilename: str (mandatory)
+        the name of profile containing the patch number
+    mask: numpy.ndarray (mandatory)
         a labeling of gyri cortical segmentation
-    profile: str (mandatory)
+    profile: numpy.ndarray (mandatory)
         a cortical connectivity profile
     internal_connections: bool
         False if the patch internal connections don't keep
@@ -31,21 +71,17 @@ def management_internal_connections(mask, profile, internal_connections=False):
         a cortical connectivity profile 
         with or without the path internal connections
     """
-    # load files
-    aims_mask = aims.read(mask)[0].arraydata()
-    aims_profile = aims.read(profile)[0].arraydata()
-    
     if not internal_connections:
         # provides the patch name
-        logger.info("You remove the patch internal connections.")
-        patch = re.findall("G[0-9]+", profile)[0]
-        patch_nb = int(re.findall("[0-9]+", patch)[0])
-        for i in xrange(len(aims_profile)):
-            aims_profile[aims_mask == patch_nb] = 0
+        patch = identify_patch_number(profilename)
+        logger.info("You remove the patch (number " 
+                    + str(patch) + ") internal connections.")
+        for i in xrange(len(profile)):
+            profile[mask == patch] = 0
     else:# keep internal connections
         logger.info("You keep the patch internal connections.")
 
-    return aims_profile
+    return profile
 
 
 def remove_labels(tex, labels):
