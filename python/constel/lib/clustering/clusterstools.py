@@ -254,7 +254,7 @@ def ward_method(dmat_file, n, output_dir, n_clusters):
 #    a = numpy.memmap('test.mymemmap', dtype=numpy.single, mode='w+', shape=(n*(n-1)/2,))
 #    del a
 #    dist_mat = numpy.memmap('test.mymemmap', dtype=numpy.single, mode='r+', shape=(n*(n-1)/2,))
-    dist_mat = numpy.zeros((n*(n-1)/2,), dtype=numpy.float16)
+    dist_mat = numpy.zeros((n*(n-1)/2,))
 
     # number of iteration to generate the distance matrix
     n_iter = 100000  # not perfect
@@ -269,8 +269,8 @@ def ward_method(dmat_file, n, output_dir, n_clusters):
             list_iteration[j] += 1
         x = f.read(list_iteration[j] * 8)
         dist_mat.ravel()[
-            idx:idx + list_iteration[j]] = numpy.asarray(struct.unpack(
-                'd' * list_iteration[j], x), dtype=numpy.float16)
+            idx:idx + list_iteration[j]] = struct.unpack(
+                'd' * list_iteration[j], x)
         idx += list_iteration[j]
     f.close()
 

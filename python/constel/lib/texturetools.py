@@ -76,6 +76,7 @@ def management_internal_connections(
         patch = identify_patch_number(profilename)
         logger.info("You remove the patch (number " 
                     + str(patch) + ") internal connections.")
+        # remove the patch internal connections
         for i in xrange(len(profile)):
             profile[mask == patch] = 0
     else:# keep internal connections
@@ -250,6 +251,7 @@ def texture_time(k_max, clusters_id, vertices_patch, vertices_mesh, mode,
             tex[k].arraydata()[vertices_patch] = \
                 clusters_id[k].astype(np.int16)
         if mode == 2:
+            print vertices_patch
             tex[k].arraydata()[vertices_patch] = \
                 clusters_id[k][minid:maxid].astype(np.int16)
     return tex

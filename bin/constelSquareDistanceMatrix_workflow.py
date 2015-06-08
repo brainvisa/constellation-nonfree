@@ -16,11 +16,11 @@ def parseOpts(argv):
     desc = """Workflow to generate the distance matrix in parallel"""
     parser = optparse.OptionParser(desc)
     parser.add_option('-m', '--matrix', dest='matrix',
-                      help='input reduced connectivity matrix')                
+                      help='input concatenated matrix')                
     parser.add_option('-j', '--jobs', dest='jobs', type='int',
                       help='number of jobs')
     parser.add_option('-i', '--input', dest='indir', metavar='FILE',
-                      help='file to construct the distance matrix')                 
+                      help='file to construct the distance matrix')
     parser.add_option('-o', '--output', dest='output', metavar='FILE',
                       help='workflow file')
     parser.add_option('-d', '--method', dest='method', default='scipy',

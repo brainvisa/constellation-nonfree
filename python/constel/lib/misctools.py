@@ -1,8 +1,30 @@
 #!/usr/bin/env python
-import numpy as np
-import colorsys
+###############################################################################
+# This software and supporting documentation are distributed by CEA/NeuroSpin,
+# Batiment 145, 91191 Gif-sur-Yvette cedex, France. This software is governed
+# by the CeCILL license version 2 under French law and abiding by the rules of
+# distribution of free software. You can  use, modify and/or redistribute the
+# software under the terms of the CeCILL license version 2 as circulated by
+# CEA, CNRS and INRIA at the following URL "http://www.cecill.info".
+###############################################################################
+
+# soma module
 from soma import aims
+
+# system module
+import logging
 import random
+import colorsys
+import numpy as np
+
+# Define logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# Create handler (console)
+steam_handler = logging.StreamHandler()
+steam_handler.setLevel(logging.INFO)
+logger.addHandler(steam_handler)
 
 def generateIntPairsNames(elements_nb):
   """
@@ -144,4 +166,13 @@ def crop(img, x1, x2, y1, y2):
     mask[y1:y2 + 1, x1:x2 + 1] = 1
     m = mask > 0
     return img[m].reshape((y2 + 1 - y1, x2 + 1 - x1))
+
+
+def check_no_empty_list(listof):
+    """
+    """
+    if not listof:
+        logger.error("List is empty.")
+    else:
+        logger.info("List has elements.")
     

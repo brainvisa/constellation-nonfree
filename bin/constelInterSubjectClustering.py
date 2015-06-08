@@ -5,6 +5,15 @@ from optparse import OptionParser
 import numpy
 import sys
 
+try :
+  import constel.lib.clustervalidity as cv
+except :
+  pass
+
+import constel.lib.plot as p
+
+import pylab
+
 # soma
 from soma import aims
 
@@ -17,6 +26,15 @@ from constel.lib.texturetools import texture_time
 # scipy
 from scipy.spatial.distance import pdist, squareform
 
+
+class MatplotlibFig(object):
+    def __init__(self, fig):
+        self._fig = fig
+    def __del__(self):
+        mainThreadActions().call(pylab.close, self._fig)
+
+def validate( self ):
+  import constel.lib.clustervalidity as cv
 
 def parseOpts(argv):
     description = """Connectivity-based parcellation of the patch.
@@ -111,6 +129,17 @@ def main():
                 options.kmax, item_number, vertices_patch, nb_vertices, 1)
 
         aims.write(clusters, str(options.clustering_time[index]))
-
+#    print reduced_matrix.shape
+ #   asw = []
+  #  for k in range(2, 12 + 1):
+   #     s = cv.silhouette_score(reduced_matrix, k)
+    #    print 'ASW is ', s, 'for K =', k 
+     #   asw.append(s)
+#    aswOpt = max(asw)
+#    print 'The larger ASW is', aswOpt
+#    list_k = range(12+1)
+#    list_k = [x for x in list_k if x != 0 and x != 1]
+#    fig = mainThreadActions().call(p.silhouette_score_plot, asw, list_k)
+#    return MatplotlibFig(fig)
 if __name__ == "__main__":
     main()
