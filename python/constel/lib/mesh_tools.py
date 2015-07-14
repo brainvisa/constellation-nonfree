@@ -72,7 +72,7 @@ def transform_mesh_to_volume(white_meshes):
 
     Parameters
     ----------
-    meshes: (AimsTimeSurface_3)
+    meshes: (AimsTimeSurface_3_VOID)
 
     Return
     ------

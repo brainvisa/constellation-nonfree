@@ -319,7 +319,7 @@ def geodesic_gravity_center(mesh, parcellated_texture, region_name,
 
     Parameters
     ----------
-    mesh: (AimsTimeSurface_3)
+    mesh: (AimsTimeSurface_3_VOID)
     parcellated_texture: (TimeTexture_S16)
     region_name: (int)
     time_step: (int)
