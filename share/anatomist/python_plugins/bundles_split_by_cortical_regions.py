@@ -26,6 +26,10 @@ class FusionBundlesSplitByCorticalROIsMethod(
         if len(objects) not in (3, 4):
             return False
 
+        mesh = None
+        tex = None
+        bundles_graph = None
+
         # type-checking
         for obj in objects:
             if isinstance(obj, anatomist.ASurface_3):
