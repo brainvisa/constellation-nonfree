@@ -63,7 +63,7 @@ def main():
         print 'Runnning K-medoids with K = ', k
         uniclusterid, unierror, uninfound = pc.kmedoids(distMat, k + 1, nbIter)
         print 'getting validity indexes'
-        sDB[k + 1], sDunn[k + 1], sCH[k + 1] = cv.computeClusterValidity(
+        sDB[k + 1], sDunn[k + 1], sCH[k + 1] = cv.compute_cluster_validity(
             distMat, uniclusterid, k + 1)
         print 'sDB = ', sDB[k + 1]
         print 'sDunn = ', sDunn[k + 1]
