@@ -413,7 +413,7 @@ int main( int argc, char* argv[] )
     app.addOption( wthresh, "-wthresh",
                    "weight threshold for thresholding the connectivity matrix, default = 1.0", true );
     app.addOption( meshClosestPoint_maxDistance, "-distmax",
-                   "mesh closest point minimum distance, default = 25.", true );
+                   "mesh closest point minimum distance, default = 5.", true );
     app.addOption( seedRegionsTexR, "-seedregionstex",
                    "input region texture. default = all the mesh", true );
     app.addOption( seedRegionLabel, "-seedlabel",
