@@ -13,11 +13,9 @@
 
 
 # python system modules
-import numpy
 import textwrap
 import argparse
 import sys
-import json
 
 # constel modules
 from constel.lib.texturetools import management_internal_connections
@@ -64,25 +62,28 @@ def parse_args(argv):
 
 def main():
     # Load the arguments of parser (delete script name: sys.arg[0])
-    print 
     arguments = (sys.argv[1:])
     parser, args = parse_args(arguments)
-    
+
     # load files
     aims_mask = aims.read(args.gyriseg)
     numpy_mask = aims_mask[0].arraydata()
     aims_profile = aims.read(args.profile)
     numpy_profile = aims_profile[0].arraydata()
-    
+
+    # remove the internal connections if internal_connections is True
     new_profile = management_internal_connections(
         args.label, numpy_mask, numpy_profile,
         args.internal_connections)
 
+    # normalize the profile
     norm_profile = normalize_profile(new_profile)
-    
-    tex = aims.TimeTexture_S16()
+
+    # create a time texture object
+    tex = aims.TimeTexture_FLOAT()
     tex[0].assign(norm_profile)
-    
+
+    # write the file on the disk
     aims.write(tex, args.normprofile)
 
 
