@@ -10,13 +10,13 @@
 
 """
 This script does the following:
-* normalize the individual connectivity profiles
-*
-*
+* create the connectivity profile overlap the mask
+* normalize of the profile by its max of connections
+* write the mean profile on the disk
 
 Main dependencies: PyAims library
 
-Author: Sandrine Lefranc
+Author: Sandrine Lefranc, 2015
 """
 
 
@@ -44,14 +44,17 @@ def parse_args(argv):
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent("""\
             -------------------------------------------------------------------
-            
+            Create the connectivity profile overlap the mask and normalize the
+            profile by its max of connections
             -------------------------------------------------------------------
             """))
 
     # adding arguments
-    parser.add_argument("mask", type=str, help="")
-    parser.add_argument("meanprofile", type=str, help="")
-    parser.add_argument("normprofile", type=str, help="")
+    parser.add_argument("mask", type=str, help="binary profile")
+    parser.add_argument("meanprofile", type=str,
+                        help="mean profile is generated from the mask")
+    parser.add_argument("normprofile", type=str,
+                        help="normed mean profile")
 
     # parsing arguments
     return parser, parser.parse_args(argv)
@@ -59,17 +62,17 @@ def parse_args(argv):
 
 def main():
     # load the arguments of parser (delete script name: sys.arg[0])
-    arguments = (sys.argv[1]), sys.argv[2]), sys.argv[3])
+    arguments = (sys.argv[1:])
     parser, args = parse_args(arguments)
 
     # read the files with aims
     aims_mask = aims.read(args.mask)
     aims_profile = aims.read(args.meanprofile)
-    
+
     # transform the aims files to numpy array
     np_profile = aims_profile[0].arraydata()
     np_mask = aims_mask[0].arraydata()
-    
+
     # create the connectivity profile overlap the mask
     np_profile[numpy.where(np_mask == 0)] = 0
 
