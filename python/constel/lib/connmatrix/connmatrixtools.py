@@ -22,6 +22,7 @@ Author: Sandrine Lefranc, 2015
 
 
 # python system module
+import csv
 import numpy
 import itertools
 import exceptions
@@ -256,6 +257,38 @@ def compute_mclusters_by_nbasins_matrix(reducedmatrix, parcels,
 
     return matrix
 
+
+def write_matrix2csv(matrix, csvfilename):
+    """
+    """
+    fieldnames = []
+    (n, p) = matrix.shape
+    print n, p
+    c = n
+    for i in xrange(p+1):
+        if i == 0:
+            fieldnames.append("Cluster")
+        else:
+            fieldnames.append("Basin " + str(i))
+    
+    with open(csvfilename, 'w') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        m = 0
+        while c<(n+1) and c>0:
+            dict = {}
+            count = 0
+            for element in fieldnames:
+                if count == 0:
+                    dict[str(element)] = m + 1
+                else:
+                    dict[str(element)] = matrix[m][count - 1]
+                    print dict
+                count += 1
+            writer.writerow(dict)   
+            c -= 1
+            m += 1
+        
 
 def contingency_matrix(labels1, labels2):
     classes = list(set(labels1))
