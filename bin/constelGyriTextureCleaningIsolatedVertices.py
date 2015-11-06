@@ -21,6 +21,7 @@ Author: Sandrine Lefranc, 2015
 
 # python system module
 import argparse
+import textwrap
 import sys
 
 # aims module

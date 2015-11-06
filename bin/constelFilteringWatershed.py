@@ -58,7 +58,7 @@ def parse_args(argv):
 
 def main():
     # load the arguments of parser (delete script name: sys.arg[0])
-    arguments = (sys.argv[1]), sys.argv[2]), sys.argv[3])
+    arguments = (sys.argv[1:])
     parser, args = parse_args(arguments)
 
     # Low connections to gyrus : filtered watershed with "minVertex_nb"
@@ -79,9 +79,11 @@ def main():
             basinTex_ar[basinTex_ar == basin_label] = 0
     
     # keep only the labels different of zero
-    otex_kept_labels = np.unique(basinTex_ar)
-    if otex_kept_labels.count(0) != 0:
-        otex_kept_labels.remove(0)
+    otex_kept_labels = numpy.unique(basinTex_ar)
+    if list(otex_kept_labels).count(0) != 0:
+        tmp = list(otex_kept_labels)
+        tmp.remove(0)
+        otex_kept_labels = numpy.array(tmp)
     
     # renumbers all the labels from 1
     otex = basinTex_ar

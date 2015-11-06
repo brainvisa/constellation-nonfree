@@ -45,13 +45,13 @@ def parseArgs(argv):
         help="a reduced connectivity matrix")
     parser.add_argument("patch", type=int,
         help="the patch number")
-    parser.add_argument("gyri_segmentation", type=file,
+    parser.add_argument("gyri_segmentation", type=str,
         help="the gyri segmentation of the cortical surface")
-    parser.add_argument("mesh", type=file,
+    parser.add_argument("mesh", type=str,
         help="the mesh of the cortical surface")
     parser.add_argument("kmax", type=int,
         help="the number of clusters in the patterns")
-    parser.add_argument("clustering_time", type=file,
+    parser.add_argument("clustering_time", type=str,
         help="the result pattern")
 
     return parser, parser.parse_args(argv)
