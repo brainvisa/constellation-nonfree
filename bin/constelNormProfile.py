@@ -10,36 +10,27 @@
 
 """
 This script does the following:
-*
-*
+* create the connectivity profile overlap the mask
+* normalize of the profile by its max of connections
+* write the mean profile on the disk
+
+Main dependencies: PyAims library
 
 Author: Sandrine Lefranc, 2015
 """
+
 
 #----------------------------Imports-------------------------------------------
 
 
 # python system module
+import sys
+import numpy
 import argparse
 import textwrap
-import sys
 
 # aims module
 from soma import aims
-
-try:
-    from constel.lib.texturetools import clean_gyri_texture, find_wrong_labels
-except:
-    pass
-
-
-def validation():
-    try:
-        from constel.lib.texturetools import clean_gyri_texture, \
-            find_wrong_labels
-    except:
-        raise ValidationError(
-            "Please make sure that constel module is installed.")
 
 
 #----------------------------Functions-----------------------------------------
@@ -53,41 +44,48 @@ def parse_args(argv):
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent("""\
             -------------------------------------------------------------------
-            Threshold an aimsTimeTexture (Warning: with one time step only)
+            Create the connectivity profile overlap the mask and normalize the
+            profile by its max of connections
             -------------------------------------------------------------------
             """))
 
-    #adding arguments
-    parser.add_argument("gyriseg", type=str, help="input gyri texture")
-    parser.add_argument("mesh", type=str, help="input mesh")
-    parser.add_argument("ogyriseg", type=str,
-                        help="gyri texture with one connected component per "
-                             "gyrus")
+    # adding arguments
+    parser.add_argument("mask", type=str, help="binary profile")
+    parser.add_argument("meanprofile", type=str,
+                        help="mean profile is generated from the mask")
+    parser.add_argument("normprofile", type=str,
+                        help="normed mean profile")
+
     # parsing arguments
     return parser, parser.parse_args(argv)
 
 
 def main():
     # load the arguments of parser (delete script name: sys.arg[0])
-    arguments = (sys.argv[1], sys.argv[2], sys.argv[3])
+    arguments = (sys.argv[1:])
     parser, args = parse_args(arguments)
 
-    # load the files with aims
-    tex = aims.read(args.tex)
-    mesh = aims.read(args.mesh)
+    # read the files with aims
+    aims_mask = aims.read(args.mask)
+    aims_profile = aims.read(args.meanprofile)
 
-    cont = True
-    count = 0
-    while cont and count < 10:
-        print "clean up number ", str(count + 1), " :"
-        tex = clean_gyri_texture(mesh, tex)
-        wrong_labels = find_wrong_labels(mesh, tex)
-        cont = False
-        count += 1
-        if len(wrong_labels) > 0:
-            cont = True
+    # transform the aims files to numpy array
+    np_profile = aims_profile[0].arraydata()
+    np_mask = aims_mask[0].arraydata()
+
+    # create the connectivity profile overlap the mask
+    np_profile[numpy.where(np_mask == 0)] = 0
+
+    # normalize of the profile by its max of connections
+    if np_profile.max() > 0:
+        np_profile *= 1. / np_profile.max()
+
+    # create a time texture object by assigning the mean profile
+    aimstex = aims.TimeTexture_FLOAT()
+    aimstex[0].assign(np_profile)
+
     # write the file on the disk
-    aims.write(tex, args.otex)
+    aims.write(aimstex, args.normprofile)
 
 
 #----------------------------Main program--------------------------------------

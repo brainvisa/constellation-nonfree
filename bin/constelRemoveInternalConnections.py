@@ -8,8 +8,13 @@
 # CEA, CNRS and INRIA at the following URL "http://www.cecill.info".
 ###############################################################################
 
-# System modules
-import optparse
+
+#----------------------------Imports-------------------------------------------
+
+
+# python system modules
+import textwrap
+import argparse
 import sys
 
 # constel modules
@@ -20,38 +25,70 @@ from constel.lib.texturetools import normalize_profile
 from soma import aims
 
 
-def parseOpts(argv):
-    desc = """usage: %prog [options] filename"
-    Remove the patch internal connections of the cortical connectivity profile.
-    Then, the profile is normalized by its total number of connections.
-    """
-    
-    parser = optparse.OptionParser(desc)
-     
-    parser.add_option("-p", "--profile", dest="profile",
-                      help="a coritcal connectivity profile")
-    parser.add_option("-g", "--gyriseg", dest="gyriseg",
-                      help="a labeling of gyri cortical segmentation")
-    parser.add_option("-c", action="store_true", dest="internal_connections")
-    parser.add_option("-q", action="store_false", dest="internal_connections")
-    parser.add_option("-n", "--nprofile", dest="normprofile",
-                      help="normalized connectivity profile")
+#----------------------------Functions-----------------------------------------
 
+
+def parse_args(argv):
+    """Parses the given list of arguments."""
+
+    # creating a parser
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=textwrap.dedent("""\
+            -------------------------------------------------------------------
+            Remove the patch internal connections of the cortical connectivity
+            profile. Then, the profile is normalized by its total number of
+            connections.
+            -------------------------------------------------------------------
+            """))
+
+    #adding arguments
+    parser.add_argument("label", type=str,
+                        help="a number of ROI")
+    parser.add_argument("profile", type=str,
+                        help="a coritcal connectivity profile")
+    parser.add_argument("gyriseg", type=str,
+                        help="a labeling of gyri cortical segmentation")
+    parser.add_argument("normprofile", type=str,
+                        help="normalized connectivity profile")
+    parser.add_argument("-c", action="store_true",
+                        dest="internal_connections")
+    parser.add_argument("-q", action="store_false",
+                        dest="internal_connections")
+
+    # parsing arguments
     return parser, parser.parse_args(argv)
 
 
-if __name__ == "__main__":
-    parser, (options, args) = parseOpts(sys.argv)
-    
+def main():
+    # Load the arguments of parser (delete script name: sys.arg[0])
+    arguments = (sys.argv[1:])
+    parser, args = parse_args(arguments)
+
     # load files
-    aims_mask = aims.read(options.gyriseg)
+    aims_mask = aims.read(args.gyriseg)
     numpy_mask = aims_mask[0].arraydata()
-    aims_profile = aims.read(options.profile)
+    aims_profile = aims.read(args.profile)
     numpy_profile = aims_profile[0].arraydata()
-    
+
+    # remove the internal connections if internal_connections is True
     new_profile = management_internal_connections(
-        options.profile, numpy_mask, numpy_profile, options.internal_connections)
-    
-    normalize_profile(new_profile)
-    
-    aims.write(aims_profile, options.normprofile)
+        args.label, numpy_mask, numpy_profile,
+        args.internal_connections)
+
+    # normalize the profile
+    norm_profile = normalize_profile(new_profile)
+
+    # create a time texture object
+    tex = aims.TimeTexture_FLOAT()
+    tex[0].assign(norm_profile)
+
+    # write the file on the disk
+    aims.write(tex, args.normprofile)
+
+
+#----------------------------Main program--------------------------------------
+
+
+if __name__ == "__main__":
+    main()

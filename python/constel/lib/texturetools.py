@@ -50,13 +50,13 @@ def identify_patch_number(fname):
 
 
 def management_internal_connections(
-    profilename, mask, profile, internal_connections=False):
+    patch, mask, profile, internal_connections=False):
     """Remove or keep the patch internal connections.
     
     Parameters
     ----------
-    profilename: str (mandatory)
-        the name of profile containing the patch number
+    patch: str (mandatory)
+        the number of ROI
     mask: numpy.ndarray (mandatory)
         a labeling of gyri cortical segmentation
     profile: numpy.ndarray (mandatory)
@@ -72,13 +72,11 @@ def management_internal_connections(
         with or without the path internal connections
     """
     if not internal_connections:
-        # provides the patch name
-        patch = identify_patch_number(profilename)
         logger.info("You remove the patch (number " 
-                    + str(patch) + ") internal connections.")
+                    + patch + ") internal connections.")
         # remove the patch internal connections
         for i in xrange(len(profile)):
-            profile[mask == patch] = 0
+            profile[mask == int(patch)] = 0
     else:# keep internal connections
         logger.info("You keep the patch internal connections.")
 
@@ -102,16 +100,23 @@ def remove_labels(tex, labels):
                                   renumbered between 1 and new max.
                                   (max - len(labels))
     """
+    # create the aims file
     otex = aims.TimeTexture_S16()
     tex_ar = tex[0].arraydata()
     otex[0].assign(tex_ar)
     otex_ar = otex[0].arraydata()
+    
+    # replace the labels to be deleted by zero (background)
     for l in labels:
         otex_ar[otex_ar == l] = 0
+    
+    # keep only the labels different of zero
     otex_kept_labels = np.unique(otex_ar)
     otex_kept_labels_list = otex_kept_labels.tolist()
     if otex_kept_labels_list.count(0) != 0:
         otex_kept_labels_list.remove(0)
+    
+    # relabelize all the labels from 1
     for i in xrange(len(otex_kept_labels_list)):
         current_label = otex_kept_labels_list[i]
         print "current label:", current_label, " new:", str(i + 1)
@@ -303,9 +308,9 @@ def normalize_profile(profile):
     profile: numpy.ndarray
        normalized profile
     """
-    max_value = profile.max()
-    if max_value > 0:
-        z = 1. / max_value
+    sum_values = profile.sum()
+    if sum_values > 0:
+        z = 1. / sum_values
         profile *= z
     logger.info("The profile is normalized.")
 

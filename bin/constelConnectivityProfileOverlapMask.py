@@ -8,70 +8,107 @@
 # CEA, CNRS and INRIA at the following URL "http://www.cecill.info".
 ###############################################################################
 
-# soma module
+"""
+This script does the following:
+* calculate the average mask from the individual connectivity matrices
+* according to two criteria:
+          - a vertex is valid if it pass the cthreshold
+          - 50 percent of subjects must possess the valid vertex
+
+Main dependencies: PyAims library
+
+Author: Sandrine Lefranc
+"""
+
+
+#----------------------------Imports-------------------------------------------
+
+
+# python system module
+import sys
+import json
+import numpy
+import argparse
+import textwrap
+
+# aims module
 from soma import aims
 
-# system module
-import optparse
-import numpy
-import sys
+
+#----------------------------Functions-----------------------------------------
 
 
-def parseOpts(argv):
-    desc="""Creation of a mask : while it is estimated that there are at least
-    "fibersnbmin" connexions on one gyrus mean connectivity profile
-    (for more than half of the subjects or equivalent )"""
+def mylist(string):
+    return json.loads(string)
 
-    parser = optparse.OptionParser(desc)
-    sys.stdout.flush()
-    parser.add_option('-p', '--profiles', dest='connectivity_profile',
-                      action='append', help='connectivity_profile' )
-    parser.add_option('-o', '--output', dest='mask', help='mask')
 
+def parse_args(argv):
+    """Parses the given list of arguments."""
+
+    # creating a parser
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=textwrap.dedent("""\
+            -------------------------------------------------------------------
+            calculate an average mask from the individual connectivity profiles
+            according to two criteria (arbitrary):
+                - a vertex is valid if it pass the threshold
+                - 50 percent of subjects must possess the valid vertex
+            -------------------------------------------------------------------
+            """))
+
+    #adding arguments
+    parser.add_argument(
+        "profiles", type=mylist,
+        help="list of individual connectivity profiles")
+    parser.add_argument("mask", type=str,
+                        help="output file: average mask")
+    # parsing arguments
     return parser, parser.parse_args(argv)
 
 
 def main():
-    parser, (options, args) = parseOpts(sys.argv)
+    # Load the arguments of parser (delete script name: sys.arg[0])
+    arguments = (json.dumps(eval(sys.argv[1])), sys.argv[2])
+    parser, args = parse_args(arguments)
 
-    files = options.connectivity_profile
+    # load all the names of the individual connectivity profiles
+    fnames = args.profiles
 
-    nbOfSubjects_threshold = int(round(len(files)/2))
+    for idx, fname in enumerate(fnames):
+        print fname
+        # read the file with aims
+        aimsprofile = aims.read(fname)
+
+        # transform the aims file to numpy array
+        np_profile = aimsprofile[0].arraydata()
+
+        # initialize a numpy array, the same size as the individual profile
+        if idx == 0:
+            nvertex = np_profile.shape[0]
+            fvertices = numpy.zeros((nvertex, ))
+
+        # first criteria: a vertex is valid if it pass the cthreshold
+        cthreshold = np_profile.max() / 100.
+        valid_vert = np_profile >= cthreshold
+        fvertices[valid_vert] += 1
+
+    # second criteria: 50 percent of subjects must possess the valid vertex
+    # 1: keep the vertex in the mask
+    sthreshold = round(len(fnames) / 2.)
+    fvertices[numpy.where(fvertices < sthreshold)] = 0
+    fvertices[numpy.where(fvertices >= sthreshold)] = 1
+
+    # create a time texture object by assigning the valid vertices
     tex = aims.TimeTexture_S16()
-    vertex_nb = 0
-    subjects_count = 0
-    final_valid_vertex_sum = numpy.ones((0))
-    listOfTextures= []
-    for texture in files:
-        listOfTextures = aims.read(texture)
-        listOfTextures_array = listOfTextures[0].arraydata()
-        threshold_value = listOfTextures_array.max() / 100. #numpy.sum( listOfTextures_array ) / 1500.
-        print threshold_value
-        print listOfTextures_array
-        if subjects_count == 0:
-            vertex_nb = listOfTextures[0].nItem()
-            tex[0].reserve(vertex_nb)
-            for i in xrange(vertex_nb):
-                tex[0].push_back(0)
-            final_valid_vertex_sum = tex[0].arraydata()
-        valid_vertex = listOfTextures_array >= threshold_value
-        print valid_vertex
-        final_valid_vertex_sum[valid_vertex]+=1
-        subjects_count += 1
-    #context.write( 'type final_valid_vertex_sum:', final_valid_vertex_sum.dtype, ', min/max:', final_valid_vertex_sum.min(),  final_valid_vertex_sum.max() )
-    #context.write( 'size:', final_valid_vertex_sum.shape )
-    texsum= aims.TimeTexture('S16')
-    t = texsum[0]
-    t.reserve(final_valid_vertex_sum.shape[0])
-    for i in xrange(final_valid_vertex_sum.shape[0]):
-        t.push_back(int(final_valid_vertex_sum[i]))
-    # tex[0].assign( final_valid_vertex_sum )
-    #context.write( 'tex min/max:', texsum[0].arraydata().min(), texsum[0].arraydata().max() )
-    # aims.write(texsum, '/tmp/final_valid_vertex_sum.gii')
+    tex[0].assign(fvertices)
 
-    final_valid_vertex_sum[numpy.where(final_valid_vertex_sum < nbOfSubjects_threshold)] = 0
-    final_valid_vertex_sum[numpy.where(final_valid_vertex_sum >= nbOfSubjects_threshold)] = 1
-    aims.write(tex, options.mask)
+    # write the file (mask) on the disk
+    aims.write(tex, args.mask)
+
+
+#----------------------------Main program--------------------------------------
+
 
 if __name__ == "__main__":
     main()

@@ -1008,7 +1008,7 @@ output: extractConn_ptr: a connectivity matrix of shape (seedRegionVertexNb, oth
 //     Connectivity sparceVectorIdentity = Connectivity(colNb);
 //     for(std::size_t j = 0; j < colNb; ++j) sparceVectorIdentity[j]=1.;
     if (verbose) std::cout << "("<<rowsNb << "," << colNb << ") : " << std::flush;
-    int five_count = int(rowsNb / 20.0);
+//    int five_count = int(rowsNb / 20.0);
     for (std::size_t i = 0; i < rowsNb; ++i)
     {
 //       if (i % five_count == 0)

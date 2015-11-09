@@ -10,36 +10,27 @@
 
 """
 This script does the following:
+* 
 *
 *
 
-Author: Sandrine Lefranc, 2015
+Main dependencies: PyAims library
+
+Author: Sandrine Lefranc
 """
+
 
 #----------------------------Imports-------------------------------------------
 
 
 # python system module
+import sys
+import numpy
 import argparse
 import textwrap
-import sys
 
 # aims module
 from soma import aims
-
-try:
-    from constel.lib.texturetools import clean_gyri_texture, find_wrong_labels
-except:
-    pass
-
-
-def validation():
-    try:
-        from constel.lib.texturetools import clean_gyri_texture, \
-            find_wrong_labels
-    except:
-        raise ValidationError(
-            "Please make sure that constel module is installed.")
 
 
 #----------------------------Functions-----------------------------------------
@@ -53,41 +44,62 @@ def parse_args(argv):
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent("""\
             -------------------------------------------------------------------
-            Threshold an aimsTimeTexture (Warning: with one time step only)
+            
             -------------------------------------------------------------------
             """))
 
-    #adding arguments
-    parser.add_argument("gyriseg", type=str, help="input gyri texture")
-    parser.add_argument("mesh", type=str, help="input mesh")
-    parser.add_argument("ogyriseg", type=str,
-                        help="gyri texture with one connected component per "
-                             "gyrus")
+    # adding arguments
+    parser.add_argument("watershed", type=str, help="")
+    parser.add_argument("filterwatershed", type=str, help="")
+
     # parsing arguments
     return parser, parser.parse_args(argv)
 
 
 def main():
     # load the arguments of parser (delete script name: sys.arg[0])
-    arguments = (sys.argv[1], sys.argv[2], sys.argv[3])
+    arguments = (sys.argv[1:])
     parser, args = parse_args(arguments)
 
-    # load the files with aims
-    tex = aims.read(args.tex)
-    mesh = aims.read(args.mesh)
+    # Low connections to gyrus : filtered watershed with "minVertex_nb"
+    minVertex_nb = 20
+    
+    # read the file with aims
+    basins_tex = aims.read(args.watershed)
+    
+    # transform the aims files to numpy array
+    basinTex_ar = basins_tex[0].arraydata()
+    
+    # recover the list of labels that are applied
+    basins_labels = numpy.unique(basinTex_ar)
+    
+    # criteria: replace the basins with less than 20 vertices by zero
+    for basin_label in basins_labels:
+        if numpy.where(basinTex_ar == basin_label)[0].size < minVertex_nb:
+            basinTex_ar[basinTex_ar == basin_label] = 0
+    
+    # keep only the labels different of zero
+    otex_kept_labels = numpy.unique(basinTex_ar)
+    if list(otex_kept_labels).count(0) != 0:
+        tmp = list(otex_kept_labels)
+        tmp.remove(0)
+        otex_kept_labels = numpy.array(tmp)
+    
+    # renumbers all the labels from 1
+    otex = basinTex_ar
+    for i in xrange(len(otex_kept_labels)):
+        current_label = otex_kept_labels[i]
+        print "current label:", current_label, " new:", str(i + 1)
+        otex[basinTex_ar == current_label] = i + 1
 
-    cont = True
-    count = 0
-    while cont and count < 10:
-        print "clean up number ", str(count + 1), " :"
-        tex = clean_gyri_texture(mesh, tex)
-        wrong_labels = find_wrong_labels(mesh, tex)
-        cont = False
-        count += 1
-        if len(wrong_labels) > 0:
-            cont = True
+    # create a time texture object
+    aimstex = aims.TimeTexture_FLOAT()
+    aimstex[0].assign(otex)
+
+    #filteredBasins = remove_labels(basins_tex, labelsToRemove_list)
+    
     # write the file on the disk
-    aims.write(tex, args.otex)
+    aims.write(aimstex, args.filterwatershed)
 
 
 #----------------------------Main program--------------------------------------
