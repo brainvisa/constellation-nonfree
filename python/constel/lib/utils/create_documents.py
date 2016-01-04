@@ -131,6 +131,7 @@ if __name__ == "__main__":
     for element in dico.iteritems():
         print element[0][:2]
         if element[0][:2] != patch:
+            pass
 
     if tri:
         d = sorted(dico.iteritems(), reverse=False, key=itemgetter(0))
