@@ -28,8 +28,9 @@ import json
 import numpy
 import argparse
 import textwrap
-import subprocess
-import exceptions
+import logging
+#import subprocess
+#import exceptions
 
 # aims module
 from soma import aims
@@ -50,7 +51,7 @@ def parse_args(argv):
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent("""\
             -------------------------------------------------------------------
-            
+
             -------------------------------------------------------------------
             """))
 
@@ -65,49 +66,61 @@ def parse_args(argv):
 
 
 def main():
+
+    logging.basicConfig(level=logging.DEBUG)
+    logging.debug('Starting the script %s..', sys.argv[0])
+
     # Load the arguments of parser (delete script name: sys.arg[0])
     arguments = (json.dumps(eval(sys.argv[1])),
                  json.dumps(eval(sys.argv[2])),
                  sys.argv[3])
     parser, args = parse_args(arguments)
+    logging.debug('args %s..', args)
 
-    #for normprofile, oprofile in zip(args.normprofiles, args.oprofiles):
-        #aimsprofile = aims.read(normprofile)
-        #profile = aimsprofile[0].arraydata()
+    for normprofile, oprofile in zip(args.normprofiles, args.oprofiles):
+        aimsprofile = aims.read(normprofile)
+        profile = aimsprofile[0].arraydata()
         #if profile.sum() > 0:
             #z = 1./ profile.sum()
             #newprofile = profile*z
         #aimstex = aims.TimeTexture_FLOAT()
         #aimstex[0].assign(newprofile)
         #aims.write(aimstex, oprofile)
-        
+
     # sum all the profiles
+    normprofiles = []
     for idx, tex_filename in enumerate(args.normprofiles):
         tex = aims.read(tex_filename)[0].arraydata()
-        if idx == 0:
-            t = tex
-            #shutil.copy2(str(tex_filename), str(args.meanprofile))
-        else:
-            t = numpy.add(t,tex)
-            #cmd = ["AimsLinearComb",
-                   #"-i", tex_filename,
-                   #"-j", args.meanprofile,
-                   #"-o", args.meanprofile]
-            #subprocess.check_call(cmd)
-            
-    # mean profile
-    meanprofile = t / len(args.normprofiles)
+        normprofiles.append(tex.astype('float32'))
 
-    # create a time texture object by assigning the mean profile
+    sum_normprofiles = [sum(i) for i in zip(*normprofiles)]
+
+#        if idx == 0:
+#            t = tex
+#            #shutil.copy2(str(tex_filename), str(args.meanprofile))
+#        else:
+#            pass
+#            t += tex
+#            #cmd = ["AimsLinearComb",
+#                   #"-i", tex_filename,
+#                   #"-j", args.meanprofile,
+#                   #"-o", args.meanprofile]
+#            #subprocess.check_call(cmd)
+#        print "stop boucle for"
+
+#    # mean profile
+    meanprofile = numpy.array(sum_normprofiles) / len(sum_normprofiles)
+#
+#    # create a time texture object by assigning the mean profile
     aimstex = aims.TimeTexture_FLOAT()
     aimstex[0].assign(meanprofile)
-
-    # write the file (mask) on the disk
+#
+#    # write the file (mask) on the disk
     aims.write(aimstex, args.meanprofile)
 
     #meanprofile = aims.read(args.meanprofile)[0].arraydata()
     #new_profile = meanprofile / len(args.normprofiles)
-       
+
     #aimstex = aims.TimeTexture_FLOAT()
     #aimstex[0].assign(new_profile)
     #aims.write(aimstex, args.meanprofile)
