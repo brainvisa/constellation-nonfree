@@ -208,74 +208,102 @@ def euclidianDistanceMatrix(matrix):
     return euclidian_dist_matrix
 
 
-def compute_mclusters_by_nbasins_matrix(reducedmatrix, parcels,
-                                        timestep=0, mode="meanOfProfiles"):
+def compute_mclusters_by_nbasins_matrix(reducedmatrix, clusters,
+                                        timestep=0, mode="mean"):
     """
-    Compute the mean connectivity profile of each parcels and create the associated matrix:
-    inputs:
-      reducedmatrix: size (patchVertex_nb, targets_nb)
-      vertices_patch: size (patchVertex_nb): index of the patch vertex in the parcels
-      parcels: labeled aims Time Texture_S16, parcellation of the patch
-      timestep: if the input parcels has several time steps, indicates the chosen step. (each step corresponding to a parcellation of the patch, time_step = 0, parcellation into 2 clusters)
-      mode: "mean": normalized by the number of parcels vertices
-         or "sum": not normalized
-    outputs:
+    Compute the mean connectivity profile of each clusters and create the
+    associated matrix.
+
+    Parameters
+    ----------
+      reducedmatrix: numpy.array (mandatory)
+          matrix of size M(vertex_ROI, vertex_targets)
+      clusters: numpy.array (mandatory)
+          connectivity-based parcelation of a ROI, labelled by clusters
+      timestep: integer
+          if the input parcels has several time steps,
+          indicates the chosen step. (each step corresponding to a parcellation
+          of the patch, time_step = 0, parcellation into 2 clusters)
+      mode:
+          "mean": normalized by the number of parcels vertices
+          "sum": not normalized
+
+    Return
+    ------
       matrix: size (parcels_nb, targets_nb)
     """
-    (n, p) = reducedmatrix.shape
-    print "reducedmatrix.shape", reducedmatrix.shape
-    labels = numpy.zeros((n), dtype=int)
+    # tuple of array dimensions
+    ndmatrix = reducedmatrix.shape
 
-    vertices_patch = []
+    # if need, transpose the matrix to always work with
+    # M(vertex_ROI, vertex_targets)
+    if ndmatrix[0] < ndmatrix[1]:
+        reducedmatrix = reducedmatrix.T
 
-    for i in xrange(parcels[0].nItem()):
-        if parcels[0][i] != 0:
-            vertices_patch.append(i)
+    # delete the zeros of the list to keep only the ROI vertices
+    vertex_ROI = [i for i in clusters if i != 0]
 
-    vertices_patch = numpy.array(vertices_patch)
-    vertices_patch = vertices_patch.tolist()
-    for i in xrange(n):  # iteration on patch Vertex
-        index_i = numpy.uint32(vertices_patch[i])
-        labels[i] = parcels[timestep][index_i]
+    # return an error if the number of vertices is different between the rows
+    # of the reduced matrix and the number of ROI vertices
+    if len(vertex_ROI) != ndmatrix[0]:
+        raise ValueError("reduced matrix and clustering must be the same size")
 
-    labels_unique = numpy.unique(labels).tolist()
+    # give the various labels
+    labels = numpy.unique(vertex_ROI)
 
-    matrix = numpy.zeros((len(labels_unique), p), dtype=numpy.float32)
-    labelCount = 0
-    for i in xrange(len(labels_unique)):
-        label = labels_unique[i]
-        label_connMatrixToTargets_array = reducedmatrix[
-            numpy.where(labels == label)]
-        if mode == "meanOfProfiles":
-            matrix[labelCount] = label_connMatrixToTargets_array.mean(axis=0)
-        elif mode == "sumOfProfiles":
-            matrix[labelCount] = label_connMatrixToTargets_array.sum(axis=0)
+    # initialyze a matrix M(labels, targets)
+    clusters_matrix = numpy.zeros(
+        (len(labels), ndmatrix[1]), dtype=numpy.float32)
+
+    # construct the clusters matrix M(labels, targets)
+    for i, label in enumerate(labels):
+        # give the indices corresponding to label
+        idx = numpy.where(vertex_ROI == label)
+        # give the matrix corresponding to idx
+        cluster_matrix = reducedmatrix[idx]
+        # mean or sum the profiles (rows) of the matrix
+        if mode == "mean":
+            clusters_matrix[i] = cluster_matrix.mean(axis=0)
+        elif mode == "sum":
+            clusters_matrix[i] = cluster_matrix.sum(axis=0)
         else:
-            raise exceptions.ValueError(
-                "the mode must be \"mean\" or \"sum\" ")
-        labelCount += 1
+            raise("The mode must be 'mean' or 'sum'.")
 
-    return matrix
+    return clusters_matrix
 
 
 def write_matrix2csv(matrix, csvfilename):
+    """Write a CSV file.
+
+    Parameters
+    ----------
+        matrix: numpy.array (mandatory)
+            matrix of size M(labels, vertex_targets)
+            labels defines the clusters of the parcellation
+        csvfilename: str (mandatory)
+            directory and name of the CSV file
     """
-    """
+    # tuple of array dimensions
+    ndmatrix = matrix.shape
+
+    # initialyze a list to add titles in columns of the csv file
     fieldnames = []
-    (n, p) = matrix.shape
-    print n, p
-    c = n
-    for i in xrange(p+1):
+
+    # define the titles in columns of the csv file
+    for i in xrange(ndmatrix[1] + 1):
         if i == 0:
             fieldnames.append("Cluster")
         else:
             fieldnames.append("Basin " + str(i))
-    
+
+    c = ndmatrix[0]
+    # open a CSV file to write the results
     with open(csvfilename, 'w') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         m = 0
-        while c<(n+1) and c>0:
+        # complete the table with the values of the matrix (values in percent)
+        while c < (ndmatrix[0] + 1) and c > 0:
             dict = {}
             count = 0
             for element in fieldnames:
@@ -285,10 +313,10 @@ def write_matrix2csv(matrix, csvfilename):
                     dict[str(element)] = matrix[m][count - 1]
                     print dict
                 count += 1
-            writer.writerow(dict)   
+            writer.writerow(dict)
             c -= 1
             m += 1
-        
+
 
 def contingency_matrix(labels1, labels2):
     classes = list(set(labels1))
