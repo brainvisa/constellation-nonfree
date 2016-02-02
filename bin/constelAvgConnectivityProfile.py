@@ -10,8 +10,7 @@
 
 """
 This script does the following:
-*
-*
+* Create and write a group profile
 
 Main dependencies: PyAims library
 
@@ -25,12 +24,10 @@ Author: Sandrine Lefranc, 2015
 # python system module
 import sys
 import json
-import numpy
 import argparse
 import textwrap
-import logging
-#import subprocess
-#import exceptions
+import shutil
+import subprocess
 
 # aims module
 from soma import aims
@@ -51,79 +48,50 @@ def parse_args(argv):
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent("""\
             -------------------------------------------------------------------
-
+            Create a group profile. All individual profiles are added and each
+            final value is then divided by the number of profile.
             -------------------------------------------------------------------
             """))
 
     # adding arguments
     parser.add_argument(
-        "normprofiles", type=mylist, help="")
-    parser.add_argument("oprofiles", type=mylist, help="")
-    parser.add_argument("meanprofile", type=str, help="")
+        "normprofiles", type=mylist, help="list of individual profiles")
+    parser.add_argument(
+        "meanprofile", type=str, help="output: group of profile")
 
     # parsing arguments
     return parser, parser.parse_args(argv)
 
 
 def main():
-
-    logging.basicConfig(level=logging.DEBUG)
-    logging.debug('Starting the script %s..', sys.argv[0])
-
+    """Execute the command to create and write a group profile on the disk.
+    """
     # Load the arguments of parser (delete script name: sys.arg[0])
-    arguments = (json.dumps(eval(sys.argv[1])),
-                 json.dumps(eval(sys.argv[2])),
-                 sys.argv[3])
+    arguments = (json.dumps(eval(sys.argv[1])), sys.argv[2])
     parser, args = parse_args(arguments)
-    logging.debug('args %s..', args)
 
-    for normprofile, oprofile in zip(args.normprofiles, args.oprofiles):
-        aimsprofile = aims.read(normprofile)
-        profile = aimsprofile[0].arraydata()
-        #if profile.sum() > 0:
-            #z = 1./ profile.sum()
-            #newprofile = profile*z
-        #aimstex = aims.TimeTexture_FLOAT()
-        #aimstex[0].assign(newprofile)
-        #aims.write(aimstex, oprofile)
-
-    # sum all the profiles
-    normprofiles = []
+    # apply a formula to a set of homogeneous textures
     for idx, tex_filename in enumerate(args.normprofiles):
-        tex = aims.read(tex_filename)[0].arraydata()
-        normprofiles.append(tex.astype('float32'))
+        if idx == 0:
+            shutil.copy(str(tex_filename), str(args.meanprofile))
+        else:
+            cmd = ["cartoLinearComb.py",
+                   "-f", "I1 + I2",
+                   "-i", tex_filename,
+                   "-i", args.meanprofile,
+                   "-o", args.meanprofile]
+            subprocess.check_call(cmd)
 
-    sum_normprofiles = [sum(i) for i in zip(*normprofiles)]
+    # read mean profile
+    meanprofile = aims.read(args.meanprofile)
 
-#        if idx == 0:
-#            t = tex
-#            #shutil.copy2(str(tex_filename), str(args.meanprofile))
-#        else:
-#            pass
-#            t += tex
-#            #cmd = ["AimsLinearComb",
-#                   #"-i", tex_filename,
-#                   #"-j", args.meanprofile,
-#                   #"-o", args.meanprofile]
-#            #subprocess.check_call(cmd)
-#        print "stop boucle for"
+    # mean of the values
+    for i in xrange(meanprofile.nItem()):
+        val = meanprofile[0][i]
+        meanprofile[0][i] = val/len(args.normprofiles)
 
-#    # mean profile
-    meanprofile = numpy.array(sum_normprofiles) / len(sum_normprofiles)
-#
-#    # create a time texture object by assigning the mean profile
-    aimstex = aims.TimeTexture_FLOAT()
-    aimstex[0].assign(meanprofile)
-#
-#    # write the file (mask) on the disk
-    aims.write(aimstex, args.meanprofile)
-
-    #meanprofile = aims.read(args.meanprofile)[0].arraydata()
-    #new_profile = meanprofile / len(args.normprofiles)
-
-    #aimstex = aims.TimeTexture_FLOAT()
-    #aimstex[0].assign(new_profile)
-    #aims.write(aimstex, args.meanprofile)
+    # write the file on the disk
+    aims.write(meanprofile, args.meanprofile)
 
 
 #----------------------------Main program--------------------------------------
