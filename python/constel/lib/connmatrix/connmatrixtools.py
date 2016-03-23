@@ -232,20 +232,19 @@ def compute_mclusters_by_nbasins_matrix(reducedmatrix, clusters,
     ------
       matrix: size (parcels_nb, targets_nb)
     """
-    # tuple of array dimensions
-    ndmatrix = reducedmatrix.shape
 
     # if need, transpose the matrix to always work with
     # M(vertex_ROI, vertex_targets)
-    if ndmatrix[0] < ndmatrix[1]:
+    if reducedmatrix.shape[0] < reducedmatrix.shape[1]:
         reducedmatrix = reducedmatrix.T
 
     # delete the zeros of the list to keep only the ROI vertices
-    vertex_ROI = [i for i in clusters if i != 0]
+    lclusters = clusters[0].arraydata()
+    vertex_ROI = [i for i in lclusters if i != 0]
 
     # return an error if the number of vertices is different between the rows
     # of the reduced matrix and the number of ROI vertices
-    if len(vertex_ROI) != ndmatrix[0]:
+    if len(vertex_ROI) != reducedmatrix.shape[0]:
         raise ValueError("reduced matrix and clustering must be the same size")
 
     # give the various labels
@@ -253,14 +252,12 @@ def compute_mclusters_by_nbasins_matrix(reducedmatrix, clusters,
 
     # initialyze a matrix M(labels, targets)
     clusters_matrix = numpy.zeros(
-        (len(labels), ndmatrix[1]), dtype=numpy.float32)
+        (len(labels), reducedmatrix.shape[1]), dtype=numpy.float32)
 
     # construct the clusters matrix M(labels, targets)
     for i, label in enumerate(labels):
-        # give the indices corresponding to label
-        idx = numpy.where(vertex_ROI == label)
         # give the matrix corresponding to idx
-        cluster_matrix = reducedmatrix[idx]
+        cluster_matrix = reducedmatrix[numpy.where(vertex_ROI == label)]
         # mean or sum the profiles (rows) of the matrix
         if mode == "mean":
             clusters_matrix[i] = cluster_matrix.mean(axis=0)
