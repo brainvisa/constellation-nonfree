@@ -51,8 +51,12 @@ def mergeBundlesGraphAndROIsGraph(roi_graph, bundles_graph,
     # creating edges between labels/fibers
     for bundles in bundles_graph.vertices():
         names = bundles['name'].split('_')
-        roi_1 = int(names[0])
-        roi_2 = int(names[1])
+        try:
+            roi_1 = int(names[0])
+            roi_2 = int(names[1])
+        except ValueError:
+            # a non-numeric name ('trash') has been used
+            continue
         roi_1 = nodes_names_mapping.get(roi_1, roi_1)
         roi_2 = nodes_names_mapping.get(roi_2, roi_2)
         if roi_1 != roi_2:
