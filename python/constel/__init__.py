@@ -32,18 +32,20 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 
 from soma.importer import ExtendedImporter
+import six
 
-ExtendedImporter().importInModule( '', globals(), locals(), 'constelsip' )
-ExtendedImporter().importInModule( '', globals(), locals(), 'constelsip', ['constelsip.constel'] )
+ExtendedImporter().importInModule('', globals(), locals(), 'constelsip')
+ExtendedImporter().importInModule('', globals(), locals(), 'constelsip',
+                                  ['constelsip.constel'])
 
 # TODO: try to fix this using ExtendedImporter
 from soma import aims
 # some classes are in the aims (C++) namespace and are imported in aimssip.aims
-for k, v in aims.__dict__.iteritems():
-  if hasattr( v, '__module__' ) and v.__module__ == constelsip.__name__:
-    try:
-      v.__module__ = 'soma.aims'
-    except:
-      pass
+for k, v in six.iteritems(aims.__dict__):
+    if hasattr(v, '__module__') and v.__module__ == constelsip.__name__:
+        try:
+            v.__module__ = 'soma.aims'
+        except:
+            pass
 del aims, ExtendedImporter, k, v
 
