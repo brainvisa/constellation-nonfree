@@ -33,7 +33,7 @@ logger.addHandler(steam_handler)
 
 def identify_patch_number(fname):
     """Identify the number of the patch from a filename.
-    
+
     Parameter
     ---------
     fname: str (mandatory)
@@ -50,9 +50,9 @@ def identify_patch_number(fname):
 
 
 def management_internal_connections(
-    patch, mask, profile, internal_connections=False):
+        patch, mask, profile, internal_connections=False):
     """Remove or keep the patch internal connections.
-    
+
     Parameters
     ----------
     patch: str (mandatory)
@@ -64,20 +64,20 @@ def management_internal_connections(
     internal_connections: bool
         False if the patch internal connections don't keep
         True otherwise
-    
+
     Return
     ------
     aims_profile: numpy.ndarray
-        a cortical connectivity profile 
+        a cortical connectivity profile
         with or without the path internal connections
     """
     if not internal_connections:
-        logger.info("You remove the patch (number " 
+        logger.info("You remove the patch (number "
                     + patch + ") internal connections.")
         # remove the patch internal connections
         for i in xrange(len(profile)):
             profile[mask == int(patch)] = 0
-    else:# keep internal connections
+    else:  # keep internal connections
         logger.info("You keep the patch internal connections.")
 
     return profile
@@ -105,17 +105,17 @@ def remove_labels(tex, labels):
     tex_ar = tex[0].arraydata()
     otex[0].assign(tex_ar)
     otex_ar = otex[0].arraydata()
-    
+
     # replace the labels to be deleted by zero (background)
     for l in labels:
         otex_ar[otex_ar == l] = 0
-    
+
     # keep only the labels different of zero
     otex_kept_labels = np.unique(otex_ar)
     otex_kept_labels_list = otex_kept_labels.tolist()
     if otex_kept_labels_list.count(0) != 0:
         otex_kept_labels_list.remove(0)
-    
+
     # relabelize all the labels from 1
     for i in xrange(len(otex_kept_labels_list)):
         current_label = otex_kept_labels_list[i]
@@ -187,7 +187,8 @@ def find_wrong_labels(mesh, gyriTex):
     """
 
     meshNeighborsVector = aims.SurfaceManip.surfaceNeighbours(mesh)
-    cctex, areas_measures = MTT.connectedComponents(mesh, gyriTex, areas_mode=1)
+    cctex, areas_measures = MTT.connectedComponents(
+        mesh, gyriTex, areas_mode=1)
     wrong_labels = []
     for label in areas_measures.keys():
         if areas_measures[label].size != 1:
@@ -209,7 +210,9 @@ def clean_gyri_texture(mesh, gyri_tex):
     gyri_tex (aims time texture S16):
         new gyri texture, without isolated vertex.
     """
+    # get a list of neighbouring nodes from a surface mesh
     mesh_neighbors_vector = aims.SurfaceManip.surfaceNeighbours(mesh)
+
     cc_tex, areas_measures = MTT.connectedComponents(
         mesh, gyri_tex, areas_mode=1)
     wrong_labels = []
@@ -259,6 +262,7 @@ def texture_time(k_max, clusters_id, vertices_patch, vertices_mesh, mode,
             print vertices_patch
             tex[k].arraydata()[vertices_patch] = \
                 clusters_id[k][minid:maxid].astype(np.int16)
+
     return tex
 
 
@@ -296,8 +300,8 @@ def add_texture(tex, add_tex, add_value):
 
 def normalize_profile(profile):
     """Normalization of connectivity profile by its total number of
-    connections. 
-    
+    connections.
+
     Parameter
     ---------
     profile: numpy.ndarray (mandatory)
@@ -315,7 +319,6 @@ def normalize_profile(profile):
     logger.info("The profile is normalized.")
 
     return profile
-    
 
 
 def geodesic_gravity_center(mesh, parcellated_texture, region_name,
@@ -365,3 +368,49 @@ def geodesic_gravity_center(mesh, parcellated_texture, region_name,
     gravity_center_index = distance_texture[0].arraydata().argmax()
 
     return gravity_center_index
+
+
+def create_relationship_region2neighbors(meshname, segname):
+    """
+    """
+    # load the files (mesh and gyri segmentation)
+    mesh = aims.read(meshname)
+    tex = aims.read(segname)
+
+    # create a numpy array from gyri segmentation (aims to numpy)
+    texar = tex[0].arraydata()
+
+    # load the polygons of the mesh (numpy array)
+    triangles = numpy.asarray([tri.arraydata() for tri in mesh.polygon()])
+
+    dict_neighboors = {}
+    for search in xrange(len(texar)):
+        neighboors = []
+
+        # give the polygons having the nodes "search"
+        idx = numpy.where(triangles == search)
+
+        # give the index of the nodes
+        for d in idx[0]:
+            neighboors.extend(triangles[d])
+
+        # list of the neighboors and give the labels
+        neighboors = numpy.unique(numpy.asarray(neighboors))
+        neighboors = neighboors[neighboors != search]
+        labels = []
+        for n in neighboors:
+            labels.append(texar[n])
+        labels = numpy.unique(labels)
+        labels = labels[labels != texar[search]]
+
+        # complete the dictionnaire with the new labels
+        if texar[search] in dict_neighboors:
+            labelsindico = dict_neighboors[texar[search]]
+            for l in labels:
+                if l not in labelsindico:
+                    dict_neighboors[texar[search]].append(l)
+        else:
+            dict_neighboors[texar[search]] = labels.tolist()
+    for i in dict_neighboors.values():
+        i.sort()
+    return dict_neighboors
