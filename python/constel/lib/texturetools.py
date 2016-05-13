@@ -413,4 +413,16 @@ def create_relationship_region2neighbors(meshname, segname):
             dict_neighboors[texar[search]] = labels.tolist()
     for i in dict_neighboors.values():
         i.sort()
+    
+    mintex = min(texar)
+    maxtex = max(texar)
+
+    # load the labels
+    countries = range(mintex, maxtex + 2)
+
+    for i in countries:
+        if i not in dict_neighboors.keys():
+            if i != (len(dict_neighboors.keys()) + 1):
+                dict_neighboors[i] = []
+    
     return dict_neighboors
