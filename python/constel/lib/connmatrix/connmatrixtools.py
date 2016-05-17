@@ -22,6 +22,7 @@ Author: Sandrine Lefranc, 2015
 
 
 # python system module
+import os
 import csv
 import numpy
 import itertools
@@ -338,3 +339,21 @@ def partialWhiten(features):
     dist = dist / sdist
     white = numpy.hstack((dist, direc))
     return white
+
+def save_normalization(filename):
+    """
+    """
+    matrix = aims.read(filename)
+    mat = numpy.array(matrix)[:, :, 0, 0]
+    rows = mat.shape[0]
+    cols = mat.shape[1]
+    norm_rows = []
+    for i in range(rows):
+        line_i = mat[i]
+        norm_i = numpy.linalg.norm(line_i)
+        norm_rows.append(norm_i)
+    name = os.path.dirname(filename)
+    oname = os.path.join(name + "/normalization")
+    save_norm = numpy.save(oname, norm_rows)
+                
+    
