@@ -240,8 +240,7 @@ def compute_mclusters_by_nbasins_matrix(reducedmatrix, clusters,
         reducedmatrix = reducedmatrix.T
 
     # delete the zeros of the list to keep only the ROI vertices
-    lclusters = clusters[0].arraydata()
-    vertex_ROI = [i for i in lclusters if i != 0]
+    vertex_ROI = [i for i in clusters if i != 0]
 
     # return an error if the number of vertices is different between the rows
     # of the reduced matrix and the number of ROI vertices
@@ -288,7 +287,7 @@ def write_matrix2csv(matrix, csvfilename):
     fieldnames = []
 
     # define the titles in columns of the csv file
-    for i in xrange(ndmatrix[1] + 1):
+    for i in range(ndmatrix[1] + 1):
         if i == 0:
             fieldnames.append("Cluster")
         else:
