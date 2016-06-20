@@ -10,9 +10,7 @@
 
 """
 This script does the following:
-* create the connectivity profile overlap the mask
-* normalize of the profile by its max of connections
-* write the mean profile on the disk
+* 
 
 Main dependencies: PyAims library
 
@@ -71,16 +69,16 @@ def parse_args(argv):
                         help="The max number of clusters.")
     parser.add_argument("ofile", type=str,
                         help="The results will write in this PDF file.")
-    parser.add_argument("-c", action="store_true", dest="autoscale_y",
-                        help="Do the autoscale on the axe Y.")
-    parser.add_argument("-q", action="store_false", dest="autoscale_y",
-                        help="Do not the autoscale on the axe Y.")
+    parser.add_argument("-s", "--scaley", type=mylist, dest="ybound",
+                        help="Do the scale given on the axe Y.")
+    parser.add_argument("-r", "--removek2", action="store_true", dest="ignore_k2",
+                        help="Ignore K=2 in the research of the optimal number of clusters.")
 
     # parsing arguments
     return parser, parser.parse_args(argv)
 
 
-def create_page(name_matrix, matrix, kmax, autoscale_y):
+def create_page(name_matrix, matrix, kmax, ybound=[0., 1.], ignore_k2=False):
     """
     """
     # Create a figure instance (ie. a new page)
@@ -98,7 +96,9 @@ def create_page(name_matrix, matrix, kmax, autoscale_y):
                        xlabel="Clusters (K)",
                        ylabel="Average Silhouette Width (ASW)",
                        color_cycle='g',
-                       autoscaley_on=autoscale_y)
+                       autoscale_on=False,
+                       ybound=ybound, 
+                       xbound=[2, kmax])
     ax2 = fig.add_axes([0.1, 0.1, 0.7, 0.2])
     ax3 = fig.add_axes([0.55, 0.55, 0.55, 0.2])
 
@@ -118,10 +118,10 @@ def create_page(name_matrix, matrix, kmax, autoscale_y):
     table.append(tvals)
 
     # give the larger ASW
-    asw_opt = max(dict_clusters.values())
+    k_opt = max(dict_clusters.values())
 
     # search the id of the optimal number of clusters
-    kopt = dict_clusters.keys()[dict_clusters.values().index(asw_opt)]
+    kopt = dict_clusters.keys()[dict_clusters.values().index(k_opt)]
 
     ax1.plot(dict_clusters.keys(), dict_clusters.values(), "k",
              color="red",
@@ -132,9 +132,17 @@ def create_page(name_matrix, matrix, kmax, autoscale_y):
     ax2.table(cellText=table, loc="center")
     ax2.axis("off")
 
-    ax3.text(0., 0.,
-             "The optimal number of clusters is " + str(kopt) + ".",
-             color="red")
+    if ignore_k2 and kopt == 2:
+        del dict_clusters[kopt]
+        k_opt = max(dict_clusters.values())
+        kopt = dict_clusters.keys()[dict_clusters.values().index(k_opt)]
+        ax3.text(0., 0.,
+                 "The optimal number of clusters is " + str(kopt) + ".\n (You have decided to ignore Kopt=2 clusters.)",
+                 color="red")
+    else:
+        ax3.text(0., 0.,
+                 "The optimal number of clusters is " + str(kopt) + ".",
+                 color="red")
     ax3.axis("off")
 
 
@@ -142,11 +150,26 @@ def create_page(name_matrix, matrix, kmax, autoscale_y):
 
 
 def main():
-    # load the arguments of parser (delete script name: sys.arg[0])
-    arguments = (json.dumps(eval(sys.argv[1])),
-                 sys.argv[2],
-                 sys.argv[3],
-                 sys.argv[4])
+    """
+    """
+    if len(sys.argv[:]) == 6:
+        # load the arguments of parser (delete script name: sys.arg[0])
+        arguments = (json.dumps(eval(sys.argv[1])),
+                     sys.argv[2],
+                     sys.argv[3],
+                     sys.argv[4],
+                     sys.argv[5])
+    elif len(sys.argv[:]) == 5:
+        # load the arguments of parser (delete script name: sys.arg[0])
+        arguments = (json.dumps(eval(sys.argv[1])),
+                     sys.argv[2],
+                     sys.argv[3],
+                     sys.argv[4])
+    else:
+        # not autoscale Y
+        arguments = (json.dumps(eval(sys.argv[1])),
+                     sys.argv[2],
+                     sys.argv[3])
     parser, args = parse_args(arguments)
 
     # the PDF document
@@ -157,7 +180,7 @@ def main():
         rmat = numpy.asarray(red_mat)[:, :, 0, 0]
         if rmat.shape[0] > rmat.shape[1]:
             mat = rmat.T
-        create_page(matrix, mat, args.kmax, args.autoscale_y)
+        create_page(matrix, mat, args.kmax, args.ybound, args.ignore_k2)
         # Done with the page
         pp.savefig()
 
