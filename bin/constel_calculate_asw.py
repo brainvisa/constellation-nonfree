@@ -10,7 +10,7 @@
 
 """
 This script does the following:
-* 
+*
 
 Main dependencies: PyAims library
 
@@ -63,16 +63,21 @@ def parse_args(argv):
             """))
 
     # adding arguments
-    parser.add_argument("matrices", type=mylist,
-                        help="List of the individual reduced matrix")
-    parser.add_argument("kmax", type=int,
-                        help="The max number of clusters.")
-    parser.add_argument("ofile", type=str,
-                        help="The results will write in this PDF file.")
-    parser.add_argument("-s", "--scaley", type=mylist, dest="ybound",
-                        help="Do the scale given on the axe Y.")
-    parser.add_argument("-r", "--removek2", action="store_true", dest="ignore_k2",
-                        help="Ignore K=2 in the research of the optimal number of clusters.")
+    parser.add_argument(
+        "matrices", type=mylist,
+        help="List of the individual reduced matrix")
+    parser.add_argument(
+        "kmax", type=int,
+        help="The max number of clusters.")
+    parser.add_argument(
+        "ofile", type=str,
+        help="The results will write in this PDF file.")
+    parser.add_argument(
+        "-s", "--scaley", type=mylist, dest="ybound",
+        help="Do the scale given on the axe Y.")
+    parser.add_argument(
+        "-r", "--removek2", action="store_true", dest="ignore_k2",
+        help="Ignore K=2 in the research of the optimal number of clusters.")
 
     # parsing arguments
     return parser, parser.parse_args(argv)
@@ -97,7 +102,7 @@ def create_page(name_matrix, matrix, kmax, ybound=[0., 1.], ignore_k2=False):
                        ylabel="Average Silhouette Width (ASW)",
                        color_cycle='g',
                        autoscale_on=False,
-                       ybound=ybound, 
+                       ybound=ybound,
                        xbound=[2, kmax])
     ax2 = fig.add_axes([0.1, 0.1, 0.7, 0.2])
     ax3 = fig.add_axes([0.55, 0.55, 0.55, 0.2])
@@ -137,7 +142,8 @@ def create_page(name_matrix, matrix, kmax, ybound=[0., 1.], ignore_k2=False):
         k_opt = max(dict_clusters.values())
         kopt = dict_clusters.keys()[dict_clusters.values().index(k_opt)]
         ax3.text(0., 0.,
-                 "The optimal number of clusters is " + str(kopt) + ".\n (You have decided to ignore Kopt=2 clusters.)",
+                 "The optimal number of clusters is " + str(kopt) + ".\n (You "
+                 " have decided to ignore Kopt=2 clusters.)",
                  color="red")
     else:
         ax3.text(0., 0.,

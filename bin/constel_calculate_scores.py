@@ -10,7 +10,7 @@
 
 """
 This script does the following:
-* 
+*
 
 Main dependencies: PyAims library
 
@@ -25,7 +25,6 @@ Author: Sandrine Lefranc, 2015
 import os
 import sys
 import json
-import numpy
 import argparse
 import textwrap
 from matplotlib import pyplot
@@ -36,7 +35,6 @@ from soma import aims
 
 # constel module
 try:
-    import constel.lib.clustervalidity as cv
     from constel.lib.clustering.clusterstools import entropy
     import constel.lib.measuringtools as measure
     from constel.lib.misctools import sameNbElements
@@ -65,24 +63,30 @@ def parse_args(argv):
             """))
 
     # adding arguments
-    parser.add_argument("cortical_parcellation_1", type=str,
-                        help="Cortical parcellation resulting from clustering"
-                        " algorithm.")
-    parser.add_argument("cortical_parcellation_2", type=str,
-                        help="Cortical parcellation resulting from clustering"
-                        " algorithm.")
-    parser.add_argument("timestep_max", type=int,
-                        help="The max number of clusters.")
-    parser.add_argument("outputdir", type=str,
-                        help="The results will write in this PDF file.")
-    parser.add_argument("title", type=str,
-                        help="The title of the pdf file.")
-    parser.add_argument("cortical_region", type=str,
-                        help="The study cortical region.")
-    parser.add_argument("-s", "--scaley", type=mylist, dest="ybound",
-                        help="Do the scale given on the axe Y.")
-    parser.add_argument("-r", "--removek2", action="store_true", dest="ignore_k2",
-                        help="Ignore K=2 in the research of the optimal number of clusters.")
+    parser.add_argument(
+        "cortical_parcellation_1", type=str,
+        help="Cortical parcellation resulting from clustering algorithm.")
+    parser.add_argument(
+        "cortical_parcellation_2", type=str,
+        help="Cortical parcellation resulting from clustering algorithm.")
+    parser.add_argument(
+        "timestep_max", type=int,
+        help="The max number of clusters.")
+    parser.add_argument(
+        "outputdir", type=str,
+        help="The results will write in this PDF file.")
+    parser.add_argument(
+        "title", type=str,
+        help="The title of the pdf file.")
+    parser.add_argument(
+        "cortical_region", type=str,
+        help="The study cortical region.")
+    parser.add_argument(
+        "-s", "--scaley", type=mylist, dest="ybound",
+        help="Do the scale given on the axe Y.")
+    parser.add_argument(
+        "-r", "--removek2", action="store_true", dest="ignore_k2",
+        help="Ignore K=2 in the research of the optimal number of clusters.")
 
     # parsing arguments
     return parser, parser.parse_args(argv)
@@ -93,12 +97,13 @@ def mkdir_path(path):
         os.makedirs(path)
 
 
-def create_page(title, measures, name_y, cortical_region, ybound=[0., 1.], ignore_k2=False):
+def create_page(title, measures, name_y, cortical_region, ybound=[0., 1.],
+                ignore_k2=False):
     """
     """
     # Create a figure instance (ie. a new page)
     fig = pyplot.figure()
-    
+
     # Add a centered title to the figure
     fig.suptitle(title,
                  fontsize=14,
@@ -111,11 +116,11 @@ def create_page(title, measures, name_y, cortical_region, ybound=[0., 1.], ignor
                        title=cortical_region,
                        color_cycle='g',
                        autoscale_on=False,
-                       ybound=ybound, 
+                       ybound=ybound,
                        xbound=[2, len(measures) + 1])
     ax2 = fig.add_axes([0.1, 0.1, 0.7, 0.2])
     ax3 = fig.add_axes([0.55, 0.55, 0.55, 0.2])
-    
+
     tvals = []
     tkeys = []
     tkeys.append("K")
@@ -137,9 +142,9 @@ def create_page(title, measures, name_y, cortical_region, ybound=[0., 1.], ignor
     kopt = dict_clusters.keys()[dict_clusters.values().index(k_opt)]
 
     ax1.plot(dict_clusters.keys(), dict_clusters.values(), "k",
-                 color="red",
-                 linewidth=3)
-    
+             color="red",
+             linewidth=3)
+
     # put a grid on the curve
     ax1.grid(True)
 
@@ -150,8 +155,13 @@ def create_page(title, measures, name_y, cortical_region, ybound=[0., 1.], ignor
         del dict_clusters[kopt]
         k_opt = max(dict_clusters.values())
         kopt = dict_clusters.keys()[dict_clusters.values().index(k_opt)]
+        ax1.annotate("kopt",
+                     xy=(kopt, k_opt),
+                     xytext=(kopt + 0.5, k_opt + 0.05),
+                     arrowprops=dict(facecolor='black', shrink=0.05),)
         ax3.text(0., 0.,
-                 "The optimal number of clusters is " + str(kopt) + ".\n (You have decided to ignore Kopt=2 clusters.)",
+                 "The optimal number of clusters is " + str(kopt) + ".\n (You"
+                 " have decided to ignore Kopt=2 clusters.)",
                  color="red")
     else:
         ax1.plot(dict_clusters.keys(), dict_clusters.values(), "k",
@@ -160,10 +170,8 @@ def create_page(title, measures, name_y, cortical_region, ybound=[0., 1.], ignor
         ax3.text(0., 0.,
                  "The optimal number of clusters is " + str(kopt) + ".",
                  color="red")
-    
+
     ax3.axis("off")
-    
-    
 
 
 #----------------------------Main program--------------------------------------
@@ -227,7 +235,7 @@ def main():
         homogeneity.append(homog)
         completeness.append(compl)
         v_measure.append(v)
-    
+
     all_measures.append(randindex_values)
     all_measures.append(cramer_values)
     all_measures.append(mutualinformation_values)
@@ -236,8 +244,8 @@ def main():
     all_measures.append(v_measure)
 
     scores = ["Rand Index", "Cramer_V", "Mutual Information",
-         "Homogeneity", "Completeness", "V_measure"]
-    
+              "Homogeneity", "Completeness", "V_measure"]
+
     # the PDF document
     pp = PdfPages(ofile + ".pdf")
 
@@ -251,7 +259,7 @@ def main():
                     args.ignore_k2)
         # Done with the page
         pp.savefig()
-    
+
     # Write the PDF document to the disk
     pp.close()
 
