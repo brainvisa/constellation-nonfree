@@ -12,7 +12,7 @@
 This script does the following:
 *
 
-Main dependencies:
+Main dependencies: PyAims library
 
 Author: Sandrine Lefranc, 2015
 """
@@ -21,29 +21,32 @@ Author: Sandrine Lefranc, 2015
 #----------------------------Imports-------------------------------------------
 
 
-# python system modules
+# system module
 import os
 import sys
-import numpy
+import json
 import argparse
 import textwrap
-
-# scipy module
-from scipy import stats
+from matplotlib import pyplot
+from matplotlib.backends.backend_pdf import PdfPages
 
 # soma module
 from soma import aims
 
-# pycluster module
-import Pycluster as pc
-
 # constel module
-import constel.lib.clustervalidity as cv
-from matplotlib import pyplot
-from matplotlib.backends.backend_pdf import PdfPages
+try:
+    from constel.lib.clustering.clusterstools import entropy
+    import constel.lib.measuringtools as measure
+    from constel.lib.misctools import sameNbElements
+except:
+    pass
 
 
 #----------------------------Functions-----------------------------------------
+
+
+def mylist(string):
+    return json.loads(string)
 
 
 def parse_args(argv):
@@ -54,30 +57,44 @@ def parse_args(argv):
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent("""\
             -------------------------------------------------------------------
-            Cluster criterion: David-Bouldin Index, Dunn Index and
-            Calinski-Harabasz Index.
+            Calculate the differents scores from time textures in order to find
+            the optimal number of clusters.
             -------------------------------------------------------------------
             """))
 
     # adding arguments
     parser.add_argument(
-        'matrix', type=str,
-        help='Reduced connectivity matrix (Ndim, Nsample)')
+        "cortical_parcellation_1", type=str,
+        help="Cortical parcellation resulting from clustering algorithm.")
+    parser.add_argument(
+        "cortical_parcellation_2", type=str,
+        help="Cortical parcellation resulting from clustering algorithm.")
+    parser.add_argument(
+        "timestep_max", type=int,
+        help="The max number of clusters.")
+    parser.add_argument(
+        "outputdir", type=str,
+        help="The results will write in this PDF file.")
+    parser.add_argument(
+        "title", type=str,
+        help="The title of the pdf file.")
     parser.add_argument(
         "cortical_region", type=str,
         help="The study cortical region.")
     parser.add_argument(
-        'nbiter', type=int,
-        help='Number of iterations of same kmedoid')
+        "-s", "--scaley", type=mylist, dest="ybound",
+        help="Do the scale given on the axe Y.")
     parser.add_argument(
-        'kmax', type=int,
-        help='K max for the clustering')
-    parser.add_argument(
-        "ofile", type=str,
-        help='Validity indexes file')
+        "-r", "--removek2", action="store_true", dest="ignore_k2",
+        help="Ignore K=2 in the research of the optimal number of clusters.")
 
     # parsing arguments
     return parser, parser.parse_args(argv)
+
+
+def mkdir_path(path):
+    if not os.access(path, os.F_OK):
+        os.makedirs(path)
 
 
 def create_page(title, measures, name_y, cortical_region, ybound=[0., 1.],
@@ -157,100 +174,94 @@ def create_page(title, measures, name_y, cortical_region, ybound=[0., 1.],
     ax3.axis("off")
 
 
+#----------------------------Main program--------------------------------------
+
+
 def main():
-    """Execute the command to create and write ...
-    """
-    # Load the arguments of parser (delete script name: sys.arg[0])
+    # load the arguments of parser (delete script name: sys.arg[0])
     arguments = sys.argv[1:]
     parser, args = parse_args(arguments)
 
-    # load the matrix file
-    matrix = aims.read(args.matrix)
+    # directory for all validation results organized by gyrus
+    odir = os.path.join(args.outputdir, "validation")
+    mkdir_path(odir)
 
-    # transpose the matrix
-    feat = numpy.asarray(matrix)[:, :, 0, 0].T
+    # directory for all measures
+    ofile = os.path.join(odir, args.title)
 
-    Nsample = feat.shape[0]
-    #Ndim = feat.shape[1]
-    #print 'Number of samples: ', Nsample, 'and Dimension: ', Ndim
+    # read clustering texture (aims)
+    c1 = aims.read(args.cortical_parcellation_1)
+    c2 = aims.read(args.cortical_parcellation_2)
 
-    nbIter = args.nbiter
-    kmax = args.kmax
-
-    distance1 = pc.distancematrix(feat, dist='e')
-
-    print 'Euclidean distance at power 2'
-    distMat1 = [numpy.array([])]
-    for i in range(1, feat.shape[0]):
-        distMat1.append((distance1[i] ** 2).copy())
-
-    print 'Converting distance matrix'
-    distMat = numpy.zeros((Nsample, Nsample))
-    for i in range(1, Nsample):
-        for j in range(0, i):
-            distMat[i, j] = distMat1[i][j]
-            distMat[j, i] = distMat1[i][j]
-    Nsample = distMat.shape[0]
-    print 'There are', Nsample, 'samples'
-
-    sDunn = numpy.zeros(kmax + 1)
-    sDB = numpy.zeros(kmax + 1)
-    sCH = numpy.zeros(kmax + 1)
-
-    for k in range(kmax):
-        print 'Runnning K-medoids with K = ', k
-        uniclusterid, unierror, uninfound = pc.kmedoids(distMat, k + 1, nbIter)
-        print 'getting validity indexes'
-        sDB[k + 1], sDunn[k + 1], sCH[k + 1] = cv.compute_cluster_validity(
-            distMat, uniclusterid, k + 1)
-        print 'sDB = ', sDB[k + 1]
-        print 'sDunn = ', sDunn[k + 1]
-        print 'sCH = ', sCH[k + 1]
-
-    sDB[1] = sDB.min()
-    sDB[0] = sDB.min()
-    sDunn[1] = sDunn.min()
-    sDunn[0] = sDunn.min()
-    sCH[1] = sCH.min()
-    sCH[0] = sCH.min()
-
-    print 'Normalizing scores'
-    sDB = (sDB - sDB.min()) / float(sDB.max() - sDB.min())
-    sDunn = (sDunn - sDunn.min()) / float(sDunn.max() - sDunn.min())
-    sCH = (sCH - sCH.min()) / float(sCH.max() - sCH.min())
-
-    # scores = numpy.vstack((sDB, sCH))
-    scores = numpy.vstack((sDunn, sDB))
-    scores = numpy.vstack((scores, sCH))
-
-    SFA = numpy.mean(scores, axis=0)
-    SFG = stats.mstats.gmean(scores, axis=0)
-    SFMed = numpy.median(scores, axis=0)
-
+    # calculate measure between two clustering (1 and 2)
+    randindex_values = []
+    cramer_values = []
+    mutualinformation_values = []
+    homogeneity = []
+    completeness = []
+    v_measure = []
     all_measures = []
-    for element in (sDB, sDunn, sCH, SFA, SFG, SFMed):
-        all_measures.append(element)
+    for i in range(2, args.timestep_max + 1):
+        # list of labels (1 and 2)
+        labels1 = c1[i].arraydata()
+        labels2 = c2[i].arraydata()
 
-    scores = ["Davies Bouldin Index", "Dunn Index", "Calinski Harabasz Index",
-              "SFA", "SFG", "SFMed"]
+        # keep the same number of elements
+        l1, l2 = sameNbElements(labels1, labels2)
+
+        # measure value for K
+        ri = measure.rand_index(l1, l2)
+        cv = measure.cramer_v(l1, l2)
+        mi = measure.mutual_information(l1, l2)
+
+        # calculate entropy for each clustering
+        entropy1 = entropy(l1)
+        entropy2 = entropy(l2)
+
+        # calculate homogeneity and completeness
+        homog = mi / (entropy1)
+        compl = mi / (entropy2)
+
+        # calculate V measure: equivalent to the mutual information
+        if homog + compl == 0.0:
+            v = 0.0
+        else:
+            v = (2.0 * homog * compl / (homog + compl))
+
+        # list of measure values for K = 2:kmax
+        randindex_values.append(ri)
+        cramer_values.append(cv)
+        mutualinformation_values.append(mi)
+        homogeneity.append(homog)
+        completeness.append(compl)
+        v_measure.append(v)
+
+    all_measures.append(randindex_values)
+    all_measures.append(cramer_values)
+    all_measures.append(mutualinformation_values)
+    all_measures.append(homogeneity)
+    all_measures.append(completeness)
+    all_measures.append(v_measure)
+
+    scores = ["Rand Index", "Cramer_V", "Mutual Information",
+              "Homogeneity", "Completeness", "V_measure"]
 
     # the PDF document
-    pp = PdfPages(args.ofile)
+    pp = PdfPages(ofile + ".pdf")
 
     for idx, measures in enumerate(all_measures):
-        title_page = scores[idx] + ": \n" + os.path.basename(args.matrix)
+        title_page = scores[idx] + ": " + args.title
         create_page(title_page,
                     measures,
                     scores[idx],
-                    args.cortical_region)
+                    args.cortical_region,
+                    args.ybound,
+                    args.ignore_k2)
         # Done with the page
         pp.savefig()
 
     # Write the PDF document to the disk
     pp.close()
-
-
-#----------------------------Main program--------------------------------------
 
 
 if __name__ == "__main__":
