@@ -1,43 +1,181 @@
 #!/usr/bin/env python
+###############################################################################
+# This software and supporting documentation are distributed by CEA/NeuroSpin,
+# Batiment 145, 91191 Gif-sur-Yvette cedex, France. This software is governed
+# by the CeCILL license version 2 under French law and abiding by the rules of
+# distribution of free software. You can  use, modify and/or redistribute the
+# software under the terms of the CeCILL license version 2 as circulated by
+# CEA, CNRS and INRIA at the following URL "http://www.cecill.info".
+###############################################################################
 
-from optparse import OptionParser
-import Pycluster as pc
-from soma import aims
-from scipy import stats
-import numpy
+"""
+This script does the following:
+*
+
+Main dependencies:
+
+Author: Sandrine Lefranc, 2015
+"""
+
+
+#----------------------------Imports-------------------------------------------
+
+
+# python system modules
+import os
 import sys
+import numpy
+import argparse
+import textwrap
 
+# scipy module
+from scipy import stats
+
+# soma module
+from soma import aims
+
+# pycluster module
+import Pycluster as pc
+
+# constel module
 import constel.lib.clustervalidity as cv
+from matplotlib import pyplot
+from matplotlib.backends.backend_pdf import PdfPages
 
 
-def parseOpts(argv):
-    description = 'Cluster criterion: David-Bouldin Index, Dunn Index and Calinski-Harabasz Index.'
+#----------------------------Functions-----------------------------------------
 
-    parser = OptionParser(description)
-    parser.add_option('-m', '--matrix', dest='matrix',
-                      help='Reduced connectivity matrix (Ndim, Nsample)')
-    parser.add_option('-n', '--nbiter', dest='nbiter',
-                      help='Number of iterations of same kmedoid')
-    parser.add_option('-k', '--kmax', dest='kmax',
-                      help='K max for the clustering')
-    parser.add_option('-f', '--file', dest='indexFile',
-                      help='Validity indexes file')
 
+def parse_args(argv):
+    """Parses the given list of arguments."""
+
+    # creating a parser
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=textwrap.dedent("""\
+            -------------------------------------------------------------------
+            Cluster criterion: David-Bouldin Index, Dunn Index and
+            Calinski-Harabasz Index.
+            -------------------------------------------------------------------
+            """))
+
+    # adding arguments
+    parser.add_argument(
+        'matrix', type=str,
+        help='Reduced connectivity matrix (Ndim, Nsample)')
+    parser.add_argument(
+        "cortical_region", type=str,
+        help="The study cortical region.")
+    parser.add_argument(
+        'nbiter', type=int,
+        help='Number of iterations of same kmedoid')
+    parser.add_argument(
+        'kmax', type=int,
+        help='K max for the clustering')
+    parser.add_argument(
+        "ofile", type=str,
+        help='Validity indexes file')
+
+    # parsing arguments
     return parser, parser.parse_args(argv)
 
 
+def create_page(title, measures, name_y, cortical_region, ybound=[0., 1.],
+                ignore_k2=False):
+    """
+    """
+    # Create a figure instance (ie. a new page)
+    fig = pyplot.figure()
+
+    # Add a centered title to the figure
+    fig.suptitle(title,
+                 fontsize=14,
+                 fontweight="bold",
+                 color="blue")
+
+    ax1 = fig.add_axes([0.1, 0.35, 0.35, 0.5],
+                       xlabel="Clusters (K)",
+                       ylabel=name_y,
+                       title=cortical_region,
+                       color_cycle='g',
+                       autoscale_on=False,
+                       ybound=ybound,
+                       xbound=[2, len(measures) + 1])
+    ax2 = fig.add_axes([0.1, 0.1, 0.7, 0.2])
+    ax3 = fig.add_axes([0.55, 0.55, 0.55, 0.2])
+
+    tvals = []
+    tkeys = []
+    tkeys.append("K")
+    tvals.append(name_y + " (%)")
+    dict_clusters = {}
+    for idx, k in enumerate(range(len(measures))):
+        tkeys.append(idx + 2)
+        tvals.append(round(measures[idx], 4) * 100)
+        dict_clusters[idx + 2] = measures[idx]
+
+    table = []
+    table.append(tkeys)
+    table.append(tvals)
+
+    # give the larger ASW
+    k_opt = max(dict_clusters.values())
+
+    # search the id of the optimal number of clusters
+    kopt = dict_clusters.keys()[dict_clusters.values().index(k_opt)]
+
+    ax1.plot(dict_clusters.keys(), dict_clusters.values(), "k",
+             color="red",
+             linewidth=3)
+
+    # put a grid on the curve
+    ax1.grid(True)
+
+    ax2.table(cellText=table, loc="center")
+    ax2.axis("off")
+
+    if ignore_k2 and kopt == 2:
+        del dict_clusters[kopt]
+        k_opt = max(dict_clusters.values())
+        kopt = dict_clusters.keys()[dict_clusters.values().index(k_opt)]
+        ax1.annotate("kopt",
+                     xy=(kopt, k_opt),
+                     xytext=(kopt + 0.5, k_opt + 0.05),
+                     arrowprops=dict(facecolor='black', shrink=0.05),)
+        ax3.text(0., 0.,
+                 "The optimal number of clusters is " + str(kopt) + ".\n (You"
+                 " have decided to ignore Kopt=2 clusters.)",
+                 color="red")
+    else:
+        ax1.plot(dict_clusters.keys(), dict_clusters.values(), "k",
+                 color="red",
+                 linewidth=3)
+        ax3.text(0., 0.,
+                 "The optimal number of clusters is " + str(kopt) + ".",
+                 color="red")
+
+    ax3.axis("off")
+
+
 def main():
-    parser, (options, args) = parseOpts(sys.argv)
+    """Execute the command to create and write ...
+    """
+    # Load the arguments of parser (delete script name: sys.arg[0])
+    arguments = sys.argv[1:]
+    parser, args = parse_args(arguments)
 
-    matrixFile = str(options.matrix)
-    matrix = aims.read(options.matrix)
-    feat = numpy.asarray(matrix)[:, :, 0, 0].transpose()
+    # load the matrix file
+    matrix = aims.read(args.matrix)
+
+    # transpose the matrix
+    feat = numpy.asarray(matrix)[:, :, 0, 0].T
+
     Nsample = feat.shape[0]
-    Ndim = feat.shape[1]
-    print 'Number of samples: ', Nsample, 'and Dimension: ', Ndim
+    #Ndim = feat.shape[1]
+    #print 'Number of samples: ', Nsample, 'and Dimension: ', Ndim
 
-    nbIter = options.nbiter
-    kmax = options.kmax
+    nbIter = args.nbiter
+    kmax = args.kmax
 
     distance1 = pc.distancematrix(feat, dist='e')
 
@@ -81,7 +219,7 @@ def main():
     sDunn = (sDunn - sDunn.min()) / float(sDunn.max() - sDunn.min())
     sCH = (sCH - sCH.min()) / float(sCH.max() - sCH.min())
 
-    # cores = numpy.vstack((sDB, sCH))
+    # scores = numpy.vstack((sDB, sCH))
     scores = numpy.vstack((sDunn, sDB))
     scores = numpy.vstack((scores, sCH))
 
@@ -89,27 +227,31 @@ def main():
     SFG = stats.mstats.gmean(scores, axis=0)
     SFMed = numpy.median(scores, axis=0)
 
-    fileR = open(options.indexFile, 'w')
-    fileR.write('Reduced connectivity matrix is ' + matrixFile + '\n')
-    linesDB = ''
-    linesDunn = ''
-    linesCH = ''
-    lineSFA = ''
-    lineSFG = ''
-    lineSFMed = ''
+    all_measures = []
+    for element in (sDB, sDunn, sCH, SFA, SFG, SFMed):
+        all_measures.append(element)
 
-    linesDB = linesDB + str(sDB) + ' '
-    linesDunn = linesDunn + str(sDunn) + ' '
-    linesCH = linesCH + str(sCH) + ' '
-    lineSFA = lineSFA + str(SFA) + ' '
-    lineSFG = lineSFG + str(SFG) + ''
-    lineSFMed = lineSFMed + str(SFMed) + ''
+    scores = ["Davies Bouldin Index", "Dunn Index", "Calinski Harabasz Index",
+              "SFA", "SFG", "SFMed"]
 
-    fileR.write('Clustering validity index --> sDB: ' + linesDB + '\n')
-    fileR.write('Clustering validity index --> sDunn: ' + linesDunn + '\n')
-    fileR.write('Clustering validity index --> sCH: ' + linesCH + '\n')
-    fileR.write('Fusion-based scores --> SFA: ' + lineSFA + '\n')
-    fileR.write('Fusion-based scores --> SFG: ' + lineSFG + '\n')
-    fileR.write('Fusion-based scores --> SMed: ' + lineSFMed + '\n')
+    # the PDF document
+    pp = PdfPages(args.ofile)
 
-    fileR.close()
+    for idx, measures in enumerate(all_measures):
+        title_page = scores[idx] + ": \n" + os.path.basename(args.matrix)
+        create_page(title_page,
+                    measures,
+                    scores[idx],
+                    args.cortical_region)
+        # Done with the page
+        pp.savefig()
+
+    # Write the PDF document to the disk
+    pp.close()
+
+
+#----------------------------Main program--------------------------------------
+
+
+if __name__ == "__main__":
+    main()
