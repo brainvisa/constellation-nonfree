@@ -10,10 +10,9 @@
 
 """
 This script does the following:
-*
-*
+* calculate the percentage on the rows of a matrix.
 
-Main dependencies: PyAims library
+Main dependencies:
 
 Author: Sandrine Lefranc, 2014
 """
@@ -23,9 +22,6 @@ Author: Sandrine Lefranc, 2014
 
 # system module
 import numpy
-
-# Matplotlib module
-import matplotlib.pyplot as plt
 
 
 #----------------------------Functions-----------------------------------------
@@ -37,10 +33,12 @@ def calculate_percentage(matrix):
     Parameters
     ----------
         matrix: numpy.array (mandatory)
+            The connectivity matrix.
 
-    Return
-    ------
+    Returns
+    -------
         percent_matrix: numpy.array
+            The table with the percentages of each line of the matrix.
     """
     # tuple of array dimensions
     ndmatrix = matrix.shape
@@ -57,108 +55,3 @@ def calculate_percentage(matrix):
             percent_matrix[i][idx] = percent
 
     return percent_matrix
-
-
-def sum_list(list_elements, start, end):
-    """ Calculate the sum of the list elements from start/end list.
-
-    Parameters
-    ----------
-    list_elements:
-        give a list of elements
-    start:
-        first item in the list
-    end:
-        last item in the list
-
-    Return
-    ------
-    s:
-        sum of the list item
-    """
-    s = 0
-    for k in xrange(start, end + 1):
-        s += list_elements[k]
-    return s
-
-
-def draw_line(x, y, marker1, xm, ym, marker2):
-    """ Draw a broken line passing through the points whose list of
-    coordinates is given.
-
-    Parameters
-    ----------
-    x:
-        list of abscissa fir the input data
-    y:
-        list of ordinate for the input data
-    marker1:
-        marker and color of the input curve
-    xm:
-        list of abscissa for the moving average
-    ym:
-        list of ordinate for the movinf average
-    marker2:
-        marker and color of the moving average curve
-
-    Return
-    ------
-    plot the curves on the same graphic
-    """
-    plt.title('Moving Average')
-    plt.xlabel('Coordinates on isomap axis')
-    plt.ylabel('Subjects')
-    plt.plot(x, y, marker1, xm, ym, marker2)
-    return plt.show()
-
-
-def moving_average(x, y, k):
-    """ Calculate the moving average.
-
-    Parameters
-    ----------
-    x:
-        list of abscissa
-    y:
-        list of ordinate
-    k:
-        moving average of order k
-
-    Return
-    ------
-    xm, ym:
-        values coordinates of the moving average
-    """
-    xm = []
-    ym = []
-    n = len(x)
-    if k % 2 == 0:
-        p = k // 2
-        for j in xrange(p, n - p):
-            ym += [(0.5 * y[j - p] + sum_list(y, j - p + 1, j + p - 1)
-                   + 0.5 * y[j + p]) / k]
-            xm += [x(j)]
-    else:
-        p = (k - 1) // 2
-        for j in xrange(p, n - p):
-            ym += [(sum_list(y, j - p, j + p)) / k]
-            xm += [x[j]]
-    return xm, ym
-
-
-def overlap(x, y):
-    i = 0
-    j = 0
-    c = 0
-    len_x = len(x)
-    len_y = len(y)
-    while i < len_x and j < len_y:
-        if x[i] > y[j]:
-            j += 1
-        elif x[i] < y[j]:
-            i += 1
-        else:  # x[i] == y[j]
-            c += 1
-            i += 1
-            j += 1
-    return c

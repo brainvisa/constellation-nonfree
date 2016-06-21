@@ -1,17 +1,43 @@
-# -*- coding: utf-8 -*-
+###############################################################################
+# This software and supporting documentation are distributed by CEA/NeuroSpin,
+# Batiment 145, 91191 Gif-sur-Yvette cedex, France. This software is governed
+# by the CeCILL license version 2 under French law and abiding by the rules of
+# distribution of free software. You can  use, modify and/or redistribute the
+# software under the terms of the CeCILL license version 2 as circulated by
+# CEA, CNRS and INRIA at the following URL "http://www.cecill.info".
+###############################################################################
 
-# BrainVisa module
+"""
+This script does the following:
+*
+
+Main dependencies:
+
+Author:
+"""
+
+
+#----------------------------Imports-------------------------------------------
+
+
+# soma module
 from soma import aims
 
-def mergeBundlesGraphAndROIsGraph(roi_graph, bundles_graph,
-        bundles_to_ROIs_motion, nodes_names_mapping={}):
-    '''Merge Aims ROIs graph with Aims bundles graph.
-    
-    Parameters:
-    -----------
-        roi_graph: roi_name (str), 
-                   roi_label (int), 
-                   roi_mesh (mesh), 
+
+#----------------------------Functions-----------------------------------------
+
+
+def merge_bundlegraph_and_roigraph(roi_graph,
+                                   bundles_graph,
+                                   bundles_to_ROIs_motion,
+                                   nodes_names_mapping={}):
+    """Merge Aims ROIs graph with Aims bundles graph.
+
+    Parameters
+    ----------
+        roi_graph: roi_name (str),
+                   roi_label (int),
+                   roi_mesh (mesh),
                    aims_roi (bucket)
         bundles_graph:
         bundles_to_ROIs_motion: transformation matrix (dw to t1)
@@ -21,10 +47,10 @@ def mergeBundlesGraphAndROIsGraph(roi_graph, bundles_graph,
             attribute (which uses int values).
             Names not in this map are not translated and kept as is.
 
-    Result:
+    Return
     -------
         roi_graph: add to roi_graph bundles as edges between nodes (=ROIs)
-    '''
+    """
 
     # associated ROIs
     roi_vertices = roi_graph.vertices().list()
@@ -32,16 +58,18 @@ def mergeBundlesGraphAndROIsGraph(roi_graph, bundles_graph,
 
     for i in xrange(roi_vertices.__len__()):
         # if a given key is available, we keep the vertex
-        if roi_vertices[i].has_key('roi_label'): # and roi_vertices[i]['roi_label'] != 0:
-            roi_vertices_labels[int(roi_vertices[i]['roi_label'])] = roi_vertices[i]
+        # and roi_vertices[i]['roi_label'] != 0:
+        if "roi_label" in roi_vertices[i]:
+            roi_vertices_labels[
+                int(roi_vertices[i]['roi_label'])] = roi_vertices[i]
     del roi_vertices
 
-    # creating a trash graph 
+    # creating a trash graph
     # (What it is for, just to create roi_vertices_labels[0] ? )
     # -> for relations with the background node
     other_name = nodes_names_mapping.get('others')
     others_vertex = None
-    if other_name is not None:
+    if other_name:
         others_vertex = roi_vertices_labels.get(other_name)
     if others_vertex is None:
         others_vertex = roi_graph.addVertex('roi')
@@ -60,12 +88,11 @@ def mergeBundlesGraphAndROIsGraph(roi_graph, bundles_graph,
         roi_1 = nodes_names_mapping.get(roi_1, roi_1)
         roi_2 = nodes_names_mapping.get(roi_2, roi_2)
         if roi_1 != roi_2:
-            edge = roi_graph.addEdge(roi_vertices_labels[roi_1], 
-                                     roi_vertices_labels[roi_2], 
+            edge = roi_graph.addEdge(roi_vertices_labels[roi_1],
+                                     roi_vertices_labels[roi_2],
                                      'roi_junction')
-            fiber_mesh =  bundles['aims_Tmtktri']
-            aims.SurfaceManip.meshTransform(fiber_mesh.get(), 
+            fiber_mesh = bundles['aims_Tmtktri']
+            aims.SurfaceManip.meshTransform(fiber_mesh.get(),
                                             bundles_to_ROIs_motion)
-            aims.GraphManip.storeAims(roi_graph, edge.get(), 
+            aims.GraphManip.storeAims(roi_graph, edge.get(),
                                       'roi_mesh_junction', fiber_mesh)
-

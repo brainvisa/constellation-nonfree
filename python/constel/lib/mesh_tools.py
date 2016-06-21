@@ -1,12 +1,43 @@
 #!/usr/bin/env python
+###############################################################################
+# This software and supporting documentation are distributed by CEA/NeuroSpin,
+# Batiment 145, 91191 Gif-sur-Yvette cedex, France. This software is governed
+# by the CeCILL license version 2 under French law and abiding by the rules of
+# distribution of free software. You can  use, modify and/or redistribute the
+# software under the terms of the CeCILL license version 2 as circulated by
+# CEA, CNRS and INRIA at the following URL "http://www.cecill.info".
+###############################################################################
+
 """
-@author: sl236442
+This script does the following:
+* check if two lists are the same number of elements.
+* check no empty list.
+
+Main dependencies:
+
+Author: Sandrine Lefranc, 2014
 """
 
+#----------------------------Imports-------------------------------------------
+
+
+# system module
 import numpy
 
+
+#----------------------------Function------------------------------------------
+
+
 def frame(data):
-    #data=numpy.array(data)
+    """
+    
+    Parameters
+    ----------
+        data: (mandatory)
+    Returns
+    -------
+        new:
+    """
     x = data.shape[1] + 2
     y = data.shape[0] + 2
     new = [x * [0]] * y
@@ -20,6 +51,16 @@ def frame(data):
 
 
 def dilatation(img):
+    """Dilatation of the image.
+    
+    Parameters
+    ----------
+        img: (mandatory)
+
+    Returns
+    -------
+        dilate
+    """
     dilate = [0] * (img.shape[1] - 2) * (img.shape[0] - 2)
     h = 0
     for i in range(1, img.shape[0] - 1):
@@ -37,6 +78,16 @@ def dilatation(img):
 
 
 def erosion(img):
+    """Erosion of the image.
+    
+    Parameters
+    ----------
+        img: (mandatory)
+
+    Returns
+    -------
+        erode
+    """
     erode = [0] * (img.shape[1] - 2) * (img.shape[0] - 2)
     h = 0
     for i in range(1, img.shape[0] - 1):
@@ -54,6 +105,19 @@ def erosion(img):
 
 def verts_to_bbox(verts):
     """Determine the min and max of each axis.
+    
+    Parameters
+    ----------
+        verts: (mandatory)
+
+    Returns
+    -------
+        min_x: float
+        min_y: float
+        min_z: float
+        max_x: float
+        max_y: float
+        max_z: float
     """
     xs = [v[0] for v in verts]
     ys = [v[1] for v in verts]
