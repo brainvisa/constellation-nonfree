@@ -195,6 +195,8 @@ def euclidianDistance(v1, v2):
 
 
 def euclidianDistanceMatrix(matrix):
+    """
+    """
     (n, p) = matrix.shape
     euclidian_dist_matrix = numpy.zeros((n, n), dtype=numpy.float)
     for i in xrange(n):
@@ -308,7 +310,6 @@ def write_matrix2csv(matrix, csvfilename):
                     dict[str(element)] = m + 1
                 else:
                     dict[str(element)] = matrix[m][count - 1]
-                    print dict
                 count += 1
             writer.writerow(dict)
             c -= 1
@@ -316,6 +317,8 @@ def write_matrix2csv(matrix, csvfilename):
 
 
 def contingency_matrix(labels1, labels2):
+    """
+    """
     classes = list(set(labels1))
     n = len(classes)
     contingency_matrix = numpy.array([zip(
@@ -327,8 +330,15 @@ def contingency_matrix(labels1, labels2):
 
 
 def partialWhiten(features):
-    """
-    Normalize the data (sigma = 1) per category.
+    """Normalize the data (sigma = 1) per category.
+    
+    Parameters
+    ----------
+        features
+
+    Returns
+    -------
+        white
     """
     dist = features[:, 0:6]
     direc = features[:, 6:12]
@@ -340,7 +350,11 @@ def partialWhiten(features):
     return white
 
 def save_normalization(filename):
-    """
+    """Save the normalization.
+    
+    Parameters
+    ----------
+    filename: str (mandatory)
     """
     matrix = aims.read(filename)
     mat = numpy.array(matrix)[:, :, 0, 0]

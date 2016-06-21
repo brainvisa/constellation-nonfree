@@ -370,6 +370,43 @@ def geodesic_gravity_center(mesh, parcellated_texture, region_name,
     return gravity_center_index
 
 
+def concatenate_texture(cortical_parcellations, time_step):
+    """Concatenate all the cortical parcellations on the same mesh.
+
+    Parameters
+    ----------
+    cortical_parcellations: list of str (mandatory)
+        List of the cortical parcellations of a subject.
+    timestep: list of int (mandatory)
+        List of all time step for the cortical parcellations.
+
+    Returns
+    -------
+    final_rseg: str
+        The complete cortical parcellation.
+    """
+    for idx, filename in enumerate(cortical_parcellations):
+        roiseg = aims.read(filename)
+        rseg = numpy.array(roiseg[time_step[idx]].arraydata())
+        if idx == 0:
+            tmp_rseg = rseg
+            max_time_step = max(rseg)
+        else:
+            l = numpy.unique(rseg)
+            if l[0] == 0:
+                labels = l.nonzero()[0][::-1]
+            else:
+                labels = l[::-1]
+            for label in labels:
+                rseg[rseg == label] = label + max_time_step
+            temp = tmp_rseg[:]
+            tmp_rseg = [x + y for x, y in zip(temp, rseg)]
+            max_time_step = max(rseg)
+    final_rseg = aims.TimeTexture_S16()
+    final_rseg[0].assign(tmp_rseg)
+    return final_rseg
+
+
 def create_relationship_region2neighbors(meshname, segname):
     """
     """
@@ -413,7 +450,7 @@ def create_relationship_region2neighbors(meshname, segname):
             dict_neighboors[texar[search]] = labels.tolist()
     for i in dict_neighboors.values():
         i.sort()
-    
+
     mintex = min(texar)
     maxtex = max(texar)
 
@@ -424,5 +461,5 @@ def create_relationship_region2neighbors(meshname, segname):
         if i not in dict_neighboors.keys():
             if i != (len(dict_neighboors.keys()) + 1):
                 dict_neighboors[i] = []
-    
+
     return dict_neighboors

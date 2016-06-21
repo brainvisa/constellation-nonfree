@@ -99,7 +99,6 @@ def generate_parent(length, colors, rules):
         state_id = random.randint(0, len(colors) - 1)
         child_states.append(colors[state_id])
     value = get_value(child_states, rules)
-    print type(Map(child_states, value))
     return Map(child_states, value)
 
 
