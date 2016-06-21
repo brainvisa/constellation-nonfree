@@ -65,7 +65,6 @@ def silhouette_sample(X, K):
             [numpy.mean(distance[i][ind]) for k,
              ind in enumerate(kIndices) if clusterid[i] != k])
     s = (b - a) / numpy.maximum(a, b)
-    print s
     # p.silhouette_plot(X, s, clusterid)
     return s
 
@@ -81,11 +80,11 @@ def silhouette_score(X, K):
 def compute_cluster_validity(distance, clusterid, K):
     """
     """
-    centers = clusterstools.getCenters(clusterid, K)
+    centers = clusterstools.get_centers(clusterid, K)
     distC = clusterstools.distToCenters(distance, centers, clusterid, K)
     sDB = 0
     sCH = 0
-    centAll = clusterstools.centroid(distance)
+    centAll = clusterstools.get_centroid(distance)
 
     Nsample = distance.shape[0]
 
