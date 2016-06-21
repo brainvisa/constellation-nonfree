@@ -8,11 +8,11 @@ import struct
 import os
 
 # scipy
-from scipy.cluster.hierarchy import fcluster
 import scipy
 import scipy.cluster.vq
 import scipy.spatial.distance
 dst = scipy.spatial.distance.euclidean
+from scipy.cluster.hierarchy import fcluster
 
 # fastcluster
 import fastcluster
@@ -274,12 +274,16 @@ def ward_method(dmat_file, n, output_dir, n_clusters):
         idx += list_iteration[j]
     f.close()
 
+    # save the dist_mat
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    output_distmat = output_dir + '/dist_mat.npy'
+    numpy.save(output_distmat, dist_mat)
+
     # compute linkage ward
     Z = fastcluster.linkage(dist_mat, method='ward', preserve_input=False)
 
     # save the dendrogram
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
     output_Z = output_dir + '/dendrogram.npy'
     numpy.save(output_Z, Z)
 
@@ -290,6 +294,10 @@ def ward_method(dmat_file, n, output_dir, n_clusters):
         clusters = fcluster(Z, criterion='maxclust', t=nb)
         clusterid.append(clusters)
     return clusterid
+    
+    # save the clusterid
+    output_clusterid = output_dir + '/clusterid.npy'
+    numpy.save(output_clusterid, clusterid)
 
 
 def calinski_harabasz_index(distance_matrix, cluster_id, kmax_clusters):
