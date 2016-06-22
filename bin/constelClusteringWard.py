@@ -21,7 +21,7 @@ from soma import aims
 
 # constel modules
 from constel.lib.clustering.clusterstools import ward_method
-from constel.lib.texturetools import texture_time
+from constel.lib.utils.texturetools import texture_time
 
 
 def parseOpts(argv):

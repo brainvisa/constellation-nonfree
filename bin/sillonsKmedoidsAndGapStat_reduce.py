@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import constel.lib.connmatrix.connmatrixtools as clcm
+import constel.lib.utils.matrixtools as clcm
 import constel.lib.clustering.clusterstools as clcc
 import scipy.spatial.distance as ssd
 import scipy.cluster.vq as scv

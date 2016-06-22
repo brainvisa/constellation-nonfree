@@ -24,7 +24,7 @@ from soma import aims
 from Pycluster import kmedoids
 
 # constel module
-from constel.lib.texturetools import texture_time
+from constel.lib.utils.texturetools import texture_time
 
 # SciPy library
 from scipy.spatial.distance import pdist, squareform

@@ -9,7 +9,7 @@ import sys
 import Pycluster as pc
 
 # constellation
-import constel.lib.connmatrix.connmatrixtools as clcm
+import constel.lib.utils.matrixtools as clcm
 from constel.lib.clustering.clusterstools import wcDist
 
 # scipy

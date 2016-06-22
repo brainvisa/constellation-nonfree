@@ -18,8 +18,8 @@ import argparse
 import sys
 
 # constel modules
-from constel.lib.texturetools import management_internal_connections
-from constel.lib.texturetools import normalize_profile
+from constel.lib.utils.texturetools import management_internal_connections
+from constel.lib.utils.texturetools import normalize_profile
 
 # soma module
 from soma import aims
