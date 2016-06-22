@@ -6,7 +6,7 @@ import numpy
 import sys
 
 try :
-  import constel.lib.validation.clustervalidity as cv
+  import constel.lib.evaluation.indices as cv
 except :
   pass
 
@@ -34,7 +34,7 @@ class MatplotlibFig(object):
         mainThreadActions().call(pylab.close, self._fig)
 
 def validate( self ):
-  import constel.lib.validation.clustervalidity as cv
+  import constel.lib.evaluation.indices as cv
 
 def parseOpts(argv):
     description = """Connectivity-based parcellation of the patch.

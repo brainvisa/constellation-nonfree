@@ -37,7 +37,7 @@ from soma import aims
 
 # constel module
 try:
-    import constel.lib.validation.clustervalidity as cv
+    import constel.lib.evaluation.indices as cv
 except:
     pass
 

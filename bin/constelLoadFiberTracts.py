@@ -14,7 +14,7 @@ import sys
 
 # constel module
 from constel.lib.utils.fibertools import load_fiber_tracts
-from constel.lib.misctools import check_no_empty_list
+from constel.lib.utils.misctools import check_no_empty_list
 
 
 def parseOpts(argv):

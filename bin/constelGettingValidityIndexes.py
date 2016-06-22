@@ -38,7 +38,7 @@ from soma import aims
 import Pycluster as pc
 
 # constel module
-import constel.lib.validation.clustervalidity as cv
+import constel.lib.evaluation.indices as cv
 from matplotlib import pyplot
 from matplotlib.backends.backend_pdf import PdfPages
 
