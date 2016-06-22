@@ -6,11 +6,11 @@ import numpy
 import sys
 
 try :
-  import constel.lib.clustervalidity as cv
+  import constel.lib.validation.clustervalidity as cv
 except :
   pass
 
-import constel.lib.plot as p
+
 
 import pylab
 
@@ -21,7 +21,7 @@ from soma import aims
 from Pycluster import kmedoids
 
 # constellation
-from constel.lib.texturetools import texture_time
+from constel.lib.utils.texturetools import texture_time
 
 # scipy
 from scipy.spatial.distance import pdist, squareform
@@ -34,7 +34,7 @@ class MatplotlibFig(object):
         mainThreadActions().call(pylab.close, self._fig)
 
 def validate( self ):
-  import constel.lib.clustervalidity as cv
+  import constel.lib.validation.clustervalidity as cv
 
 def parseOpts(argv):
     description = """Connectivity-based parcellation of the patch.
@@ -80,22 +80,35 @@ def main():
     reduced_matrix = aims.read(options.group_matrix)
     reduced_matrix = numpy.asarray(reduced_matrix)[:, :, 0, 0]
 
-    # generate the squareform distance matrix
-    distance_matrix = squareform(pdist(reduced_matrix, metric='euclidean'))
+    if options.study == 'avg':
+        # generate the squareform distance matrix
+        distance_matrix = squareform(pdist(reduced_matrix, metric='euclidean'))
     
-    # generate several array containing the number of the cluster to which 
-    # each item was assigned
-    # i.e., one array by given nclusters (number_clusters)
-    item_number = []
-    for number_clusters in range(2, options.kmax + 1):
-        # implements the k-medoids clustering algorithm (min of two clusters)
-        # **ref**: http://bonsai.hgc.jp/~mdehoon/software/cluster/cluster.pdf
-        clusterid, err, nfound = kmedoids(
-            distance_matrix, nclusters=number_clusters, npass=100)
-        # rename the clusters from 1 to kmax
-        for i, item in enumerate(numpy.unique(clusterid)):
-            clusterid[clusterid == item] = i + 1
-        item_number.append(clusterid)
+        # generate several array containing the number of the cluster to which 
+        # each item was assigned
+        # i.e., one array by given nclusters (number_clusters)
+        item_number = []
+        for number_clusters in range(2, options.kmax + 1):
+            # implements the k-medoids clustering algorithm (min of two clusters)
+            # **ref**: http://bonsai.hgc.jp/~mdehoon/software/cluster/cluster.pdf
+            clusterid, err, nfound = kmedoids(
+                distance_matrix, nclusters=number_clusters, npass=100)
+            # rename the clusters from 1 to kmax
+            for i, item in enumerate(numpy.unique(clusterid)):
+                clusterid[clusterid == item] = i + 1
+            item_number.append(clusterid)
+    else:
+        # compute the distance matrix
+        dmat = scipy.spatial.distance.pdist(reduced_matrix, 'euclidean')  
+        # compute linkage ward
+        Z = fastcluster.linkage(dmat, method='ward', preserve_input=False)
+        # labelization between 1 to nb
+        clusterid = []
+        for nb in range(1, n_clusters + 1):
+            print "Trying {nb} cluster(s)".format(nb=nb)
+            clusters = fcluster(Z, criterion='maxclust', t=nb)
+            clusterid.append(clusters)
+        
         
     #########################################################################
     #                        time texture of clusters                       #
@@ -105,7 +118,6 @@ def main():
     nb_vertices = mesh.vertex().size()
 
     min_index = 0
-    print options.patch
     for index, texture in enumerate(options.gyri_texture):
         # load a texture while identifying vertices of patch        
         tex = aims.read(texture)

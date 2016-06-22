@@ -4,7 +4,7 @@ import numpy
 import exceptions
 from math import log
 from scipy.misc import comb
-import constel.lib.connmatrix.connmatrixtools as clccm
+import constel.lib.utils.matrixtools as clccm
 
 
 def intersection(list1, list2):

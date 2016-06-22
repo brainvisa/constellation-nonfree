@@ -28,14 +28,14 @@ import sys
 from soma import aims
 
 try:
-    from constel.lib.texturetools import clean_gyri_texture, find_wrong_labels
+    from constel.lib.utils.texturetools import clean_gyri_texture, find_wrong_labels
 except:
     pass
 
 
 def validation():
     try:
-        from constel.lib.texturetools import clean_gyri_texture, \
+        from constel.lib.utils.texturetools import clean_gyri_texture, \
             find_wrong_labels
     except:
         raise ValidationError(
@@ -73,7 +73,7 @@ def main():
     parser, args = parse_args(arguments)
 
     # load the files with aims
-    tex = aims.read(args.tex)
+    tex = aims.read(args.gyriseg)
     mesh = aims.read(args.mesh)
 
     cont = True
@@ -87,7 +87,7 @@ def main():
         if len(wrong_labels) > 0:
             cont = True
     # write the file on the disk
-    aims.write(tex, args.otex)
+    aims.write(tex, args.ogyriseg)
 
 
 #----------------------------Main program--------------------------------------

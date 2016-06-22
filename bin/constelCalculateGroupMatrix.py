@@ -1,4 +1,25 @@
 #!/usr/bin/env python
+###############################################################################
+# This software and supporting documentation are distributed by CEA/NeuroSpin,
+# Batiment 145, 91191 Gif-sur-Yvette cedex, France. This software is governed
+# by the CeCILL license version 2 under French law and abiding by the rules of
+# distribution of free software. You can  use, modify and/or redistribute the
+# software under the terms of the CeCILL license version 2 as circulated by
+# CEA, CNRS and INRIA at the following URL "http://www.cecill.info".
+###############################################################################
+
+"""
+This script does the following:
+*
+
+Main dependencies: PyAims library
+
+Author: Sandrine Lefranc, 2015
+"""
+
+
+#----------------------------Imports-------------------------------------------
+
 
 # python system modules
 import sys
@@ -9,7 +30,10 @@ import optparse
 from soma import aims
 
 # constel
-from constel.lib.connmatrix.connmatrixtools import resize_matrix
+from constel.lib.utils.matrixtools import resize_matrix
+
+
+#----------------------------Functions-----------------------------------------
 
 
 def parseOpts(argv):
@@ -31,6 +55,9 @@ def parseOpts(argv):
                       help="Choice 'avg' or 'concat'")
 
     return parser, parser.parse_args(argv)
+
+
+#----------------------------Main program--------------------------------------
 
 
 def main():

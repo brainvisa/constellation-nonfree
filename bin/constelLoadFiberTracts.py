@@ -13,7 +13,7 @@ import optparse
 import sys
 
 # constel module
-from constel.lib.bundles.bundles_tools import load_fiber_tracts
+from constel.lib.utils.fibertools import load_fiber_tracts
 from constel.lib.misctools import check_no_empty_list
 
 

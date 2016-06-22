@@ -87,13 +87,13 @@ def main():
     
     # renumbers all the labels from 1
     otex = basinTex_ar
-    for i in xrange(len(otex_kept_labels)):
+    for i in range(len(otex_kept_labels)):
         current_label = otex_kept_labels[i]
         print "current label:", current_label, " new:", str(i + 1)
         otex[basinTex_ar == current_label] = i + 1
 
     # create a time texture object
-    aimstex = aims.TimeTexture_FLOAT()
+    aimstex = aims.TimeTexture_S16()
     aimstex[0].assign(otex)
 
     #filteredBasins = remove_labels(basins_tex, labelsToRemove_list)
