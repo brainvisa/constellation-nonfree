@@ -36,8 +36,8 @@ from soma import aims
 # constel module
 try:
     from constel.lib.clustering.clusterstools import entropy
-    import constel.lib.validation.measuringtools as measure
-    from constel.lib.misctools import sameNbElements
+    import constel.lib.evaluation.indices as measure
+    from constel.lib.utils.misctools import sameNbElements
 except:
     pass
 
