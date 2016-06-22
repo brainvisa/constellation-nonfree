@@ -35,6 +35,36 @@ from soma import aims
 #----------------------------Functions-----------------------------------------
 
 
+def calculate_percentage(matrix):
+    """Calculate a percentage on the rows of a matrix.
+
+    Parameters
+    ----------
+        matrix: numpy.array (mandatory)
+            The connectivity matrix.
+
+    Returns
+    -------
+        percent_matrix: numpy.array
+            The table with the percentages of each line of the matrix.
+    """
+    # tuple of array dimensions
+    ndmatrix = matrix.shape
+
+    # initialyze a matrix with the same size as input matrix
+    percent_matrix = numpy.zeros(
+        (ndmatrix[0], ndmatrix[1]), dtype=numpy.float32)
+
+    # work on the rows of the matrix
+    for i in range(ndmatrix[0]):
+        # each element of the rows is divided by total number
+        for idx, value in enumerate(matrix[i]):
+            percent = (value / sum(matrix[i])) * 100
+            percent_matrix[i][idx] = percent
+
+    return percent_matrix
+
+
 def resize_matrix(matrix, rows_length=100.0, cols_length=80.0):
     """Resize a matrix.
 

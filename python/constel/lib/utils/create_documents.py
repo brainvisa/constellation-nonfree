@@ -34,7 +34,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 from soma import aims
 
 # constel import
-from constel.lib.texturetools import identify_patch_number
+from constel.lib.utils.texturetools import identify_patch_number
 
 
 #----------------------------Functions-----------------------------------------
