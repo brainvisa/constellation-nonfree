@@ -20,6 +20,8 @@ Author:
 #----------------------------Imports-------------------------------------------
 
 
+from __future__ import print_function
+
 # soma module
 from soma import aims
 from soma.aims.meshSplit import meshSplit2
@@ -190,7 +192,7 @@ class FusionBundlesSplitByCorticalROIsMethod(anatomist.FusionMethod):
             del aims_roi_graph
 
         else:
-            print "error in TimeTexture: 0 Items"
+            print("error in TimeTexture: 0 Items")
 
         # remove python references to anatomist objects before closing
         del bundles_graph, tex, obj

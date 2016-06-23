@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
+
 # Anatomist module
 import anatomist.direct.api as anatomist
 
@@ -12,6 +14,7 @@ from PyQt4 import QtGui, QtCore
 import os
 import sip
 import math
+import six
 
 ############################################################################
 #                           Selection Action
@@ -62,12 +65,12 @@ class SmallBrainSelectionAction(anatomist.cpp.Action):
         bb = graph.boundingbox()
         gcent = (bb[0] + bb[1])/2
         aimsgraph = graph.attributed()
-        if vertex.attributed().has_key('normal'):
+        if 'normal' in vertex.attributed():
             normal = vertex.attributed()['normal']
             use_normal = True
         else:
             use_normal = False
-        if not use_normal and aimsgraph.has_key('lateralized_view'):
+        if not use_normal and 'lateralized_view' in aimsgraph:
             lateralized = True
             gcent_r = bb[0] + bb[1]
             gcent_r[0] *= 0.25
@@ -79,7 +82,7 @@ class SmallBrainSelectionAction(anatomist.cpp.Action):
             gcent_l[2] /= 2
         else:
             lateralized = False
-        if vertex.attributed().has_key('center'):
+        if 'center' in vertex.attributed():
             cent = aims.Point3df(vertex.attributed()['center'])
         else:
             bb = vertex.boundingbox()
@@ -100,12 +103,12 @@ class SmallBrainSelectionAction(anatomist.cpp.Action):
             vdir = normal
         m = aims.AffineTransformation3d()
         distance = self.distance
-        if aimsgraph.has_key('small_brains_distance'):
+        if 'small_brains_distance' in aimsgraph:
             distance = aimsgraph['small_brains_distance']
         rot_center = cent + vdir * distance
         m.setTranslation(rot_center)
         scaling = self.scaling
-        if aimsgraph.has_key('small_brains_scaling'):
+        if 'small_brains_scaling' in aimsgraph:
             scaling = aimsgraph['small_brains_scaling']
 
         m *= aims.AffineTransformation3d([scaling, 0, 0, 0,
@@ -134,7 +137,7 @@ class SmallBrainSelectionAction(anatomist.cpp.Action):
                 objects = secondview.objects
                 secondview.removeObjects(objects)
         refs = []
-        for vertex, values in self._displayed_vertices.iteritems():
+        for vertex, values in six.iteritems(self._displayed_vertices):
             if keep and vertex in keep:
                 continue
             objs = values.get('objects', [])
@@ -162,7 +165,7 @@ class SmallBrainSelectionAction(anatomist.cpp.Action):
             self._displayed_vertices = {}
         else:
             self._displayed_vertices = dict([(vertex, value) \
-                for vertex, value in self._displayed_vertices.iteritems() \
+                for vertex, value in six.iteritems(self._displayed_vertices) \
                 if vertex in keep])
         if refs:
             a.theProcessor().execute('DeleteElement', elements=refs)
@@ -170,7 +173,7 @@ class SmallBrainSelectionAction(anatomist.cpp.Action):
     def hide(self, keep=None):
         a = anatomist.Anatomist()
         window = a.AWindow(a, self.view().aWindow())
-        for vertex, values in self._displayed_vertices.iteritems():
+        for vertex, values in six.iteritems(self._displayed_vertices):
             if keep and vertex in keep:
                 continue
             objs = values.get('objects', [])
@@ -200,7 +203,7 @@ class SmallBrainSelectionAction(anatomist.cpp.Action):
             if parent.type() == anatomist.cpp.AObject.GRAPHOBJECT:
                 return parent
             parents += list(parent.parents())
-        for vertex, objs in self._displayed_vertices.iteritems():
+        for vertex, objs in six.iteritems(self._displayed_vertices):
             if obj in [o[0]._get() for o in objs['objects']]:
                 return vertex['ana_object']
         return None
@@ -242,7 +245,7 @@ class SmallBrainSelectionAction(anatomist.cpp.Action):
             objs = vmemo.get('objects', [])
             if len(objs) != 0:
                 # vertex already done and available: just reuse it
-                print 'vertex in cache.'
+                print('vertex in cache.')
                 new_objects = [obj[0].get() for obj in objs]
                 if not self.display_all:
                     # if display_all this will be done after the loop
@@ -254,12 +257,12 @@ class SmallBrainSelectionAction(anatomist.cpp.Action):
             nref, tr, rot_center = self.computeRefAndTransformation(graph,
                 vertex)
             global_mesh = None
-            if graph.graph().has_key('global_mesh'):
+            if 'global_mesh' in graph.graph():
                 global_mesh = graph.graph()['global_mesh']
             vmemo['referential'] = nref
             diffuse_list = [1., 0., 0., 1.]
             for obj in vertex:
-                print 'obj:', type(obj), obj
+                #print('obj:', type(obj), obj)
                 obj_to_display.append(self.addReducedObjectToView(aimsvertex,
                     obj, nref, rot_center, tr, a, window, diffuse_list))
             if global_mesh is not None:
@@ -269,7 +272,7 @@ class SmallBrainSelectionAction(anatomist.cpp.Action):
                 a.execute('SetMaterial', objects=[rmesh],
                     selectable_mode='always_selectable')
             for edge in aimsvertex.edges():
-                if edge.has_key('ana_object'):
+                if 'ana_object' in edge:
                     aedge = edge['ana_object']
                     diffuse_list = [0, 0, 1., 0.5]
                     for obj in aedge:
@@ -278,7 +281,7 @@ class SmallBrainSelectionAction(anatomist.cpp.Action):
                             diffuse_list))
 
         if self.display_all:
-            for vertex, values in self._displayed_vertices.iteritems():
+            for vertex, values in six.iteritems(self._displayed_vertices):
                 window.registerObject(vertex['ana_object'])
                 for objd in values.get('objects', []):
                     window.registerObject(objd[0].get())
@@ -321,7 +324,7 @@ class SmallBrainsRotationAction(anatomist.cpp.TrackOblique):
         for vert_objs in action._displayed_vertices.itervalues():
             stored = vert_objs.get('objects', [])
             for obj, rot_center, tr in stored:
-                if not self.tr_dict.has_key(tr):
+                if not tr in self.tr_dict:
                     self.tr_dict[tr] \
                         = aims.AffineTransformation3d(tr.motion()), rot_center
 
@@ -332,7 +335,7 @@ class SmallBrainsRotationAction(anatomist.cpp.TrackOblique):
         rot.setVector(v)
         tr = None
         for tr, (begin_tr_AffineTransformation3d, rot_center) \
-                in self.tr_dict.iteritems():
+                in six.iteritems(self.tr_dict):
             rot_motion = aims.AffineTransformation3d()
             rot_motion.setTranslation(-rot_center)
             rot_center_translation = aims.AffineTransformation3d()
@@ -364,7 +367,7 @@ class SmallBrainsScaleAction(anatomist.cpp.Action):
         for vert_objs in action._displayed_vertices.itervalues():
             stored = vert_objs.get('objects', [])
             for obj, rot_center, tr in stored:
-                if not self.tr_dict.has_key(tr):
+                if tr not in self.tr_dict:
                     self.tr_dict[tr] \
                         = aims.AffineTransformation3d(tr.motion()), rot_center
 
@@ -374,7 +377,7 @@ class SmallBrainsScaleAction(anatomist.cpp.Action):
         scale = self.initscale * zfac
         tr = None
         for tr, (begin_tr_AffineTransformation3d, rot_center) \
-                in self.tr_dict.iteritems():
+                in six.iteritems(self.tr_dict):
             scl_trans = aims.AffineTransformation3d()
             scl_trans.rotation().setValue(scale, 0, 0)
             scl_trans.rotation().setValue(scale, 1, 1)
@@ -413,7 +416,7 @@ class SmallBrainsTranslateAction(anatomist.cpp.Action):
         graphs = [obj for obj in self.view().aWindow().Objects() \
             if obj.objectTypeName(obj.type()) == 'GRAPH']
         for graph in graphs:
-            if graph.attributed().has_key('small_brains_distance'):
+            if 'small_brains_distance' in graph.attributed():
                 self.initial_distance \
                     = graph.attributed()['small_brains_distance']
                 break # take just the first for now.
@@ -432,7 +435,7 @@ class SmallBrainsTranslateAction(anatomist.cpp.Action):
         distance = self.initial_distance + ydiff
         tr = None
         done = {}
-        for vertex, vert_objs in action._displayed_vertices.iteritems():
+        for vertex, vert_objs in six.iteritems(action._displayed_vertices):
             ana_vertex = vertex['ana_object']
             graph = list(ana_vertex.parents())[0]
             graph.attributed()['small_brains_distance'] = distance
