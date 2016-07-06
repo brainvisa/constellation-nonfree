@@ -67,14 +67,20 @@ def merge_bundlegraph_and_roigraph(roi_graph,
     # creating a trash graph
     # (What it is for, just to create roi_vertices_labels[0] ? )
     # -> for relations with the background node
-    other_name = nodes_names_mapping.get('others')
-    others_vertex = None
-    if other_name:
-        others_vertex = roi_vertices_labels.get(other_name)
-    if others_vertex is None:
+    if 0 not in roi_vertices_labels:
         others_vertex = roi_graph.addVertex('roi')
+        others_vertex['name'] = '0'
         roi_vertices_labels[0] = others_vertex.get()
-    others_vertex['name'] = 'others'
+
+    #other_name = nodes_names_mapping.get('others', 0)
+    #others_vertex = None
+    #if other_name:
+        #others_vertex = roi_vertices_labels.get(other_name)
+    #if others_vertex is None:
+        #others_vertex = roi_graph.addVertex('roi')
+        #roi_vertices_labels[0] = others_vertex.get()
+        #others_vertex['name'] = '0'
+    #others_vertex['name'] = 'others'
 
     # creating edges between labels/fibers
     for bundles in bundles_graph.vertices():
