@@ -76,3 +76,52 @@ def select_ROI_number(filename, ROIname):
         if s[i][1] == ROIname:
             ROIlabel = s[i][0]
     return ROIlabel
+
+
+def delete_regions_in_nomenclature(nomenclature, regions, up_nomenclature):
+    """ Remove some regions in the cortical region nomenclature.
+    
+    Parameters
+    ----------
+    nomenclature: string (mandatory)
+        The filename with the correspondance between the name region and its
+        number.
+    regions: list (mandatory)
+        List of the cortical regions to delete.
+    up_nomenclature: string (mandatory)
+        The name (with directory) of the nomenclature without the regions.
+    
+    Returns
+    -------
+    up_nomenclature: list
+        The nomenclature without the regions.
+    """
+    with open(nomenclature) as f:
+        #content = f.readlines()
+        with open(up_nomenclature, "w") as output:
+            for line in f:
+                if line.split()[0] not in regions:
+                    output.write(line)
+
+    return up_nomenclature
+
+
+def add_region_in_nomenclature(nomenclature, new_region, number_region):
+    """Add a new name in the cortical region nomenclature.
+    
+    Parameters
+    ----------
+    nomenclature: string (mandatory)
+        The filename with the correspondance between the name region and its
+        number.
+    new_region: string (mandatory)
+        The new name for inclusion into the nomenclature.
+    number_region: int (mandatory)
+        The number associated to the new region.
+    """
+    with open(nomenclature, "a") as f:
+        new_line = str(number_region) + " " + new_region + "\n"
+        f.writelines(new_line)
+    
+
+    
