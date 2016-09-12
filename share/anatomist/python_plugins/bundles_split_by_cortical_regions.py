@@ -20,6 +20,8 @@ Author:
 #----------------------------Imports-------------------------------------------
 
 
+from __future__ import print_function
+
 # soma module
 from soma import aims
 from soma.aims.meshSplit import meshSplit2
@@ -124,7 +126,7 @@ class FusionBundlesSplitByCorticalROIsMethod(anatomist.FusionMethod):
             time_step = 0
 
         # number of vertices
-        n = int(aims_tex[time_step].nItem())
+        n = aims_tex[time_step].nItem()
 
         if n != 0:
             filter_proportion = 0
@@ -156,8 +158,8 @@ class FusionBundlesSplitByCorticalROIsMethod(anatomist.FusionMethod):
             #   and "0" in aims_roi_graph
             merge_bundlegraph_and_roigraph(aims_roi_graph,
                                            aims_bundles_graph,
-                                           motion,
-                                           nodes_names_mapping={"others": 0})
+                                           motion)
+                                           #nodes_names_mapping={"others": 0})
 
             # converts an Aims object to an Anatomist object
             roi_graph = anatomist.AObjectConverter.anatomist(aims_roi_graph)
@@ -190,7 +192,7 @@ class FusionBundlesSplitByCorticalROIsMethod(anatomist.FusionMethod):
             del aims_roi_graph
 
         else:
-            print "error in TimeTexture: 0 Items"
+            print("error in TimeTexture: 0 Items")
 
         # remove python references to anatomist objects before closing
         del bundles_graph, tex, obj
