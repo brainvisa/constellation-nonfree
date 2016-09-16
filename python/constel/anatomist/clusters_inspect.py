@@ -149,9 +149,15 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         self.measure_tex = a.toAObject(aims_tex)
         self.measure_tex.setPalette('Yellow-red-fusion')
         self.make_measurements_texture(0)
-        self.measure_funsion = a.fusionObjects([mesh, self.measure_tex],
-                                               method='FusionTexSurfMethod')
-        measures_win.addObjects(self.measure_funsion)
+        self.measure_fusion = a.fusionObjects([mesh, self.measure_tex],
+                                              method='FusionTexSurfMethod')
+        measures_win.addObjects(self.measure_fusion)
+        try:
+            import paletteViewer
+
+            paletteViewer.toggleShowPaletteForObject(self.measure_tex)
+        except ImportError:
+            pass
 
         install_controls()
 
