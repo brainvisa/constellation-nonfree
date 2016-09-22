@@ -3,6 +3,9 @@ from __future__ import print_function
 import os, sys
 import anatomist.direct.api as ana
 from soma.qt_gui.qt_backend import QtGui, QtCore
+from soma.qt_gui.qt_backend import init_matplotlib_backend
+init_matplotlib_backend()
+from matplotlib import pyplot
 from soma import aims
 import numpy as np
 import weakref
@@ -73,7 +76,9 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         self.measurements = measurements
         self.seed_gyri = seed_gyri
         self.viewing_column = 0
+        self.curves_columns = [0, 1]
 
+        # 3D views area
         main_w = QtGui.QSplitter(QtCore.Qt.Vertical)
         main_w.setObjectName('views')
         self.setCentralWidget(main_w)
@@ -88,6 +93,7 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         main_w.addWidget(measures_view)
         measures_view.setLayout(QtGui.QHBoxLayout())
 
+        # info dock
         info_dock = QtGui.QDockWidget()
         info_dock.setObjectName('info_dock')
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, info_dock)
@@ -96,6 +102,7 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         self.info = info
         self.print_cluster_info(0, 1)
 
+        # measurements table dock
         table_dock = QtGui.QDockWidget()
         table_dock.setObjectName('table_dock')
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, table_dock)
@@ -110,6 +117,24 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         table_wid.layout().addWidget(table)
         self.table = table
 
+        # matplotlib curves dock
+        curves_dock = QtGui.QDockWidget()
+        curves_dock.setObjectName('curves_dock')
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, curves_dock)
+        self.curves_fig = pyplot.figure()
+        self.curves_widget = \
+            pyplot._pylab_helpers.Gcf.get_fig_manager(
+                self.curves_fig.number).window
+        curves_dock.setWidget(self.curves_widget)
+
+        # matrix view dock
+        matrix_dock = QtGui.QDockWidget()
+        matrix_dock.setObjectName('matrix_dock')
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, matrix_dock)
+        matrix_dock.setWidget(QtGui.QLabel(
+            'Here will be the matrix view.<br/>Soon.'))
+
+        # Anatomist views
         a = ana.Anatomist('-b')
         clusters_win = a.createWindow('3D')
         clusters_view.layout().addWidget(clusters_win.getInternalRep())
@@ -137,6 +162,11 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
 
         clusters_win.addObjects(self.clusters_fusion)
 
+        # remove referential button and views toolbar
+        for win in (clusters_win, measures_win):
+            win.findChild(QtGui.QPushButton).parent().objectName()
+            win.findChild(QtGui.QToolBar, 'mutations').hide()
+
         if self.seed_gyri is not None:
             self.boundaries \
                 = a.toAObject(aims.SurfaceManip.meshTextureBoundary(
@@ -152,6 +182,7 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         self.measure_fusion = a.fusionObjects([mesh, self.measure_tex],
                                               method='FusionTexSurfMethod')
         measures_win.addObjects(self.measure_fusion)
+        # display colormap
         try:
             import paletteViewer
 
@@ -163,12 +194,17 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
 
         self.clusters_win.setControl('ClusterSelectionControl')
 
+        # link time sliders on both views
         time_slider = clusters_win.findChild(QtGui.QSlider, 'sliderT')
         time_slider.valueChanged.connect(self.time_changed)
 
+        # build and display table
         self.build_table(0)
         self.table.horizontalHeader().sectionDoubleClicked.connect(
             self.display_column)
+
+        # build and display curves
+        self.display_curves(0)
 
 
     def make_measurements_texture(self, col):
@@ -218,6 +254,8 @@ Timestep: <b>%d</b><br/>
     def time_changed(self):
         timestep = self.clusters_win.getTime() / self.clusters.TimeStep()
         self.build_table(timestep)
+        self.display_curves(timestep)
+
 
     def display_column(self, col):
         if self.viewing_column != col:
@@ -225,6 +263,22 @@ Timestep: <b>%d</b><br/>
                                       % self.measurements[0].columns[col])
             self.make_measurements_texture(col)
             self.viewing_column = col
+
+    def display_curves(self, timestep):
+        if len(self.curves_fig.axes) == 0:
+            # no axes yet. Create them
+            bgcolor = self.palette().color(QtGui.QPalette.Base)
+            axes = self.curves_fig.add_subplot(111, axisbg=str(bgcolor.name()))
+        else:
+            # use existing axes
+            axes = self.curves_fig.axes[0]
+            axes.clear()
+        axes.set_xlabel('cluster')
+        cols = self.measurements[timestep].columns[self.curves_columns]
+        axes.set_xticks(range(self.measurements[timestep].shape[0]))
+        axes.plot(self.measurements[timestep][cols])
+        axes.legend(list(cols))
+        self.curves_fig.canvas.draw()
 
 
 def load_clusters_instpector_files(mesh_filename, clusters_filename,
