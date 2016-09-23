@@ -43,7 +43,6 @@ class ClusterSelectionAction(ana.cpp.Action):
         aims_tex = a.AObject(a, tex).toAimsObject()
         timestep = max([x for x in aims_tex.keys() if x <= timestep])
         label = aims_tex[timestep][ivert]
-        print('label:', label)
         if hasattr(win, 'cluster_window'):
             win.cluster_window.cluster_selected(timestep, label)
 
@@ -126,13 +125,28 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
             pyplot._pylab_helpers.Gcf.get_fig_manager(
                 self.curves_fig.number).window
         curves_dock.setWidget(self.curves_widget)
+        toolbar = self.curves_widget.findChild(QtGui.QToolBar)
+        toolbar.addSeparator()
+        sel_cols = QtGui.QAction('Select plots', toolbar)
+        toolbar.addAction(sel_cols)
+        sel_cols.triggered.connect(self.select_curves_columns)
 
         # matrix view dock
         matrix_dock = QtGui.QDockWidget()
         matrix_dock.setObjectName('matrix_dock')
-        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, matrix_dock)
+        self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, matrix_dock)
         matrix_dock.setWidget(QtGui.QLabel(
             'Here will be the matrix view.<br/>Soon.'))
+
+        # cluster time evolution view
+        cluster_time_dock = QtGui.QDockWidget()
+        cluster_time_dock.setObjectName('cluster_time_dock')
+        self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, cluster_time_dock)
+        self.cluster_time_fig = pyplot.figure()
+        self.cluster_time_widget = \
+            pyplot._pylab_helpers.Gcf.get_fig_manager(
+                self.cluster_time_fig.number).window
+        cluster_time_dock.setWidget(self.cluster_time_widget)
 
         # Anatomist views
         a = ana.Anatomist('-b')
@@ -249,6 +263,9 @@ Timestep: <b>%d</b><br/>
 
     def cluster_selected(self, timestep, label):
         self.print_cluster_info(timestep, label)
+        self.set_curve_cursor(timestep, label)
+        self.select_table_row(timestep, label)
+        self.update_cluster_time(timestep, label)
 
 
     def time_changed(self):
@@ -274,11 +291,70 @@ Timestep: <b>%d</b><br/>
             axes = self.curves_fig.axes[0]
             axes.clear()
         axes.set_xlabel('cluster')
-        cols = self.measurements[timestep].columns[self.curves_columns]
-        axes.set_xticks(range(self.measurements[timestep].shape[0]))
-        axes.plot(self.measurements[timestep][cols])
-        axes.legend(list(cols))
+        data = self.measurements[timestep]
+        cols = data.columns[self.curves_columns]
+        if len(cols) != 0:
+            axes.set_xticks(range(data.shape[0]))
+            axes.plot(range(1, data.shape[0] + 1), data[cols], 'o-')
+            axes.legend(list(cols))
         self.curves_fig.canvas.draw()
+
+
+    def set_curve_cursor(self, timestep, label):
+        if len(self.curves_fig.axes) != 0:
+            axes = self.curves_fig.axes[0]
+            if len(axes.lines) > len(self.curves_columns):
+                # erase previous cursor
+                axes.lines.remove(axes.lines[-1])
+            axes.plot([label, label], axes.get_ylim(), 'r')
+            self.curves_fig.canvas.draw()
+
+
+    def select_curves_columns(self):
+        dialog = QtGui.QDialog()
+        dialog.setModal(True)
+        lay = QtGui.QVBoxLayout()
+        dialog.setLayout(lay)
+        lwid = QtGui.QListWidget()
+        lay.addWidget(lwid)
+        lwid.addItems(self.measurements[0].columns)
+        lwid.setSelectionMode(lwid.ExtendedSelection)
+        for col in self.curves_columns:
+            lwid.item(col).setSelected(True)
+        ok = QtGui.QPushButton('OK')
+        cancel = QtGui.QPushButton('Cancel')
+        hlay = QtGui.QHBoxLayout()
+        lay.addLayout(hlay)
+        hlay.addStretch()
+        hlay.addWidget(ok)
+        hlay.addWidget(cancel)
+        ok.pressed.connect(dialog.accept)
+        cancel.pressed.connect(dialog.reject)
+        res = dialog.exec_()
+        if res:
+            self.curves_columns = [item.row()
+                                   for item in lwid.selectedIndexes()]
+            timestep = int(round(self.clusters_win.getTime()))
+            self.display_curves(timestep)
+
+
+    def select_table_row(self, timestep, label):
+        self.table.selectRow(label - 1)
+
+
+    def update_cluster_time(self, timestep, label):
+        if len(self.cluster_time_fig.axes) == 0:
+            # no axes yet. Create them
+            bgcolor = self.palette().color(QtGui.QPalette.Base)
+            axes = self.cluster_time_fig.add_subplot(
+                111, axisbg=str(bgcolor.name()))
+        else:
+            # use existing axes
+            axes = self.cluster_time_fig.axes[0]
+            axes.clear()
+        axes.set_xlabel('cluster evolution')
+        # TODO: put some data in the plot here...
+        self.cluster_time_fig.canvas.draw()
 
 
 def load_clusters_instpector_files(mesh_filename, clusters_filename,
