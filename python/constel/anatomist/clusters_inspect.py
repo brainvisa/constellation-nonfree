@@ -95,6 +95,7 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         # info dock
         info_dock = QtGui.QDockWidget()
         info_dock.setObjectName('info_dock')
+        info_dock.setWindowTitle('Info')
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, info_dock)
         info = QtGui.QTextBrowser()
         info_dock.setWidget(info)
@@ -104,6 +105,7 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         # measurements table dock
         table_dock = QtGui.QDockWidget()
         table_dock.setObjectName('table_dock')
+        table_dock.setWindowTitle('Table')
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, table_dock)
         table_wid = QtGui.QWidget()
         table_dock.setWidget(table_wid)
@@ -119,6 +121,7 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         # matplotlib curves dock
         curves_dock = QtGui.QDockWidget()
         curves_dock.setObjectName('curves_dock')
+        curves_dock.setWindowTitle('Curves')
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, curves_dock)
         self.curves_fig = pyplot.figure()
         self.curves_widget = \
@@ -134,6 +137,7 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         # matrix view dock
         matrix_dock = QtGui.QDockWidget()
         matrix_dock.setObjectName('matrix_dock')
+        matrix_dock.setWindowTitle('Matrix')
         self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, matrix_dock)
         matrix_dock.setWidget(QtGui.QLabel(
             'Here will be the matrix view.<br/>Soon.'))
@@ -141,6 +145,7 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         # cluster time evolution view
         cluster_time_dock = QtGui.QDockWidget()
         cluster_time_dock.setObjectName('cluster_time_dock')
+        cluster_time_dock.setWindowTitle('Cluster evolution')
         self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, cluster_time_dock)
         self.cluster_time_fig = pyplot.figure()
         self.cluster_time_widget = \
@@ -178,7 +183,7 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
 
         # remove referential button and views toolbar
         for win in (clusters_win, measures_win):
-            win.findChild(QtGui.QPushButton).parent().objectName()
+            win.findChild(QtGui.QPushButton).parent().hide()
             win.findChild(QtGui.QToolBar, 'mutations').hide()
 
         if self.seed_gyri is not None:
@@ -294,7 +299,8 @@ Timestep: <b>%d</b><br/>
         data = self.measurements[timestep]
         cols = data.columns[self.curves_columns]
         if len(cols) != 0:
-            axes.set_xticks(range(data.shape[0]))
+            axes.set_xticks(range(data.shape[0] + 1))
+            axes.set_xlim((0.8, data.shape[0] + 0.2))
             axes.plot(range(1, data.shape[0] + 1), data[cols], 'o-')
             axes.legend(list(cols))
         self.curves_fig.canvas.draw()
@@ -306,7 +312,11 @@ Timestep: <b>%d</b><br/>
             if len(axes.lines) > len(self.curves_columns):
                 # erase previous cursor
                 axes.lines.remove(axes.lines[-1])
-            axes.plot([label, label], axes.get_ylim(), 'r')
+            lim = axes.get_ylim()
+            lim = (lim[0] + lim[1] * 0.01, lim[1] * 0.99)
+            axes.plot([label - 0.1, label - 0.1, label + 0.1, label + 0.1,
+                       label - 0.1],
+                      lim + lim[::-1] + (lim[0], ), 'r')
             self.curves_fig.canvas.draw()
 
 
