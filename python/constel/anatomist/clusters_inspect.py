@@ -65,13 +65,19 @@ class ClusterSelectionControl(selection.SelectionControl):
 
 class ClustersInspectorWidget(QtGui.QMainWindow):
 
-    def __init__(self, mesh, clusters, measurements, seed_gyri=None,
+    def __init__(self, meshes, clusters, measurements, seed_gyri=[],
                  parent=None, flags=QtCore.Qt.WindowFlags(0)):
         super(ClustersInspectorWidget, self).__init__(parent=parent,
                                                       flags=flags)
-        self.mesh = mesh
+        if len(meshes) != len(clusters):
+            raise ValueError('meshes and clusters numbers do not match')
+        if len(seed_gyri) != 0 and len(seed_gyri) != len(meshes):
+            raise ValueError('meshes and seed_gyri numbers do not match')
+
+        self.meshes = meshes
         self.clusters = clusters
-        self.aims_clusters = clusters.toAimsObject()
+        self.aims_clusters = [clusters_tex.toAimsObject()
+                              for clusters_tex in clusters]
         self.measurements = measurements
         self.seed_gyri = seed_gyri
         self.viewing_column = 0
@@ -169,43 +175,59 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         a.execute('LinkWindows', windows=[clusters_win, measures_win],
                   group=153)
 
-        clusters.setPalette('Talairach')
-        a.execute('TexturingParams', objects=[clusters], interpolation='rgb')
-        self.clusters_fusion = a.fusionObjects([mesh, clusters],
-                                               method='FusionTexSurfMethod')
-        self.clusters_boundaries \
-            = a.toAObject(aims.SurfaceManip.meshTextureBoundary(
-                mesh.surface(), self.aims_clusters, -1))
-        self.clusters_boundaries.setMaterial(line_width=3.)
-        measures_win.addObjects(self.clusters_boundaries)
+        self.clusters_fusions = []
+        self.clusters_boundaries = []
+        self.boundaries = []
+        self.aims_measure_tex = []
+        self.measure_tex = []
+        self.measure_fusions = []
 
-        clusters_win.addObjects(self.clusters_fusion)
+        for mesh, clusters_tex, aims_clusters in zip(meshes, clusters,
+                                                     self.aims_clusters):
+            clusters_tex.setPalette('Talairach')
+            a.execute('TexturingParams', objects=[clusters_tex],
+                      interpolation='rgb')
+            clusters_fusion = a.fusionObjects(
+                [mesh, clusters_tex], method='FusionTexSurfMethod')
+            self.clusters_fusions.append(clusters_fusion)
+            clusters_boundaries \
+                = a.toAObject(aims.SurfaceManip.meshTextureBoundary(
+                    mesh.surface(), aims_clusters, -1))
+            self.clusters_boundaries.append(clusters_boundaries)
+            clusters_boundaries.setMaterial(line_width=3.)
+
+        measures_win.addObjects(self.clusters_boundaries)
+        clusters_win.addObjects(self.clusters_fusions)
 
         # remove referential button and views toolbar
         for win in (clusters_win, measures_win):
             win.findChild(QtGui.QPushButton).parent().hide()
             win.findChild(QtGui.QToolBar, 'mutations').hide()
 
-        if self.seed_gyri is not None:
-            self.boundaries \
-                = a.toAObject(aims.SurfaceManip.meshTextureBoundary(
-                    mesh.surface(), self.seed_gyri.toAimsObject(), -1))
-            self.boundaries.setMaterial(line_width=3.)
+        if len(self.seed_gyri) != 0:
+            for mesh, seed_gyri_tex in zip(self.meshes, self.seed_gyri):
+                boundaries \
+                    = a.toAObject(aims.SurfaceManip.meshTextureBoundary(
+                        mesh.surface(), seed_gyri_tex.toAimsObject(), -1))
+                boundaries.setMaterial(line_width=3.)
+                self.boundaries.append(boundaries)
             clusters_win.addObjects(self.boundaries)
 
-        aims_tex = aims.TimeTexture('FLOAT')
+        aims_tex = [aims.TimeTexture('FLOAT')] * len(self.meshes)
         self.aims_measure_tex = aims_tex
-        self.measure_tex = a.toAObject(aims_tex)
-        self.measure_tex.setPalette('Yellow-red-fusion')
+        self.measure_tex = [a.toAObject(tex) for tex in aims_tex]
+        for measure_tex in self.measure_tex:
+            measure_tex.setPalette('Yellow-red-fusion')
         self.make_measurements_texture(0)
-        self.measure_fusion = a.fusionObjects([mesh, self.measure_tex],
-                                              method='FusionTexSurfMethod')
-        measures_win.addObjects(self.measure_fusion)
+        for mesh, measure_tex in zip(self.meshes, self.measure_tex):
+            self.measure_fusions.append(a.fusionObjects(
+                [mesh, measure_tex], method='FusionTexSurfMethod'))
+        measures_win.addObjects(self.measure_fusions)
         # display colormap
         try:
             import paletteViewer
-
-            paletteViewer.toggleShowPaletteForObject(self.measure_tex)
+            # FIXME TODO have a common palette for all measure_tex
+            paletteViewer.toggleShowPaletteForObject(self.measure_tex[0])
         except ImportError:
             pass
 
@@ -227,20 +249,21 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
 
 
     def make_measurements_texture(self, col):
-        atex = self.aims_measure_tex
-        ctex = self.aims_clusters
-        ndata = len(ctex[0].data())
-        for i in ctex.keys():
-            measurements = self.measurements[i]
-            values = measurements[measurements.columns[col]]
-            arr = np.zeros((ndata,), dtype=np.float32)
-            for label in range(len(values)):
-                value = values[label]
-                arr[ctex[i].data().arraydata() == label + 1] = value
-            atex[i].data().assign(arr)
-        self.measure_tex.setTexture(atex)
-        self.measure_tex.setChanged()
-        self.measure_tex.notifyObservers()
+        for atex, ctex, measure_tex in zip(self.aims_measure_tex,
+                                           self.aims_clusters,
+                                           self.measure_tex):
+            ndata = len(ctex[0].data())
+            for i in ctex.keys():
+                measurements = self.measurements[i]
+                values = measurements[measurements.columns[col]]
+                arr = np.zeros((ndata,), dtype=np.float32)
+                for label in range(len(values)):
+                    value = values[label]
+                    arr[ctex[i].data().arraydata() == label + 1] = value
+                atex[i].data().assign(arr)
+            measure_tex.setTexture(atex)
+            measure_tex.setChanged()
+            measure_tex.notifyObservers()
 
 
     def print_cluster_info(self, timestep, cluster):
@@ -274,7 +297,7 @@ Timestep: <b>%d</b><br/>
 
 
     def time_changed(self):
-        timestep = self.clusters_win.getTime() / self.clusters.TimeStep()
+        timestep = self.clusters_win.getTime() / self.clusters[0].TimeStep()
         self.build_table(timestep)
         self.display_curves(timestep)
 
@@ -367,18 +390,26 @@ Timestep: <b>%d</b><br/>
         self.cluster_time_fig.canvas.draw()
 
 
-def load_clusters_instpector_files(mesh_filename, clusters_filename,
+def load_clusters_instpector_files(mesh_filenames, clusters_filenames,
                                    measurements_filenames,
-                                   seed_gyri_filename=None):
+                                   seed_gyri_filenames=[]):
     a = ana.Anatomist('-b')
-    mesh = a.loadObject(mesh_filename)
-    clusters = a.loadObject(clusters_filename)
+    meshes = []
+    clusters = []
+    seed_gyri = []
+    for mesh_filename in mesh_filenames:
+        meshes.append(a.loadObject(mesh_filename))
+    for clusters_filename in clusters_filenames:
+        clusters.append(a.loadObject(clusters_filename))
     measurements = None
-    seed_gyri = None
-    if seed_gyri_filename is not None:
-        seed_gyri = a.loadObject(seed_gyri_filename)
+    for seed_gyri_filename in seed_gyri_filenames:
+        seed_gyri.append(a.loadObject(seed_gyri_filename))
 
-    return mesh, clusters, measurements, seed_gyri
+    if len(meshes) != len(clusters):
+        raise ValueError('meshes and clusters numbers do not match')
+    if len(seed_gyri) != 0 and len(seed_gyri) != len(meshes):
+        raise ValueError('meshes and seed_gyri numbers do not match')
+    return meshes, clusters, measurements, seed_gyri
 
 
 def clear_controls():
@@ -417,18 +448,19 @@ if __name__ == '__main__':
         qapp = QtGui.QApplication(['bloup'])
         run_event_loop = True
 
-    mesh, clusters, measurements, seed_gyri = load_clusters_instpector_files(
-        '/neurospin/archi-public/DataBaseArchi/FreeSurfer/fs_archi_v5.3.0/group_analysis/01to40/average_brain/averagebrain.white.mesh',
-        '/neurospin/archi-public/Users/lefranc/archi/bv_archi/proba27/subjects/group_analysis/01to40/connectivity_clustering/avg/fs01to40/lh.supramarginal/smooth3.0/avgSubject/01to40_avg_fs01to40_lh.supramarginal_avgSubject_clusteringTime.gii',
+    meshes, clusters, measurements, seed_gyri = load_clusters_instpector_files(
+        ['/neurospin/archi-public/DataBaseArchi/FreeSurfer/fs_archi_v5.3.0/group_analysis/01to40/average_brain/averagebrain.white.mesh'],
+        ['/neurospin/archi-public/Users/lefranc/archi/bv_archi/proba27/subjects/group_analysis/01to40/connectivity_clustering/avg/fs01to40/lh.supramarginal/smooth3.0/avgSubject/01to40_avg_fs01to40_lh.supramarginal_avgSubject_clusteringTime.gii'],
         None,
-        '/neurospin/archi-public/DataBaseArchi/FreeSurfer/fs_archi_v5.3.0/group_analysis/01to40/average_brain/bh.annot.averagebrain.gii')
+        ['/neurospin/archi-public/DataBaseArchi/FreeSurfer/fs_archi_v5.3.0/group_analysis/01to40/average_brain/bh.annot.averagebrain.gii'])
     # temp
     measurements = dict(
         (i, pandas.DataFrame(np.random.ranf((i + 2, 2)),
                              columns=('size', 'homogeneity')))
-        for i in range(len(clusters.toAimsObject())))
+        for i in range(sum([len(clusters_tex.toAimsObject())
+                            for clusters_tex in clusters])))
     cw = ClustersInspectorWidget(
-        mesh, clusters, measurements=measurements, seed_gyri=seed_gyri)
+        meshes, clusters, measurements=measurements, seed_gyri=seed_gyri)
     cw.show()
 
     if run_event_loop:
