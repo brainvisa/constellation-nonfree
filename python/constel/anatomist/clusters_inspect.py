@@ -92,7 +92,7 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         self.measurements = measurements
         self.seed_gyri = [a.toAObject(gyri) for gyri in seed_gyri]
         self.viewing_column = 0
-        self.curves_columns = [0, 1]
+        self.curves_columns = range(measurements[0].shape[1])
 
         # 3D views area
         main_w = QtGui.QSplitter(QtCore.Qt.Vertical)
@@ -159,6 +159,17 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         matrix_dock.setWidget(QtGui.QLabel(
             'Here will be the matrix view.<br/>Soon.'))
 
+        # fibers histogram dock
+        fibers_histo_dock = QtGui.QDockWidget()
+        fibers_histo_dock.setObjectName('fibers_histo_dock')
+        fibers_histo_dock.setWindowTitle('Fibers length histogram')
+        self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, fibers_histo_dock)
+        self.fibers_histo_fig = pyplot.figure()
+        self.fibers_histo_widget = \
+            pyplot._pylab_helpers.Gcf.get_fig_manager(
+                self.fibers_histo_fig.number).window
+        fibers_histo_dock.setWidget(self.fibers_histo_widget)
+
         # cluster time evolution view
         cluster_time_dock = QtGui.QDockWidget()
         cluster_time_dock.setObjectName('cluster_time_dock')
@@ -172,6 +183,7 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
 
         # Anatomist views
         a = ana.Anatomist('-b')
+        a.execute('GraphParams', show_tooltips=0)
         clusters_win = a.createWindow('3D')
         clusters_view.layout().addWidget(clusters_win.getInternalRep())
         self.clusters_win = clusters_win
@@ -247,6 +259,7 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         self.measure_tex = [a.toAObject(tex) for tex in aims_tex]
         for measure_tex in self.measure_tex:
             measure_tex.setPalette('Yellow-red-fusion')
+            measure_tex.setName(self.measurements[0].columns[self.viewing_column])
         self.make_measurements_texture()
         for mesh, measure_tex in zip(self.meshes, self.measure_tex):
             self.measure_fusions.append(a.fusionObjects(
@@ -306,11 +319,33 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
 
     def print_cluster_info(self, timestep, cluster):
         info_text = '''<h1>Cluster %d info:</h1>
-Nb of clusters: <b>%d</b><br/>
-Timestep: <b>%d</b><br/>
+Num of clusters (K): <b>%d</b><br/>
 ''' \
-            % (cluster, timestep + 2, timestep)
+            % (cluster, timestep + 2)
+        patch = self.patch_of_cluster(timestep, cluster)
+        if patch is not None:
+            if patch[1] is not None:
+                info_text += 'In patch (gyrus): %d, label: %s<br/>' % patch
+            else:
+                info_text += 'In patch (gyrus): %d<br/>' % patch[0]
         self.info.setText(info_text)
+
+
+    def patch_of_cluster(self, timestep, cluster):
+        if len(self.seed_gyri) == 0:
+            return None, None
+        for aims_clusters, seed_gyri in zip(self.aims_clusters, self.seed_gyri):
+            if len(aims_clusters) > timestep:
+                vert = np.where(aims_clusters[timestep].arraydata() == cluster)
+                if len(vert[0]) != 0:
+                    patch_label = seed_gyri.toAimsObject()[0].data()[vert[0][0]]
+                    print('patch_label:', patch_label)
+                    hdr = seed_gyri.attributed()
+                    if 'GIFTI_labels_table' in hdr:
+                        label = hdr['GIFTI_labels_table'][patch_label]
+                        print('gyrus label:', label)
+                        return patch_label, label
+                    return patch_label, None
 
 
     def build_table(self, timestep):
@@ -332,6 +367,7 @@ Timestep: <b>%d</b><br/>
         self.set_curve_cursor(timestep, label)
         self.select_table_row(timestep, label)
         self.update_cluster_time(timestep, label)
+        self.clusters_win.statusBar().showMessage('Cluster: %d' % label)
 
 
     def update_clusters_boundaries(self):
@@ -371,10 +407,19 @@ Timestep: <b>%d</b><br/>
 
     def display_column(self, col):
         if self.viewing_column != col:
-            self.column_label.setText('displaying: <b>%s</b>'
-                                      % self.measurements[0].columns[col])
+            name = self.measurements[0].columns[col]
+            self.column_label.setText('displaying: <b>%s</b>' % name)
             self.viewing_column = col
             self.make_measurements_texture()
+            try:
+                import paletteViewer
+                paletteViewer.toggleShowPaletteForObject(self.measure_tex[0])
+                self.measure_tex[0].setName(name)
+                #self.measure_tex[0].setChanged()
+                #self.measure_tex[0].notifyObservers()
+                paletteViewer.toggleShowPaletteForObject(self.measure_tex[0])
+            except ImportError:
+                pass
 
     def display_curves(self, timestep):
         if len(self.curves_fig.axes) == 0:
@@ -514,17 +559,26 @@ if __name__ == '__main__':
         qapp = QtGui.QApplication(['bloup'])
         run_event_loop = True
 
-    meshes, clusters, measurements, seed_gyri = load_clusters_instpector_files(
-        #['/neurospin/archi-public/DataBaseArchi/FreeSurfer/fs_archi_v5.3.0/group_analysis/01to40/average_brain/averagebrain.white.mesh'],
-        ['/neurospin/archi-public/DataBaseArchi/FreeSurfer/fs_archi_v5.1.0/001/surf/bh.r.aims.white.inflated.gii'],
-        ['/neurospin/archi-public/Users/lefranc/archi/bv_archi/proba27/subjects/group_analysis/01to40/connectivity_clustering/avg/fs01to40/lh.supramarginal/smooth3.0/avgSubject/01to40_avg_fs01to40_lh.supramarginal_avgSubject_clusteringTime.gii'],
-        None,
-        ['/neurospin/archi-public/DataBaseArchi/FreeSurfer/fs_archi_v5.3.0/group_analysis/01to40/average_brain/bh.annot.averagebrain.gii'])
+    use_ex_num = 0
+
+    if use_ex_num == 1:
+        meshes, clusters, measurements, seed_gyri = load_clusters_instpector_files(
+            #['/neurospin/archi-public/DataBaseArchi/FreeSurfer/fs_archi_v5.3.0/group_analysis/01to40/average_brain/averagebrain.white.mesh'],
+            ['/neurospin/archi-public/DataBaseArchi/FreeSurfer/fs_archi_v5.1.0/001/surf/bh.r.aims.white.inflated.gii'],
+            ['/neurospin/archi-public/Users/lefranc/archi/bv_archi/proba27/subjects/group_analysis/01to40/connectivity_clustering/avg/fs01to40/lh.supramarginal/smooth3.0/avgSubject/01to40_avg_fs01to40_lh.supramarginal_avgSubject_clusteringTime.gii'],
+            None,
+            ['/neurospin/archi-public/DataBaseArchi/FreeSurfer/fs_archi_v5.3.0/group_analysis/01to40/average_brain/bh.annot.averagebrain.gii'])
+    elif use_ex_num == 1:
+        meshes, clusters, measurements, seed_gyri = load_clusters_instpector_files(
+            ['/neurospin/population/HCP/S500-1/100307/T1w/fsaverage_LR32k/100307.L.inflated.32k_fs_LR.surf.gii', '/neurospin/population/HCP/S500-1/100307/T1w/fsaverage_LR32k/100307.R.inflated.32k_fs_LR.surf.gii'],
+            ['/neurospin/archi-public/Users/lefranc/archi/bv_archi/proba27/subjects/group_analysis/01to40/connectivity_clustering/avg/fs01to40/lh.supramarginal/smooth3.0/avgSubject/01to40_avg_fs01to40_lh.supramarginal_avgSubject_clusteringTime.gii', '/neurospin/archi-public/Users/lefranc/archi/bv_archi/proba27/subjects/group_analysis/01to40/connectivity_clustering/avg/fs01to40/lh.supramarginal/smooth3.0/avgSubject/01to40_avg_fs01to40_lh.supramarginal_avgSubject_clusteringTime.gii'],
+            None,
+            ['/neurospin/population/HCP/S500-1/100307/MNINonLinear/fsaverage_LR32k/100307.L.aparc.32k_fs_LR.label.gii', '/neurospin/population/HCP/S500-1/100307/MNINonLinear/fsaverage_LR32k/100307.R.aparc.32k_fs_LR.label.gii'])
     # temp
     measurements = dict(
-        (i, pandas.DataFrame(np.random.ranf((i + 2, 2)),
-                             columns=('size', 'homogeneity')))
-        for i in range(sum([len(clusters_tex) for clusters_tex in clusters])))
+        (i, pandas.DataFrame(np.random.ranf((i + 2, 4)),
+                             columns=('size', 'homogeneity', 'conn_density', 'other')))
+        for i in range(max([len(clusters_tex) for clusters_tex in clusters])))
     cw = ClustersInspectorWidget(
         meshes, clusters, measurements=measurements, seed_gyri=seed_gyri)
     cw.show()
