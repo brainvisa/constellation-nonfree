@@ -67,6 +67,16 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
 
     def __init__(self, meshes, clusters, measurements, seed_gyri=[],
                  parent=None, flags=QtCore.Qt.WindowFlags(0)):
+        '''Clusters inspector widget
+
+        Parameters
+        ----------
+        meshes: list of aims.AimsTimeSurface objects
+        clusters: list of aims.TimeTexture_S16 objects
+        measurements: dict {int: pandas array}
+        seed_gyri: list of aims.TimeTexture_S16 objects (optional)
+        '''
+
         super(ClustersInspectorWidget, self).__init__(parent=parent,
                                                       flags=flags)
         if len(meshes) != len(clusters):
@@ -74,12 +84,13 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         if len(seed_gyri) != 0 and len(seed_gyri) != len(meshes):
             raise ValueError('meshes and seed_gyri numbers do not match')
 
-        self.meshes = meshes
-        self.clusters = clusters
-        self.aims_clusters = [clusters_tex.toAimsObject()
-                              for clusters_tex in clusters]
+        a = ana.Anatomist('-b')
+        self.meshes = [a.toAObject(mesh) for mesh in meshes]
+        self.aims_clusters = clusters
+        self.clusters = [a.toAObject(aims.TimeTexture('S16'))
+                         for c in clusters]
         self.measurements = measurements
-        self.seed_gyri = seed_gyri
+        self.seed_gyri = [a.toAObject(gyri) for gyri in seed_gyri]
         self.viewing_column = 0
         self.curves_columns = [0, 1]
 
@@ -175,6 +186,24 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         a.execute('LinkWindows', windows=[clusters_win, measures_win],
                   group=153)
 
+        # setup a specific cluster time slider
+        time_slider = clusters_win.findChild(QtGui.QSlider, 'sliderT')
+        w = time_slider.parentWidget().parentWidget()
+        slider_panel = QtGui.QWidget()
+        lay = QtGui.QVBoxLayout()
+        slider_panel.setLayout(lay)
+        w.layout().addWidget(slider_panel)
+        self.cluster_slider_label = QtGui.QLabel('2')
+        self.cluster_slider = QtGui.QSlider()
+        lay.addWidget(QtGui.QLabel('K:'))
+        lay.addWidget(self.cluster_slider_label)
+        lay.addWidget(self.cluster_slider)
+        self.cluster_slider.setInvertedAppearance(True)
+        self.cluster_slider.setInvertedControls(True)
+        self.cluster_slider.setRange(2, len(self.measurements) + 1)
+        self.cluster_slider.setPageStep(1)
+        self.cluster_slider.valueChanged.connect(self.time_changed)
+
         self.clusters_fusions = []
         self.clusters_boundaries = []
         self.boundaries = []
@@ -182,7 +211,9 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         self.measure_tex = []
         self.measure_fusions = []
 
-        for mesh, clusters_tex, aims_clusters in zip(meshes, clusters,
+        self.update_clusters_texture()
+        for mesh, clusters_tex, aims_clusters in zip(self.meshes,
+                                                     self.clusters,
                                                      self.aims_clusters):
             clusters_tex.setPalette('Talairach')
             a.execute('TexturingParams', objects=[clusters_tex],
@@ -190,13 +221,10 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
             clusters_fusion = a.fusionObjects(
                 [mesh, clusters_tex], method='FusionTexSurfMethod')
             self.clusters_fusions.append(clusters_fusion)
-            clusters_boundaries \
-                = a.toAObject(aims.SurfaceManip.meshTextureBoundary(
-                    mesh.surface(), aims_clusters, -1))
+            clusters_boundaries = a.toAObject(aims.AimsTimeSurface(2))
             self.clusters_boundaries.append(clusters_boundaries)
             clusters_boundaries.setMaterial(line_width=3.)
 
-        measures_win.addObjects(self.clusters_boundaries)
         clusters_win.addObjects(self.clusters_fusions)
 
         # remove referential button and views toolbar
@@ -213,12 +241,13 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
                 self.boundaries.append(boundaries)
             clusters_win.addObjects(self.boundaries)
 
+        # build measurements texture and boundaries
         aims_tex = [aims.TimeTexture('FLOAT')] * len(self.meshes)
         self.aims_measure_tex = aims_tex
         self.measure_tex = [a.toAObject(tex) for tex in aims_tex]
         for measure_tex in self.measure_tex:
             measure_tex.setPalette('Yellow-red-fusion')
-        self.make_measurements_texture(0)
+        self.make_measurements_texture()
         for mesh, measure_tex in zip(self.meshes, self.measure_tex):
             self.measure_fusions.append(a.fusionObjects(
                 [mesh, measure_tex], method='FusionTexSurfMethod'))
@@ -230,14 +259,21 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
             paletteViewer.toggleShowPaletteForObject(self.measure_tex[0])
         except ImportError:
             pass
+        self.update_clusters_boundaries()
+        measures_win.addObjects(self.clusters_boundaries)
 
         install_controls()
 
         self.clusters_win.setControl('ClusterSelectionControl')
 
         # link time sliders on both views
-        time_slider = clusters_win.findChild(QtGui.QSlider, 'sliderT')
-        time_slider.valueChanged.connect(self.time_changed)
+        #time_slider.valueChanged.connect(self.time_changed)
+        # Hide slider of 2nd window
+        # hide both slider and label instead of hiding the parent panel
+        # because the panel will be showed automatically by Window3D.Refresh()
+        time_slider2 = measures_win.findChild(QtGui.QSlider, 'sliderT')
+        time_slider2.hide()
+        time_slider2.parentWidget().findChild(QtGui.QLabel).hide()
 
         # build and display table
         self.build_table(0)
@@ -248,19 +284,21 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         self.display_curves(0)
 
 
-    def make_measurements_texture(self, col):
+    def make_measurements_texture(self):
+        col = self.viewing_column
+        timestep = self.cluster_slider.value() - 2
         for atex, ctex, measure_tex in zip(self.aims_measure_tex,
                                            self.aims_clusters,
                                            self.measure_tex):
             ndata = len(ctex[0].data())
-            for i in ctex.keys():
-                measurements = self.measurements[i]
+            arr = np.zeros((ndata,), dtype=np.float32)
+            if len(ctex) > timestep:
+                measurements = self.measurements[timestep]
                 values = measurements[measurements.columns[col]]
-                arr = np.zeros((ndata,), dtype=np.float32)
                 for label in range(len(values)):
                     value = values[label]
-                    arr[ctex[i].data().arraydata() == label + 1] = value
-                atex[i].data().assign(arr)
+                    arr[ctex[timestep].data().arraydata() == label + 1] = value
+            atex[0].data().assign(arr)
             measure_tex.setTexture(atex)
             measure_tex.setChanged()
             measure_tex.notifyObservers()
@@ -296,18 +334,47 @@ Timestep: <b>%d</b><br/>
         self.update_cluster_time(timestep, label)
 
 
-    def time_changed(self):
-        timestep = self.clusters_win.getTime() / self.clusters[0].TimeStep()
+    def update_clusters_boundaries(self):
+        timestep = self.cluster_slider.value() - 2
+        for mesh, aims_clusters, boundaries in zip(self.meshes,
+                                                   self.aims_clusters,
+                                                   self.clusters_boundaries):
+            texture = aims.TimeTexture(dtype='S16')
+            texture[0].data().assign(
+                aims_clusters[min(timestep, len(aims_clusters) - 1)].data())
+            clusters_boundaries \
+                = aims.SurfaceManip.meshTextureBoundary(
+                    mesh.surface(), texture, -1)
+            boundaries.setSurface(clusters_boundaries)
+            boundaries.notifyObservers()
+
+
+    def update_clusters_texture(self):
+        timestep = self.cluster_slider.value() - 2
+        for clusters, aims_clusters in zip(self.clusters, self.aims_clusters):
+            t = min(timestep, len(aims_clusters) - 1)
+            texture = aims.TimeTexture('S16')
+            texture[0].data().assign(aims_clusters[t].data())
+            clusters.setTexture(texture)
+            clusters.notifyObservers()
+
+
+    def time_changed(self, value):
+        self.cluster_slider_label.setText(str(value))
+        timestep = value - 2
         self.build_table(timestep)
         self.display_curves(timestep)
+        self.make_measurements_texture()
+        self.update_clusters_texture()
+        self.update_clusters_boundaries()
 
 
     def display_column(self, col):
         if self.viewing_column != col:
             self.column_label.setText('displaying: <b>%s</b>'
                                       % self.measurements[0].columns[col])
-            self.make_measurements_texture(col)
             self.viewing_column = col
+            self.make_measurements_texture()
 
     def display_curves(self, timestep):
         if len(self.curves_fig.axes) == 0:
@@ -393,17 +460,16 @@ Timestep: <b>%d</b><br/>
 def load_clusters_instpector_files(mesh_filenames, clusters_filenames,
                                    measurements_filenames,
                                    seed_gyri_filenames=[]):
-    a = ana.Anatomist('-b')
     meshes = []
     clusters = []
     seed_gyri = []
     for mesh_filename in mesh_filenames:
-        meshes.append(a.loadObject(mesh_filename))
+        meshes.append(aims.read(mesh_filename))
     for clusters_filename in clusters_filenames:
-        clusters.append(a.loadObject(clusters_filename))
+        clusters.append(aims.read(clusters_filename))
     measurements = None
     for seed_gyri_filename in seed_gyri_filenames:
-        seed_gyri.append(a.loadObject(seed_gyri_filename))
+        seed_gyri.append(aims.read(seed_gyri_filename))
 
     if len(meshes) != len(clusters):
         raise ValueError('meshes and clusters numbers do not match')
@@ -457,8 +523,7 @@ if __name__ == '__main__':
     measurements = dict(
         (i, pandas.DataFrame(np.random.ranf((i + 2, 2)),
                              columns=('size', 'homogeneity')))
-        for i in range(sum([len(clusters_tex.toAimsObject())
-                            for clusters_tex in clusters])))
+        for i in range(sum([len(clusters_tex) for clusters_tex in clusters])))
     cw = ClustersInspectorWidget(
         meshes, clusters, measurements=measurements, seed_gyri=seed_gyri)
     cw.show()
