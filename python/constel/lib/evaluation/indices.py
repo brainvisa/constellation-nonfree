@@ -18,7 +18,7 @@ This script does the following:
 
 Main dependencies: Pycluster library, scipy and constel
 
-Author: sandrine.lefranc@cea.fr
+Author: S. Lefranc
 """
 
 #----------------------------Imports-------------------------------------------
@@ -44,8 +44,17 @@ import constel.lib.utils.matrixtools as clccm
 #----------------------------Functions-----------------------------------------
 
 
-def silhouette_sample(X, K):
-    """
+def silhouette_score(X, K):
+    """Average silhouette method.
+    
+    The average silhouette approach measures the quality of a clustering. It
+    determines how welle each object lies within its cluster. A high average
+    silhouette width indicates a good clustering.
+    Average silhouette method computes the average silhouette of observations
+    for different values of k. The optimal number of clusters k is the one that
+    maximize the average silhouette over a range of possible values for k.
+    
+    reference: [Kaufman and Rousseeuw, 1990]
     """
     n = X.shape[0]
 
@@ -69,14 +78,6 @@ def silhouette_sample(X, K):
             [numpy.mean(distance[i][ind]) for k,
              ind in enumerate(kIndices) if clusterid[i] != k])
     s = (b - a) / numpy.maximum(a, b)
-    # p.silhouette_plot(X, s, clusterid)
-    return s
-
-
-def silhouette_score(X, K):
-    """
-    """
-    s = silhouette_sample(X, K)
     score = numpy.mean(s)
     return score
 
