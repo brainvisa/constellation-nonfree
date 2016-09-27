@@ -64,18 +64,18 @@ class ClusterSelectionControl(selection.SelectionControl):
 
 
 class ClustersInspectorWidget(QtGui.QMainWindow):
+    '''Clusters inspector widget
+
+    Parameters
+    ----------
+    meshes: list of aims.AimsTimeSurface objects
+    clusters: list of aims.TimeTexture_S16 objects
+    measurements: dict {int: pandas array}
+    seed_gyri: list of aims.TimeTexture_S16 objects (optional)
+    '''
 
     def __init__(self, meshes, clusters, measurements, seed_gyri=[],
                  parent=None, flags=QtCore.Qt.WindowFlags(0)):
-        '''Clusters inspector widget
-
-        Parameters
-        ----------
-        meshes: list of aims.AimsTimeSurface objects
-        clusters: list of aims.TimeTexture_S16 objects
-        measurements: dict {int: pandas array}
-        seed_gyri: list of aims.TimeTexture_S16 objects (optional)
-        '''
 
         super(ClustersInspectorWidget, self).__init__(parent=parent,
                                                       flags=flags)
@@ -99,16 +99,25 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         main_w.setObjectName('views')
         self.setCentralWidget(main_w)
 
-        clusters_view = QtGui.QWidget()
-        clusters_view.setObjectName('clusters_view')
-        main_w.addWidget(clusters_view)
-        clusters_view.setLayout(QtGui.QHBoxLayout())
+        self.create_info_dock()
+        self.create_table_dock()
+        self.create_curves_dock()
+        self.create_matrix_dock()
+        self.create_fibers_histo_dock()
+        self.create_clusters_evolution_dock()
+        self.create_anatomist_views()
+        self.create_silhouette_dock()
 
-        measures_view = QtGui.QWidget()
-        measures_view.setObjectName('measures_view')
-        main_w.addWidget(measures_view)
-        measures_view.setLayout(QtGui.QHBoxLayout())
+        # build and display table
+        self.build_table(0)
+        self.table.horizontalHeader().sectionDoubleClicked.connect(
+            self.display_column)
 
+        # build and display curves
+        self.display_curves(0)
+
+
+    def create_info_dock(self):
         # info dock
         info_dock = QtGui.QDockWidget()
         info_dock.setObjectName('info_dock')
@@ -119,6 +128,8 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         self.info = info
         self.print_cluster_info(0, 1)
 
+
+    def create_table_dock(self):
         # measurements table dock
         table_dock = QtGui.QDockWidget()
         table_dock.setObjectName('table_dock')
@@ -135,6 +146,8 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         table_wid.layout().addWidget(table)
         self.table = table
 
+
+    def create_curves_dock(self):
         # matplotlib curves dock
         curves_dock = QtGui.QDockWidget()
         curves_dock.setObjectName('curves_dock')
@@ -151,6 +164,8 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         toolbar.addAction(sel_cols)
         sel_cols.triggered.connect(self.select_curves_columns)
 
+
+    def create_matrix_dock(self):
         # matrix view dock
         matrix_dock = QtGui.QDockWidget()
         matrix_dock.setObjectName('matrix_dock')
@@ -159,6 +174,8 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         matrix_dock.setWidget(QtGui.QLabel(
             'Here will be the matrix view.<br/>Soon.'))
 
+
+    def create_fibers_histo_dock(self):
         # fibers histogram dock
         fibers_histo_dock = QtGui.QDockWidget()
         fibers_histo_dock.setObjectName('fibers_histo_dock')
@@ -170,6 +187,8 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
                 self.fibers_histo_fig.number).window
         fibers_histo_dock.setWidget(self.fibers_histo_widget)
 
+
+    def create_clusters_evolution_dock(self):
         # cluster time evolution view
         cluster_time_dock = QtGui.QDockWidget()
         cluster_time_dock.setObjectName('cluster_time_dock')
@@ -181,13 +200,37 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
                 self.cluster_time_fig.number).window
         cluster_time_dock.setWidget(self.cluster_time_widget)
 
+
+    def create_silhouette_dock(self):
+        # silhouette dock
+        silhouette_dock = QtGui.QDockWidget()
+        silhouette_dock.setObjectName('silhouette_dock')
+        silhouette_dock.setWindowTitle('Silhouette')
+        self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, silhouette_dock)
+        silhouette_dock.setWidget(QtGui.QLabel('Nice silhouette here. Cute.'))
+
+
+    def create_anatomist_views(self):
         # Anatomist views
         a = ana.Anatomist('-b')
+        main_w = self.centralWidget()
+
         a.execute('GraphParams', show_tooltips=0)
+
+        clusters_view = QtGui.QWidget()
+        clusters_view.setObjectName('clusters_view')
+        main_w.addWidget(clusters_view)
+        clusters_view.setLayout(QtGui.QHBoxLayout())
+
         clusters_win = a.createWindow('3D')
         clusters_view.layout().addWidget(clusters_win.getInternalRep())
         self.clusters_win = clusters_win
         clusters_win.getInternalRep().cluster_window = weakref.proxy(self)
+
+        measures_view = QtGui.QWidget()
+        measures_view.setObjectName('measures_view')
+        main_w.addWidget(measures_view)
+        measures_view.setLayout(QtGui.QHBoxLayout())
 
         measures_win = a.createWindow('3D')
         measures_view.layout().addWidget(measures_win.getInternalRep())
@@ -259,7 +302,8 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         self.measure_tex = [a.toAObject(tex) for tex in aims_tex]
         for measure_tex in self.measure_tex:
             measure_tex.setPalette('Yellow-red-fusion')
-            measure_tex.setName(self.measurements[0].columns[self.viewing_column])
+            measure_tex.setName(
+                self.measurements[0].columns[self.viewing_column])
         self.make_measurements_texture()
         for mesh, measure_tex in zip(self.meshes, self.measure_tex):
             self.measure_fusions.append(a.fusionObjects(
@@ -279,22 +323,12 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
 
         self.clusters_win.setControl('ClusterSelectionControl')
 
-        # link time sliders on both views
-        #time_slider.valueChanged.connect(self.time_changed)
         # Hide slider of 2nd window
         # hide both slider and label instead of hiding the parent panel
         # because the panel will be showed automatically by Window3D.Refresh()
         time_slider2 = measures_win.findChild(QtGui.QSlider, 'sliderT')
         time_slider2.hide()
         time_slider2.parentWidget().findChild(QtGui.QLabel).hide()
-
-        # build and display table
-        self.build_table(0)
-        self.table.horizontalHeader().sectionDoubleClicked.connect(
-            self.display_column)
-
-        # build and display curves
-        self.display_curves(0)
 
 
     def make_measurements_texture(self):
@@ -334,11 +368,13 @@ Num of clusters (K): <b>%d</b><br/>
     def patch_of_cluster(self, timestep, cluster):
         if len(self.seed_gyri) == 0:
             return None, None
-        for aims_clusters, seed_gyri in zip(self.aims_clusters, self.seed_gyri):
+        for aims_clusters, seed_gyri in zip(self.aims_clusters,
+                                            self.seed_gyri):
             if len(aims_clusters) > timestep:
                 vert = np.where(aims_clusters[timestep].arraydata() == cluster)
                 if len(vert[0]) != 0:
-                    patch_label = seed_gyri.toAimsObject()[0].data()[vert[0][0]]
+                    patch_label \
+                        = seed_gyri.toAimsObject()[0].data()[vert[0][0]]
                     print('patch_label:', patch_label)
                     hdr = seed_gyri.attributed()
                     if 'GIFTI_labels_table' in hdr:
@@ -561,23 +597,29 @@ if __name__ == '__main__':
 
     use_ex_num = 0
 
-    if use_ex_num == 1:
-        meshes, clusters, measurements, seed_gyri = load_clusters_instpector_files(
-            #['/neurospin/archi-public/DataBaseArchi/FreeSurfer/fs_archi_v5.3.0/group_analysis/01to40/average_brain/averagebrain.white.mesh'],
-            ['/neurospin/archi-public/DataBaseArchi/FreeSurfer/fs_archi_v5.1.0/001/surf/bh.r.aims.white.inflated.gii'],
-            ['/neurospin/archi-public/Users/lefranc/archi/bv_archi/proba27/subjects/group_analysis/01to40/connectivity_clustering/avg/fs01to40/lh.supramarginal/smooth3.0/avgSubject/01to40_avg_fs01to40_lh.supramarginal_avgSubject_clusteringTime.gii'],
-            None,
-            ['/neurospin/archi-public/DataBaseArchi/FreeSurfer/fs_archi_v5.3.0/group_analysis/01to40/average_brain/bh.annot.averagebrain.gii'])
+    if use_ex_num == 0:
+        meshes, clusters, measurements, seed_gyri \
+            = load_clusters_instpector_files(
+                #['/neurospin/archi-public/DataBaseArchi/FreeSurfer/fs_archi_v5.3.0/group_analysis/01to40/average_brain/averagebrain.white.mesh'],
+                ['/neurospin/archi-public/DataBaseArchi/FreeSurfer/fs_archi_v5.1.0/001/surf/bh.r.aims.white.inflated.gii'],
+                ['/neurospin/archi-public/Users/lefranc/archi/bv_archi/proba27/subjects/group_analysis/01to40/connectivity_clustering/avg/fs01to40/lh.supramarginal/smooth3.0/avgSubject/01to40_avg_fs01to40_lh.supramarginal_avgSubject_clusteringTime.gii'],
+                None,
+                ['/neurospin/archi-public/DataBaseArchi/FreeSurfer/fs_archi_v5.3.0/group_analysis/01to40/average_brain/bh.annot.averagebrain.gii'])
     elif use_ex_num == 1:
-        meshes, clusters, measurements, seed_gyri = load_clusters_instpector_files(
-            ['/neurospin/population/HCP/S500-1/100307/T1w/fsaverage_LR32k/100307.L.inflated.32k_fs_LR.surf.gii', '/neurospin/population/HCP/S500-1/100307/T1w/fsaverage_LR32k/100307.R.inflated.32k_fs_LR.surf.gii'],
-            ['/neurospin/archi-public/Users/lefranc/archi/bv_archi/proba27/subjects/group_analysis/01to40/connectivity_clustering/avg/fs01to40/lh.supramarginal/smooth3.0/avgSubject/01to40_avg_fs01to40_lh.supramarginal_avgSubject_clusteringTime.gii', '/neurospin/archi-public/Users/lefranc/archi/bv_archi/proba27/subjects/group_analysis/01to40/connectivity_clustering/avg/fs01to40/lh.supramarginal/smooth3.0/avgSubject/01to40_avg_fs01to40_lh.supramarginal_avgSubject_clusteringTime.gii'],
-            None,
-            ['/neurospin/population/HCP/S500-1/100307/MNINonLinear/fsaverage_LR32k/100307.L.aparc.32k_fs_LR.label.gii', '/neurospin/population/HCP/S500-1/100307/MNINonLinear/fsaverage_LR32k/100307.R.aparc.32k_fs_LR.label.gii'])
+        meshes, clusters, measurements, seed_gyri \
+            = load_clusters_instpector_files(
+                ['/neurospin/population/HCP/S500-1/100307/T1w/fsaverage_LR32k/100307.L.inflated.32k_fs_LR.surf.gii', '/neurospin/population/HCP/S500-1/100307/T1w/fsaverage_LR32k/100307.R.inflated.32k_fs_LR.surf.gii'],
+                ['/neurospin/archi-public/Users/lefranc/archi/bv_archi/proba27/subjects/group_analysis/01to40/connectivity_clustering/avg/fs01to40/lh.supramarginal/smooth3.0/avgSubject/01to40_avg_fs01to40_lh.supramarginal_avgSubject_clusteringTime.gii', '/neurospin/archi-public/Users/lefranc/archi/bv_archi/proba27/subjects/group_analysis/01to40/connectivity_clustering/avg/fs01to40/lh.supramarginal/smooth3.0/avgSubject/01to40_avg_fs01to40_lh.supramarginal_avgSubject_clusteringTime.gii'],
+                None,
+                ['/neurospin/population/HCP/S500-1/100307/MNINonLinear/fsaverage_LR32k/100307.L.aparc.32k_fs_LR.label.gii', '/neurospin/population/HCP/S500-1/100307/MNINonLinear/fsaverage_LR32k/100307.R.aparc.32k_fs_LR.label.gii'])
+    else:
+        print('wrong use_ex_num value:', use_ex_num)
+        raise ValueError('aborting')
     # temp
     measurements = dict(
         (i, pandas.DataFrame(np.random.ranf((i + 2, 4)),
-                             columns=('size', 'homogeneity', 'conn_density', 'other')))
+                             columns=('size', 'homogeneity', 'conn_density',
+                                      'other')))
         for i in range(max([len(clusters_tex) for clusters_tex in clusters])))
     cw = ClustersInspectorWidget(
         meshes, clusters, measurements=measurements, seed_gyri=seed_gyri)
