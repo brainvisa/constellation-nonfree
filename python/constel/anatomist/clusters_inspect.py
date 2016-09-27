@@ -44,7 +44,7 @@ class ClusterSelectionAction(ana.cpp.Action):
         timestep = max([x for x in aims_tex.keys() if x <= timestep])
         label = aims_tex[timestep][ivert]
         if hasattr(win, 'cluster_window'):
-            win.cluster_window.cluster_selected(timestep, label)
+            win.cluster_window.cluster_selected(timestep, label, mesh, ivert)
 
 
 class ClusterSelectionControl(selection.SelectionControl):
@@ -90,6 +90,7 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         self.clusters = [a.toAObject(aims.TimeTexture('S16'))
                          for c in clusters]
         self.measurements = measurements
+        self.aims_seed_gyri = seed_gyri
         self.seed_gyri = [a.toAObject(gyri) for gyri in seed_gyri]
         self.viewing_column = 0
         self.curves_columns = range(measurements[0].shape[1])
@@ -351,37 +352,36 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
             measure_tex.notifyObservers()
 
 
-    def print_cluster_info(self, timestep, cluster):
+    def print_cluster_info(self, timestep, cluster, mesh=None, ivertex=None):
         info_text = '''<h1>Cluster %d info:</h1>
 Num of clusters (K): <b>%d</b><br/>
 ''' \
             % (cluster, timestep + 2)
-        patch = self.patch_of_cluster(timestep, cluster)
-        if patch is not None:
+        patch = self.get_patch(timestep, mesh, ivertex)
+        if patch[0] is not None:
             if patch[1] is not None:
-                info_text += 'In patch (gyrus): %d, label: %s<br/>' % patch
+                label = patch[1]['Label']
+                color = tuple(int(x * 255.9) for x in patch[1]['RGB'][:3])
+                clabel = '<div style="background-color: ' \
+                    '#%02x%02x%02x">%s</div>' % (color + (label, ))
+                info_text += 'In patch (gyrus): %d, label: %s<br/>' \
+                    % (patch[0], clabel)
             else:
                 info_text += 'In patch (gyrus): %d<br/>' % patch[0]
         self.info.setText(info_text)
 
 
-    def patch_of_cluster(self, timestep, cluster):
-        if len(self.seed_gyri) == 0:
+    def get_patch(self, timestep, mesh, ivertex):
+        if mesh is None or ivertex is None or len(self.seed_gyri) == 0:
             return None, None
-        for aims_clusters, seed_gyri in zip(self.aims_clusters,
-                                            self.seed_gyri):
-            if len(aims_clusters) > timestep:
-                vert = np.where(aims_clusters[timestep].arraydata() == cluster)
-                if len(vert[0]) != 0:
-                    patch_label \
-                        = seed_gyri.toAimsObject()[0].data()[vert[0][0]]
-                    print('patch_label:', patch_label)
-                    hdr = seed_gyri.attributed()
-                    if 'GIFTI_labels_table' in hdr:
-                        label = hdr['GIFTI_labels_table'][patch_label]
-                        print('gyrus label:', label)
-                        return patch_label, label
-                    return patch_label, None
+        mesh_index = [m.getInternalRep() for m in self.meshes].index(mesh)
+        seed_gyri = self.aims_seed_gyri[mesh_index]
+        patch_label = seed_gyri[0].data()[ivertex]
+        hdr = seed_gyri.header()
+        if 'GIFTI_labels_table' in hdr:
+            label = hdr['GIFTI_labels_table'][patch_label]
+            return patch_label, label
+        return patch_label, None
 
 
     def build_table(self, timestep):
@@ -398,8 +398,9 @@ Num of clusters (K): <b>%d</b><br/>
                                    QtGui.QTableWidgetItem(str(col[r])))
 
 
-    def cluster_selected(self, timestep, label):
-        self.print_cluster_info(timestep, label)
+    def cluster_selected(self, timestep, label, mesh, ivert):
+        timestep = self.cluster_slider.value() - 2
+        self.print_cluster_info(timestep, label, mesh, ivert)
         self.set_curve_cursor(timestep, label)
         self.select_table_row(timestep, label)
         self.update_cluster_time(timestep, label)
@@ -604,7 +605,8 @@ if __name__ == '__main__':
                 ['/neurospin/archi-public/DataBaseArchi/FreeSurfer/fs_archi_v5.1.0/001/surf/bh.r.aims.white.inflated.gii'],
                 ['/neurospin/archi-public/Users/lefranc/archi/bv_archi/proba27/subjects/group_analysis/01to40/connectivity_clustering/avg/fs01to40/lh.supramarginal/smooth3.0/avgSubject/01to40_avg_fs01to40_lh.supramarginal_avgSubject_clusteringTime.gii'],
                 None,
-                ['/neurospin/archi-public/DataBaseArchi/FreeSurfer/fs_archi_v5.3.0/group_analysis/01to40/average_brain/bh.annot.averagebrain.gii'])
+                #['/neurospin/archi-public/DataBaseArchi/FreeSurfer/fs_archi_v5.3.0/group_analysis/01to40/average_brain/bh.annot.averagebrain.gii'])
+                ['/tmp/bh.r.aparc.annot.gii'])
     elif use_ex_num == 1:
         meshes, clusters, measurements, seed_gyri \
             = load_clusters_instpector_files(
