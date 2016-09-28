@@ -30,7 +30,10 @@ class ClusterSelectionAction(ana.cpp.Action):
         obj = win.objectAtCursorPosition(x, y)
         if obj is None:
             return
-        mesh = [m for m in obj if isinstance(m, ana.cpp.ASurface_3)][0]
+        meshes = [m for m in obj if isinstance(m, ana.cpp.ASurface_3)]
+        if len(meshes) == 0:
+            return
+        mesh = meshes[0]
         tex = [m for m in obj if isinstance(m, ana.cpp.ATexture)][0]
         poly = win.polygonAtCursorPosition(x, y, obj)
         polygon = mesh.surface().polygon()[poly]
@@ -353,22 +356,57 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
 
 
     def print_cluster_info(self, timestep, cluster, mesh=None, ivertex=None):
-        info_text = '''<h1>Cluster %d info:</h1>
+        color = self.get_cluster_color(timestep, mesh, cluster)
+        if color is not None:
+            intensity = np.sqrt(np.sum(np.array(color[:3]) ** 2)) / np.sqrt(3.)
+            if intensity < 160:
+                text_col = ' style="color: white; background-color: ' \
+                    '#%02x%02x%02x;"' % color[:3]
+            else:
+                text_col = ' style="background-color: #%02x%02x%02x;"' \
+                    % color[:3]
+        else:
+            text_col = ''
+        info_text = '''<h1%s>Cluster %d info:</h1>
 Num of clusters (K): <b>%d</b><br/>
 ''' \
-            % (cluster, timestep + 2)
+            % (text_col, cluster, timestep + 2)
         patch = self.get_patch(timestep, mesh, ivertex)
         if patch[0] is not None:
             if patch[1] is not None:
                 label = patch[1]['Label']
                 color = tuple(int(x * 255.9) for x in patch[1]['RGB'][:3])
-                clabel = '<div style="background-color: ' \
-                    '#%02x%02x%02x">%s</div>' % (color + (label, ))
+                intensity = np.sqrt(np.sum(np.array(color) ** 2)) / np.sqrt(3.)
+                if intensity < 135:
+                    text_col = ' color: white;'
+                else:
+                    text_col = ''
+                clabel = '<b style="background-color: ' \
+                    '#%02x%02x%02x;%s">%s</b>' % (color + (text_col, label))
                 info_text += 'In patch (gyrus): %d, label: %s<br/>' \
                     % (patch[0], clabel)
             else:
                 info_text += 'In patch (gyrus): %d<br/>' % patch[0]
         self.info.setText(info_text)
+
+
+    def get_cluster_color(self, timestep, mesh, cluster):
+        if mesh is None:
+            return None
+        mesh_index = [m.getInternalRep() for m in self.meshes].index(mesh)
+        cluster_tex = self.clusters[mesh_index]
+        te = cluster_tex.glTexExtrema()
+        pos = (cluster - te.minquant[0]) / (te.maxquant[0] - te.minquant[0])
+        pal = cluster_tex.palette()
+        colors = pal.colors()
+        pos = (pos - pal.min1()) / (pal.max1() - pal.min1())
+        if pos < 0:
+            pos = 0
+        elif pos > 1:
+            pos = 1
+        color = colors.value(int(pos * (colors.dimX() - 0.0001)))
+        color = (color[0], color[1], color[2], color[3])
+        return color
 
 
     def get_patch(self, timestep, mesh, ivertex):
