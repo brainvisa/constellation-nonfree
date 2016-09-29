@@ -42,6 +42,7 @@ class ClusterSelectionAction(ana.cpp.Action):
         vert = [vertices[p] - pos for p in polygon]
         ivert = polygon[np.argmin([x.norm2() for x in vert])]
         a = ana.Anatomist('-b')
+        mesh = a.AObject(a, mesh)
         timestep = win.getTime() / obj.TimeStep()
         aims_tex = a.AObject(a, tex).toAimsObject()
         timestep = max([x for x in aims_tex.keys() if x <= timestep])
@@ -97,6 +98,7 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         self.seed_gyri = [a.toAObject(gyri) for gyri in seed_gyri]
         self.viewing_column = 0
         self.curves_columns = range(measurements[0].shape[1])
+        self.selected_cluster_boundaries = a.toAObject(aims.AimsTimeSurface(2))
 
         # 3D views area
         main_w = QtGui.QSplitter(QtCore.Qt.Vertical)
@@ -334,6 +336,9 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         time_slider2.hide()
         time_slider2.parentWidget().findChild(QtGui.QLabel).hide()
 
+        self.selected_cluster_boundaries.setMaterial(
+            line_width=5., diffuse=[0.6, 0.8, 0., 1.])
+
 
     def make_measurements_texture(self):
         col = self.viewing_column
@@ -393,7 +398,7 @@ Num of clusters (K): <b>%d</b><br/>
     def get_cluster_color(self, timestep, mesh, cluster):
         if mesh is None:
             return None
-        mesh_index = [m.getInternalRep() for m in self.meshes].index(mesh)
+        mesh_index = self.meshes.index(mesh)
         cluster_tex = self.clusters[mesh_index]
         te = cluster_tex.glTexExtrema()
         pos = (cluster - te.minquant[0]) / (te.maxquant[0] - te.minquant[0])
@@ -412,7 +417,7 @@ Num of clusters (K): <b>%d</b><br/>
     def get_patch(self, timestep, mesh, ivertex):
         if mesh is None or ivertex is None or len(self.seed_gyri) == 0:
             return None, None
-        mesh_index = [m.getInternalRep() for m in self.meshes].index(mesh)
+        mesh_index = self.meshes.index(mesh)
         seed_gyri = self.aims_seed_gyri[mesh_index]
         patch_label = seed_gyri[0].data()[ivertex]
         hdr = seed_gyri.header()
@@ -443,6 +448,7 @@ Num of clusters (K): <b>%d</b><br/>
         self.select_table_row(timestep, label)
         self.update_cluster_time(timestep, label)
         self.clusters_win.statusBar().showMessage('Cluster: %d' % label)
+        self.update_selected_cluster_boundaries(label, mesh)
 
 
     def update_clusters_boundaries(self):
@@ -458,6 +464,27 @@ Num of clusters (K): <b>%d</b><br/>
                     mesh.surface(), texture, -1)
             boundaries.setSurface(clusters_boundaries)
             boundaries.notifyObservers()
+
+
+    def update_selected_cluster_boundaries(self, label, mesh):
+        self.clusters_win.removeObjects(self.selected_cluster_boundaries)
+        self.measures_win.removeObjects(self.selected_cluster_boundaries)
+        if mesh is None or label == 0:
+            return
+        mesh_index = self.meshes.index(mesh)
+        timestep = self.cluster_slider.value() - 2
+        cluster_tex0 = self.aims_clusters[mesh_index][timestep]
+        cluster_tex = self.aims_clusters[mesh_index].__class__()
+        cluster_tex[0].assign(cluster_tex0.data())
+        cluster_boundaries = aims.SurfaceManip.meshTextureBoundary(
+            mesh.surface(), cluster_tex, label)
+        self.selected_cluster_boundaries.setSurface(cluster_boundaries)
+        self.selected_cluster_boundaries.setChanged()
+        self.selected_cluster_boundaries.notifyObservers()
+        self.clusters_win.addObjects(self.selected_cluster_boundaries,
+                                     temporary=True, position=0)
+        self.measures_win.addObjects(self.selected_cluster_boundaries,
+                                     temporary=True, position=0)
 
 
     def update_clusters_texture(self):
@@ -478,6 +505,8 @@ Num of clusters (K): <b>%d</b><br/>
         self.make_measurements_texture()
         self.update_clusters_texture()
         self.update_clusters_boundaries()
+        self.cluster_selected(0, 0, None, 0)
+        #self.update_selected_cluster_boundaries(0, None)
 
 
     def display_column(self, col):
