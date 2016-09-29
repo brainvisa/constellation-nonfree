@@ -241,8 +241,7 @@ def euclidianDistanceMatrix(matrix):
     return euclidian_dist_matrix
 
 
-def compute_mclusters_by_nbasins_matrix(reducedmatrix, clusters,
-                                        timestep=0, mode="mean"):
+def compute_mclusters_by_nbasins_matrix(reducedmatrix, clusters, mode="mean"):
     """
     Compute the mean connectivity profile of each clusters and create the
     associated matrix.
@@ -253,10 +252,6 @@ def compute_mclusters_by_nbasins_matrix(reducedmatrix, clusters,
           matrix of size M(vertex_ROI, vertex_targets)
       clusters: numpy.array (mandatory)
           connectivity-based parcelation of a ROI, labelled by clusters
-      timestep: integer
-          if the input parcels has several time steps,
-          indicates the chosen step. (each step corresponding to a parcellation
-          of the patch, time_step = 0, parcellation into 2 clusters)
       mode:
           "mean": normalized by the number of parcels vertices
           "sum": not normalized
@@ -265,7 +260,6 @@ def compute_mclusters_by_nbasins_matrix(reducedmatrix, clusters,
     ------
       matrix: size (parcels_nb, targets_nb)
     """
-
     # if need, transpose the matrix to always work with
     # M(vertex_ROI, vertex_targets)
     if reducedmatrix.shape[0] < reducedmatrix.shape[1]:
