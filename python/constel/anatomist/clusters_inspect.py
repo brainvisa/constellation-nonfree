@@ -11,6 +11,8 @@ import numpy as np
 import weakref
 import pandas
 import six
+from constel.lib.utils import matrixtools
+
 
 # need to initialize Anatomist before importing selection plugin
 a = ana.Anatomist('-b')
@@ -42,6 +44,7 @@ class ClusterSelectionAction(ana.cpp.Action):
         vert = [vertices[p] - pos for p in polygon]
         ivert = polygon[np.argmin([x.norm2() for x in vert])]
         a = ana.Anatomist('-b')
+        mesh = a.AObject(a, mesh)
         timestep = win.getTime() / obj.TimeStep()
         aims_tex = a.AObject(a, tex).toAimsObject()
         timestep = max([x for x in aims_tex.keys() if x <= timestep])
@@ -75,9 +78,13 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
     clusters: list of aims.TimeTexture_S16 objects
     measurements: dict {int: pandas array}
     seed_gyri: list of aims.TimeTexture_S16 objects (optional)
+    matrix: aims.SparseOrDenseMatrix (optional)
+    parent: parent widget (optional)
+    flags: Qt widget flags (optional)
     '''
 
     def __init__(self, meshes, clusters, measurements, seed_gyri=[],
+                 matrix=None,
                  parent=None, flags=QtCore.Qt.WindowFlags(0)):
 
         super(ClustersInspectorWidget, self).__init__(parent=parent,
@@ -95,8 +102,11 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         self.measurements = measurements
         self.aims_seed_gyri = seed_gyri
         self.seed_gyri = [a.toAObject(gyri) for gyri in seed_gyri]
+        self.matrix = matrix
+        self.clusters_matrix = []
         self.viewing_column = 0
         self.curves_columns = range(measurements[0].shape[1])
+        self.selected_cluster_boundaries = a.toAObject(aims.AimsTimeSurface(2))
 
         # 3D views area
         main_w = QtGui.QSplitter(QtCore.Qt.Vertical)
@@ -106,10 +116,10 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         self.create_info_dock()
         self.create_table_dock()
         self.create_curves_dock()
+        self.create_anatomist_views()
         self.create_matrix_dock()
         self.create_fibers_histo_dock()
         self.create_clusters_evolution_dock()
-        self.create_anatomist_views()
         self.create_silhouette_dock()
 
         # build and display table
@@ -175,8 +185,16 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         matrix_dock.setObjectName('matrix_dock')
         matrix_dock.setWindowTitle('Matrix')
         self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, matrix_dock)
-        matrix_dock.setWidget(QtGui.QLabel(
-            'Here will be the matrix view.<br/>Soon.'))
+        self.matrix_fig = pyplot.figure()
+        self.matrix_widget = \
+            pyplot._pylab_helpers.Gcf.get_fig_manager(
+                self.matrix_fig.number).window
+        matrix_dock.setWidget(self.matrix_widget)
+        self.display_matrix()
+        toolbar = self.matrix_widget.findChild(QtGui.QToolBar)
+        toolbar.hide()
+        statusbar = self.matrix_widget.findChild(QtGui.QStatusBar)
+        statusbar.hide()
 
 
     def create_fibers_histo_dock(self):
@@ -334,6 +352,8 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         time_slider2.hide()
         time_slider2.parentWidget().findChild(QtGui.QLabel).hide()
 
+        self.selected_cluster_boundaries.setMaterial(
+            line_width=5., diffuse=[0.6, 0.8, 0., 1.])
 
     def make_measurements_texture(self):
         col = self.viewing_column
@@ -393,7 +413,7 @@ Num of clusters (K): <b>%d</b><br/>
     def get_cluster_color(self, timestep, mesh, cluster):
         if mesh is None:
             return None
-        mesh_index = [m.getInternalRep() for m in self.meshes].index(mesh)
+        mesh_index = self.meshes.index(mesh)
         cluster_tex = self.clusters[mesh_index]
         te = cluster_tex.glTexExtrema()
         pos = (cluster - te.minquant[0]) / (te.maxquant[0] - te.minquant[0])
@@ -412,7 +432,7 @@ Num of clusters (K): <b>%d</b><br/>
     def get_patch(self, timestep, mesh, ivertex):
         if mesh is None or ivertex is None or len(self.seed_gyri) == 0:
             return None, None
-        mesh_index = [m.getInternalRep() for m in self.meshes].index(mesh)
+        mesh_index = self.meshes.index(mesh)
         seed_gyri = self.aims_seed_gyri[mesh_index]
         patch_label = seed_gyri[0].data()[ivertex]
         hdr = seed_gyri.header()
@@ -443,6 +463,8 @@ Num of clusters (K): <b>%d</b><br/>
         self.select_table_row(timestep, label)
         self.update_cluster_time(timestep, label)
         self.clusters_win.statusBar().showMessage('Cluster: %d' % label)
+        self.update_selected_cluster_boundaries(label, mesh)
+        self.set_matrix_cursor(label)
 
 
     def update_clusters_boundaries(self):
@@ -458,6 +480,27 @@ Num of clusters (K): <b>%d</b><br/>
                     mesh.surface(), texture, -1)
             boundaries.setSurface(clusters_boundaries)
             boundaries.notifyObservers()
+
+
+    def update_selected_cluster_boundaries(self, label, mesh):
+        self.clusters_win.removeObjects(self.selected_cluster_boundaries)
+        self.measures_win.removeObjects(self.selected_cluster_boundaries)
+        if mesh is None or label == 0:
+            return
+        mesh_index = self.meshes.index(mesh)
+        timestep = self.cluster_slider.value() - 2
+        cluster_tex0 = self.aims_clusters[mesh_index][timestep]
+        cluster_tex = self.aims_clusters[mesh_index].__class__()
+        cluster_tex[0].assign(cluster_tex0.data())
+        cluster_boundaries = aims.SurfaceManip.meshTextureBoundary(
+            mesh.surface(), cluster_tex, label)
+        self.selected_cluster_boundaries.setSurface(cluster_boundaries)
+        self.selected_cluster_boundaries.setChanged()
+        self.selected_cluster_boundaries.notifyObservers()
+        self.clusters_win.addObjects(self.selected_cluster_boundaries,
+                                     temporary=True, position=0)
+        self.measures_win.addObjects(self.selected_cluster_boundaries,
+                                     temporary=True, position=0)
 
 
     def update_clusters_texture(self):
@@ -478,6 +521,9 @@ Num of clusters (K): <b>%d</b><br/>
         self.make_measurements_texture()
         self.update_clusters_texture()
         self.update_clusters_boundaries()
+        self.cluster_selected(0, 0, None, 0)
+        self.display_matrix()
+        #self.update_selected_cluster_boundaries(0, None)
 
 
     def display_column(self, col):
@@ -501,6 +547,7 @@ Num of clusters (K): <b>%d</b><br/>
             # no axes yet. Create them
             bgcolor = self.palette().color(QtGui.QPalette.Base)
             axes = self.curves_fig.add_subplot(111, axisbg=str(bgcolor.name()))
+            self.curves_fig.subplots_adjust(bottom=0.2, right=0.8)
         else:
             # use existing axes
             axes = self.curves_fig.axes[0]
@@ -512,7 +559,8 @@ Num of clusters (K): <b>%d</b><br/>
             axes.set_xticks(range(data.shape[0] + 1))
             axes.set_xlim((0.8, data.shape[0] + 0.2))
             axes.plot(range(1, data.shape[0] + 1), data[cols], 'o-')
-            axes.legend(list(cols))
+            axes.legend(list(cols), loc=(1.02, 0.2), fontsize='x-small',
+                        labelspacing=0.5)
         self.curves_fig.canvas.draw()
 
 
@@ -526,7 +574,7 @@ Num of clusters (K): <b>%d</b><br/>
             lim = (lim[0] + lim[1] * 0.01, lim[1] * 0.99)
             axes.plot([label - 0.1, label - 0.1, label + 0.1, label + 0.1,
                        label - 0.1],
-                      lim + lim[::-1] + (lim[0], ), 'r')
+                      lim + lim[::-1] + (lim[0], ), 'r', linewidth=2)
             self.curves_fig.canvas.draw()
 
 
@@ -554,7 +602,7 @@ Num of clusters (K): <b>%d</b><br/>
         if res:
             self.curves_columns = [item.row()
                                    for item in lwid.selectedIndexes()]
-            timestep = int(round(self.clusters_win.getTime()))
+            timestep = self.cluster_slider.value() - 2
             self.display_curves(timestep)
 
 
@@ -577,12 +625,77 @@ Num of clusters (K): <b>%d</b><br/>
         self.cluster_time_fig.canvas.draw()
 
 
+    def build_matrix_by_cluster(self, timestep):
+        if self.matrix is None:
+            return None
+        if len(self.clusters_matrix) > timestep \
+                and self.clusters_matrix[timestep] is not None:
+            return self.clusters_matrix[timestep]
+        matrix = self.matrix
+        a_mat = np.asarray(matrix)
+        a_mat = a_mat.reshape(a_mat.shape[:2])
+        clusters_arr = self.aims_clusters[0][timestep].arraydata() ## WARNING use tex 0
+        new_matrix = matrixtools.compute_mclusters_by_nbasins_matrix(
+            a_mat, clusters_arr, mode='mean')
+        if len(self.clusters_matrix) <= timestep:
+            self.clusters_matrix += [None] * (timestep
+                                              - len(self.clusters_matrix) + 1)
+        self.clusters_matrix[timestep] = new_matrix
+        return new_matrix
+
+
+    def display_matrix(self):
+        timestep = self.cluster_slider.value() - 2
+        matrix = self.build_matrix_by_cluster(timestep)
+        if len(self.matrix_fig.axes) == 0:
+            # no axes yet. Create them
+            bgcolor = self.palette().color(QtGui.QPalette.Base)
+            axes = self.matrix_fig.add_subplot(
+                111, axisbg=str(bgcolor.name()))
+            self.matrix_fig.subplots_adjust(bottom=0.2)
+        else:
+            axes = self.matrix_fig.axes[0]
+            axes.clear()
+        axes.set_xlabel('basins')
+        axes.set_ylabel('clusters')
+        axes.set_yticks(range(matrix.shape[0] + 1))
+        axes.set_yticklabels([str(x) for x in range(1, matrix.shape[0] + 2)])
+        axes.imshow(matrix, aspect='auto', interpolation='none')
+        self.matrix_fig.canvas.draw()
+
+
+    def set_matrix_cursor(self, label):
+        if len(self.curves_fig.axes) != 0:
+            axes = self.matrix_fig.axes[0]
+            if len(axes.lines) != 0:
+                # erase previous cursor
+                axes.lines.remove(axes.lines[-1])
+            if label == 0:
+                return
+            lim = axes.get_xlim()
+            xlim = (lim[0] + 0.01, lim[1] - 0.01)
+            ylim = (label - 1.49, label - 0.51)
+            axes.plot([xlim[0], xlim[1], xlim[1], xlim[0], xlim[0]],
+                      [ylim[0], ylim[0], ylim[1], ylim[1], ylim[0]], 'r',
+                      linewidth=2)
+            axes.set_xlim(lim)
+            self.matrix_fig.canvas.draw()
+
+
 def load_clusters_instpector_files(mesh_filenames, clusters_filenames,
                                    measurements_filenames,
-                                   seed_gyri_filenames=[]):
+                                   seed_gyri_filenames=[],
+                                   matrix_filename=None):
+    if len(mesh_filenames) != len(clusters_filenames):
+        raise ValueError('meshes and clusters numbers do not match')
+    if len(seed_gyri_filenames) != 0 \
+            and len(seed_gyri_filenames) != len(mesh_filenames):
+        raise ValueError('meshes and seed_gyri numbers do not match')
+
     meshes = []
     clusters = []
     seed_gyri = []
+    matrix = None
     for mesh_filename in mesh_filenames:
         meshes.append(aims.read(mesh_filename))
     for clusters_filename in clusters_filenames:
@@ -591,11 +704,10 @@ def load_clusters_instpector_files(mesh_filenames, clusters_filenames,
     for seed_gyri_filename in seed_gyri_filenames:
         seed_gyri.append(aims.read(seed_gyri_filename))
 
-    if len(meshes) != len(clusters):
-        raise ValueError('meshes and clusters numbers do not match')
-    if len(seed_gyri) != 0 and len(seed_gyri) != len(meshes):
-        raise ValueError('meshes and seed_gyri numbers do not match')
-    return meshes, clusters, measurements, seed_gyri
+    if matrix_filename is not None:
+        matrix = aims.read(matrix_filename)
+
+    return meshes, clusters, measurements, seed_gyri, matrix
 
 
 def clear_controls():
@@ -637,16 +749,17 @@ if __name__ == '__main__':
     use_ex_num = 0
 
     if use_ex_num == 0:
-        meshes, clusters, measurements, seed_gyri \
+        meshes, clusters, measurements, seed_gyri, matrix \
             = load_clusters_instpector_files(
                 #['/neurospin/archi-public/DataBaseArchi/FreeSurfer/fs_archi_v5.3.0/group_analysis/01to40/average_brain/averagebrain.white.mesh'],
                 ['/neurospin/archi-public/DataBaseArchi/FreeSurfer/fs_archi_v5.1.0/001/surf/bh.r.aims.white.inflated.gii'],
                 ['/neurospin/archi-public/Users/lefranc/archi/bv_archi/proba27/subjects/group_analysis/01to40/connectivity_clustering/avg/fs01to40/lh.supramarginal/smooth3.0/avgSubject/01to40_avg_fs01to40_lh.supramarginal_avgSubject_clusteringTime.gii'],
                 None,
                 #['/neurospin/archi-public/DataBaseArchi/FreeSurfer/fs_archi_v5.3.0/group_analysis/01to40/average_brain/bh.annot.averagebrain.gii'])
-                ['/tmp/bh.r.aparc.annot.gii'])
+                ['/tmp/bh.r.aparc.annot.gii'],
+                '/neurospin/archi-public/Users/lefranc/archi/bv_archi/proba27/subjects/group_analysis/01to40/connectivity_clustering/avg/fs01to40/lh.supramarginal/smooth3.0/01to40_avg_fs01to40_lh.supramarginal_matrix.ima')
     elif use_ex_num == 1:
-        meshes, clusters, measurements, seed_gyri \
+        meshes, clusters, measurements, seed_gyri, matrix \
             = load_clusters_instpector_files(
                 ['/neurospin/population/HCP/S500-1/100307/T1w/fsaverage_LR32k/100307.L.inflated.32k_fs_LR.surf.gii', '/neurospin/population/HCP/S500-1/100307/T1w/fsaverage_LR32k/100307.R.inflated.32k_fs_LR.surf.gii'],
                 ['/neurospin/archi-public/Users/lefranc/archi/bv_archi/proba27/subjects/group_analysis/01to40/connectivity_clustering/avg/fs01to40/lh.supramarginal/smooth3.0/avgSubject/01to40_avg_fs01to40_lh.supramarginal_avgSubject_clusteringTime.gii', '/neurospin/archi-public/Users/lefranc/archi/bv_archi/proba27/subjects/group_analysis/01to40/connectivity_clustering/avg/fs01to40/lh.supramarginal/smooth3.0/avgSubject/01to40_avg_fs01to40_lh.supramarginal_avgSubject_clusteringTime.gii'],
@@ -662,7 +775,8 @@ if __name__ == '__main__':
                                       'other')))
         for i in range(max([len(clusters_tex) for clusters_tex in clusters])))
     cw = ClustersInspectorWidget(
-        meshes, clusters, measurements=measurements, seed_gyri=seed_gyri)
+        meshes, clusters, measurements=measurements, seed_gyri=seed_gyri,
+        matrix=matrix)
     cw.show()
 
     if run_event_loop:
