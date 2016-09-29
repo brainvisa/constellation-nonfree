@@ -272,7 +272,7 @@ def compute_mclusters_by_nbasins_matrix(reducedmatrix, clusters,
         reducedmatrix = reducedmatrix.T
 
     # delete the zeros of the list to keep only the ROI vertices
-    vertex_ROI = [i for i in clusters if i != 0]
+    vertex_ROI = [i for i in clusters[timestep] if i != 0]
 
     # return an error if the number of vertices is different between the rows
     # of the reduced matrix and the number of ROI vertices
