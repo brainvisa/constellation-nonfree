@@ -154,7 +154,7 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         table_wid.setLayout(QtGui.QVBoxLayout())
         self.column_label = QtGui.QLabel(
             'displaying: <b>%s</b>'
-            % measurements[0].columns[self.viewing_column])
+            % self.measurements[0].columns[self.viewing_column])
         table_wid.layout().addWidget(self.column_label)
         table = QtGui.QTableWidget()
         table_wid.layout().addWidget(table)
