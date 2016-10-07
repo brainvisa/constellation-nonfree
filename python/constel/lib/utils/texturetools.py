@@ -69,12 +69,13 @@ def management_internal_connections(patch, mask, profile, list_regions=[]):
         a cortical connectivity profile
         with or without the path internal connections
     """
-    if list_regions:
-        name_labels = list(numpy.unique(mask))
-        for element in list(list_regions):
+
+    name_labels = list(numpy.unique(mask))
+    for element in list(list_regions):
+        if element in name_labels:
             name_labels.remove(element)
-        for name_label in name_labels:
-            profile[mask == name_label] = 0
+    for name_label in name_labels:
+        profile[mask == name_label] = 0
 
     return profile
 

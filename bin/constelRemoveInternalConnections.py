@@ -15,6 +15,7 @@
 # python system modules
 import textwrap
 import argparse
+import json
 import sys
 
 # constel modules
@@ -27,6 +28,9 @@ from soma import aims
 
 #----------------------------Functions-----------------------------------------
 
+
+def mylist(string):
+    return json.loads(string)
 
 def parse_args(argv):
     """Parses the given list of arguments."""
@@ -51,10 +55,8 @@ def parse_args(argv):
                         help="a labeling of gyri cortical segmentation")
     parser.add_argument("normprofile", type=str,
                         help="normalized connectivity profile")
-    parser.add_argument("-c", action="store_true",
-                        dest="internal_connections")
-    parser.add_argument("-q", action="store_false",
-                        dest="internal_connections")
+    parser.add_argument("-r", nargs='+', type=int,
+                        dest="keep_regions")
 
     # parsing arguments
     return parser, parser.parse_args(argv)
@@ -74,7 +76,7 @@ def main():
     # remove the internal connections if internal_connections is True
     new_profile = management_internal_connections(
         args.label, numpy_mask, numpy_profile,
-        args.internal_connections)
+        list_regions=args.keep_regions)
 
     # normalize the profile
     norm_profile = normalize_profile(new_profile)
