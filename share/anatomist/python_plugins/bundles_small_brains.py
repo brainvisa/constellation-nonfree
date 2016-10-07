@@ -8,7 +8,7 @@ import anatomist.direct.api as anatomist
 # BrainVisa module
 from soma import aims
 
-from PyQt4 import QtGui, QtCore
+from soma.qt_gui.qt_backend import QtGui, QtCore
 
 # Python system modules
 import os
