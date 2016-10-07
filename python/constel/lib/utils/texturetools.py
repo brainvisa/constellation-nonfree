@@ -49,8 +49,7 @@ def identify_patch_number(fname):
     return patch_nb
 
 
-def management_internal_connections(
-        patch, mask, profile, internal_connections=False):
+def management_internal_connections(patch, mask, profile, list_regions=[]):
     """Remove or keep the patch internal connections.
 
     Parameters
@@ -61,9 +60,8 @@ def management_internal_connections(
         a labeling of gyri cortical segmentation
     profile: numpy.ndarray (mandatory)
         a cortical connectivity profile
-    internal_connections: bool
-        False if the patch internal connections don't keep
-        True otherwise
+    list_regions: list of int (mandatory)
+        list of labels (int values) corresponding to gyri
 
     Return
     ------
@@ -71,14 +69,13 @@ def management_internal_connections(
         a cortical connectivity profile
         with or without the path internal connections
     """
-    if not internal_connections:
-        logger.info("You remove the patch (number "
-                    + patch + ") internal connections.")
-        # remove the patch internal connections
-        for i in xrange(len(profile)):
-            profile[mask == int(patch)] = 0
-    else:  # keep internal connections
-        logger.info("You keep the patch internal connections.")
+
+    name_labels = list(numpy.unique(mask))
+    for element in list(list_regions):
+        if element in name_labels:
+            name_labels.remove(element)
+    for name_label in name_labels:
+        profile[mask == name_label] = 0
 
     return profile
 

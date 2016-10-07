@@ -46,11 +46,12 @@ def read_file(filename, mode=0):
     """
     with open(filename, "r") as inf:
         ls = inf.readlines()
-        nomenclature = []
         if mode == 0:
+            nomenclature = {}
             for l in ls:
-                nomenclature.append(l.split())
+                nomenclature[l.split()[0]] = l.split()[1]
         else:
+            nomenclature = []
             for l in ls:
                 nomenclature.append(l.split()[mode - 1])
     return nomenclature
@@ -70,11 +71,10 @@ def select_ROI_number(filename, ROIname):
     ------
     ROIlabel: int
     """
-    s = read_file(filename, mode=0)
+    s = read_file(filename)
 
-    for i in range(1, len(s)):
-        if s[i][1] == ROIname:
-            ROIlabel = s[i][0]
+    ROIlabel = s.keys()[s.values().index(ROIname)]
+    #ROIlabel = list(s.keys())[list(s.values()).index(ROIname) # python3
     return ROIlabel
 
 
