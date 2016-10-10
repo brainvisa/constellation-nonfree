@@ -30,12 +30,16 @@ class ClusterSelectionAction(ana.cpp.Action):
     def select_cluster(self, x, y, dx, dy):
         win = self.view().aWindow()
         obj = win.objectAtCursorPosition(x, y)
-        if obj is None:
+        if obj is None or (not isinstance(obj, ana.cpp.ASurface_3) 
+                           and not isinstance(obj, ana.cpp.MObject)):
             return
-        meshes = [m for m in obj if isinstance(m, ana.cpp.ASurface_3)]
-        if len(meshes) == 0:
-            return
-        mesh = meshes[0]
+        if isinstance(obj, ana.cpp.ASurface_3):
+            mesh = obj
+        else:
+            meshes = [m for m in obj if isinstance(m, ana.cpp.ASurface_3)]
+            if len(meshes) == 0:
+                return
+            mesh = meshes[0]
         tex = [m for m in obj if isinstance(m, ana.cpp.ATexture)][0]
         poly = win.polygonAtCursorPosition(x, y, obj)
         polygon = mesh.surface().polygon()[poly]
@@ -129,6 +133,18 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
 
         # build and display curves
         self.display_curves(0)
+        
+        
+    def __del__(self):
+        print('##### DEL ClustersInspectorWidget #####')
+        if self.curves_fig is not None:
+            pyplot.close(self.curves_fig)
+        if self.matrix_fig is not None:
+            pyplot.close(self.matrix_fig)
+        if self.fibers_histo_fig is not None:
+            pyplot.close(self.fibers_histo_fig)
+        if self.cluster_time_fig is not None:
+            pyplot.close(self.cluster_time_fig)
 
 
     def create_info_dock(self):
@@ -747,7 +763,7 @@ if __name__ == '__main__':
         qapp = QtGui.QApplication(['bloup'])
         run_event_loop = True
 
-    use_ex_num = 0
+    use_ex_num = 2
 
     if use_ex_num == 0:
         meshes, clusters, measurements, seed_gyri, matrix \
@@ -766,6 +782,15 @@ if __name__ == '__main__':
                 ['/neurospin/archi-public/Users/lefranc/archi/bv_archi/proba27/subjects/group_analysis/01to40/connectivity_clustering/avg/fs01to40/lh.supramarginal/smooth3.0/avgSubject/01to40_avg_fs01to40_lh.supramarginal_avgSubject_clusteringTime.gii', '/neurospin/archi-public/Users/lefranc/archi/bv_archi/proba27/subjects/group_analysis/01to40/connectivity_clustering/avg/fs01to40/lh.supramarginal/smooth3.0/avgSubject/01to40_avg_fs01to40_lh.supramarginal_avgSubject_clusteringTime.gii'],
                 None,
                 ['/neurospin/population/HCP/S500-1/100307/MNINonLinear/fsaverage_LR32k/100307.L.aparc.32k_fs_LR.label.gii', '/neurospin/population/HCP/S500-1/100307/MNINonLinear/fsaverage_LR32k/100307.R.aparc.32k_fs_LR.label.gii'])
+    elif use_ex_num == 2:
+        meshes, clusters, measurements, seed_gyri, matrix \
+            = load_clusters_instpector_files(
+                ['/neurospin/archi-public/DataBaseArchi/FreeSurfer/fs_archi_v5.3.0/001/surf/bh.r.aims.white.inflated_sequence.gii'],
+                ['/neurospin/archi-public/Users/lefranc/archi/bv_archi/proba27/subjects/group_analysis/01to39/connectivity_clustering/avg/fs01to39/lh.postcentral/smooth3.0/avgSubject/01to39_avg_fs01to39_lh.postcentral_avgSubject_clusteringTime.gii'],
+                None,
+                ['/neurospin/archi-public/DataBaseArchi/FreeSurfer/fs_archi_v5.3.0/group_analysis/01to39/average_brain/bh.annot.averagebrain.gii'],
+                '/neurospin/archi-public/Users/lefranc/archi/bv_archi/proba27/subjects/group_analysis/01to39/connectivity_clustering/avg/fs01to39/lh.postcentral/smooth3.0/01to39_avg_fs01to39_lh.postcentral_matrix.ima',
+            )
     else:
         print('wrong use_ex_num value:', use_ex_num)
         raise ValueError('aborting')
