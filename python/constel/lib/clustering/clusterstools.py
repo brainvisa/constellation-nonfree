@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 # python system modules
+from __future__ import print_function
 from tempfile import mkdtemp
 import os.path as path
 import numpy
@@ -37,7 +38,7 @@ def get_centers(clusters_id, kmax_clusters):
     i = 0
     centers = numpy.array([])
     while (centers.size < kmax_clusters):
-        print i
+        print(i)
         c = clusters_id[i]
         if ((numpy.where(centers == c)[0]).size == 0):
             centers = numpy.append(centers, numpy.array([int(c)]))
@@ -181,14 +182,14 @@ def gap(data, refs=None, nrefs=20, ks=range(1, 11)):
 
     gaps = scipy.zeros((len(ks),))
     for (i, k) in enumerate(ks):
-        print "ks", ks, "k", k, "i", i
+        print("ks", ks, "k", k, "i", i)
         # clusterid, error, nfound = pc.kmedoids(data, k, 100)
         # labels, error, nfound = pc.kcluster(clusterid, k)
         # kml = labels
         # centers = get_centers(clusterid, k)
         # kmc = centers
         (kmc, kml) = scipy.cluster.vq.kmeans2(data, k)
-        print "labels -->", kml, "centers -->", kmc
+        print("labels -->", kml, "centers -->", kmc)
         disp = sum([dst(data[m, :], kmc[kml[m], :]) for m in range(shape[0])])
 
         refdisps = scipy.zeros((rands.shape[2],))
@@ -290,7 +291,7 @@ def ward_method(dmat_file, n, output_dir, n_clusters):
     # labelization between 1 to nb
     clusterid = []
     for nb in range(1, n_clusters + 1):
-        print "Trying {nb} cluster(s)".format(nb=nb)
+        print("Trying {nb} cluster(s)".format(nb=nb))
         clusters = fcluster(Z, criterion='maxclust', t=nb)
         clusterid.append(clusters)
     return clusterid

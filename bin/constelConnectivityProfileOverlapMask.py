@@ -25,6 +25,7 @@ Author: Sandrine Lefranc
 
 
 # python system module
+from __future__ import print_function
 import sys
 import json
 import numpy
@@ -76,7 +77,7 @@ def main():
     fnames = args.profiles
 
     for idx, fname in enumerate(fnames):
-        print fname
+        print(fname)
         # read the file with aims
         aimsprofile = aims.read(fname)
 

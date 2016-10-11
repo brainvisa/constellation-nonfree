@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 # python system modules
+from __future__ import print_function
 import numpy as np
 import optparse
 import sys
@@ -120,7 +121,7 @@ def main():
         small_matrix = k*(k - 1) / 2
         large_matrix = m*(m - 1) / 2
         f.seek((large_matrix - small_matrix) * 8)
-        print (large_matrix - small_matrix)
+        print((large_matrix - small_matrix))
     
     # write the distance matrix bounded by starting_iteration and 
     # max iteration required
@@ -130,7 +131,7 @@ def main():
     else:
         f.write(square_distance_matrix.ravel())
     
-    print square_distance_matrix.ravel()
+    print(square_distance_matrix.ravel())
 
     # remove the square distance matrix to free the memory
     del square_distance_matrix

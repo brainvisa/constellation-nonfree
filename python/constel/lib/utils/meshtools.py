@@ -21,6 +21,7 @@ Author: Sandrine Lefranc, 2014
 #----------------------------Imports-------------------------------------------
 
 
+from __future__ import print_function
 # system module
 import numpy
 
@@ -158,7 +159,7 @@ def transform_mesh_to_volume(white_meshes):
     # amax - amin
     size = (a[1] - a[0]) + 1
     t = numpy.zeros((size), dtype=numpy.single)
-    print t.shape
+    print(t.shape)
 
     # to obtain binary matrix
     for p in asarray_submesh:
@@ -166,7 +167,7 @@ def transform_mesh_to_volume(white_meshes):
         p = numpy.round(p)
         t[p[0], p[1], p[2]] = 1
     
-    print t[numpy.where(t > 0)]
+    print(t[numpy.where(t > 0)])
     
     # 2D
     t = numpy.max(t, axis=2)  

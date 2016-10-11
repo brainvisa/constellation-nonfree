@@ -9,6 +9,7 @@
 ###############################################################################
 
 # system modules
+from __future__ import print_function
 import optparse
 import sys
 
@@ -38,7 +39,7 @@ def main():
     
     fibertracts = load_fiber_tracts(options.directory, options.formats)
     options.fibertracts = str(fibertracts)
-    print type(options.fibertracts)
+    print(type(options.fibertracts))
     check_no_empty_list(options.fibertracts)
 
     return options.fibertracts

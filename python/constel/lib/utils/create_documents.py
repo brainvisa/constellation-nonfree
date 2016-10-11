@@ -21,6 +21,7 @@ Author: Sandrine Lefranc, 2015
 #----------------------------Imports-------------------------------------------
 
 
+from __future__ import print_function
 #system import
 import os
 import numpy
@@ -129,7 +130,7 @@ if __name__ == "__main__":
     pp = PdfPages(pdffile)
 
     for element in dico.iteritems():
-        print element[0][:2]
+        print(element[0][:2])
         if element[0][:2] != patch:
             pass
 
