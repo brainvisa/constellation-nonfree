@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 from optparse import OptionParser
 from soma import aims
 import numpy as np
@@ -8,8 +9,8 @@ import sys
 import roca.lib.textureTools as TT
 
 def usage():
-  print "Fusion multi texture for all gyri (by subject)"
-  print "usage: python mergeTextureKopt.py output.tex file1.tex ... fileN.tex"
+  print("Fusion multi texture for all gyri (by subject)")
+  print("usage: python mergeTextureKopt.py output.tex file1.tex ... fileN.tex")
 
 def parseOpts(argv):
   description = 'Fusion of a texture in another.'
@@ -117,7 +118,7 @@ if __name__ == "__main__" : main()
   #for t in inputs:
     #tex = aims.read( t )
     #tex_array = tex[0].arraydata()
-    #print tex_array
+    #print(tex_array)
     #for v in xrange(vertex_nb):
       #ntex[0].push_back(0)
     #final_valid_vertex_sum = np.ones((0))
@@ -128,11 +129,11 @@ if __name__ == "__main__" : main()
       
       
       #texture_fusion = tex_array
-      #print texture_fusion
+      #print(texture_fusion)
     #else:
-      #print 'je rentre dans c=autre'
+      #print('je rentre dans c=autre')
       #texture_fusion = np.concatenate((texture_fusion, tex_array))
-      #print texture_fusion, len(texture_fusion)
+      #print(texture_fusion, len(texture_fusion))
     #count += 1
   #valid_vertex = np.where( tex_array != dispersion )
   #ntex = aims.TimeTexture( 'S16' )
@@ -149,5 +150,5 @@ if __name__ == "__main__" : main()
 
 
 
-   #print np.sum( tex_array )
+   #print(np.sum( tex_array ))
    #tex_array_filter = [ x for x in tex_array if x!=0  ] 

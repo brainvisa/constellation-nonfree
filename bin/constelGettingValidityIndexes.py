@@ -22,6 +22,7 @@ Author: Sandrine Lefranc, 2015
 
 
 # python system modules
+from __future__ import print_function
 import os
 import sys
 import numpy
@@ -172,40 +173,40 @@ def main():
 
     Nsample = feat.shape[0]
     #Ndim = feat.shape[1]
-    #print 'Number of samples: ', Nsample, 'and Dimension: ', Ndim
+    #print('Number of samples: ', Nsample, 'and Dimension: ', Ndim)
 
     nbIter = args.nbiter
     kmax = args.kmax
 
     distance1 = pc.distancematrix(feat, dist='e')
 
-    print 'Euclidean distance at power 2'
+    print('Euclidean distance at power 2')
     distMat1 = [numpy.array([])]
     for i in range(1, feat.shape[0]):
         distMat1.append((distance1[i] ** 2).copy())
 
-    print 'Converting distance matrix'
+    print('Converting distance matrix')
     distMat = numpy.zeros((Nsample, Nsample))
     for i in range(1, Nsample):
         for j in range(0, i):
             distMat[i, j] = distMat1[i][j]
             distMat[j, i] = distMat1[i][j]
     Nsample = distMat.shape[0]
-    print 'There are', Nsample, 'samples'
+    print('There are', Nsample, 'samples')
 
     sDunn = numpy.zeros(kmax + 1)
     sDB = numpy.zeros(kmax + 1)
     sCH = numpy.zeros(kmax + 1)
 
     for k in range(kmax):
-        print 'Runnning K-medoids with K = ', k
+        print('Runnning K-medoids with K = ', k)
         uniclusterid, unierror, uninfound = pc.kmedoids(distMat, k + 1, nbIter)
-        print 'getting validity indexes'
+        print('getting validity indexes')
         sDB[k + 1], sDunn[k + 1], sCH[k + 1] = cv.compute_cluster_validity(
             distMat, uniclusterid, k + 1)
-        print 'sDB = ', sDB[k + 1]
-        print 'sDunn = ', sDunn[k + 1]
-        print 'sCH = ', sCH[k + 1]
+        print('sDB = ', sDB[k + 1])
+        print('sDunn = ', sDunn[k + 1])
+        print('sCH = ', sCH[k + 1])
 
     sDB[1] = sDB.min()
     sDB[0] = sDB.min()
@@ -214,7 +215,7 @@ def main():
     sCH[1] = sCH.min()
     sCH[0] = sCH.min()
 
-    print 'Normalizing scores'
+    print('Normalizing scores')
     sDB = (sDB - sDB.min()) / float(sDB.max() - sDB.min())
     sDunn = (sDunn - sDunn.min()) / float(sDunn.max() - sDunn.min())
     sCH = (sCH - sCH.min()) / float(sCH.max() - sCH.min())

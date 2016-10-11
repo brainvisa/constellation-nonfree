@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 # python system modules
+from __future__ import print_function
 from optparse import OptionParser
 import numpy
 import sys
@@ -105,7 +106,7 @@ def main():
         # labelization between 1 to nb
         clusterid = []
         for nb in range(1, n_clusters + 1):
-            print "Trying {nb} cluster(s)".format(nb=nb)
+            print("Trying {nb} cluster(s)".format(nb=nb))
             clusters = fcluster(Z, criterion='maxclust', t=nb)
             clusterid.append(clusters)
         
@@ -141,14 +142,14 @@ def main():
                 options.kmax, item_number, vertices_patch, nb_vertices, 1)
 
         aims.write(clusters, str(options.clustering_time[index]))
-#    print reduced_matrix.shape
+#    print(reduced_matrix.shape)
  #   asw = []
   #  for k in range(2, 12 + 1):
    #     s = cv.silhouette_score(reduced_matrix, k)
-    #    print 'ASW is ', s, 'for K =', k 
+    #    print('ASW is ', s, 'for K =', k)
      #   asw.append(s)
 #    aswOpt = max(asw)
-#    print 'The larger ASW is', aswOpt
+#    print('The larger ASW is', aswOpt)
 #    list_k = range(12+1)
 #    list_k = [x for x in list_k if x != 0 and x != 1]
 #    fig = mainThreadActions().call(p.silhouette_score_plot, asw, list_k)

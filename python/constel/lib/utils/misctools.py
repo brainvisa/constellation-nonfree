@@ -21,6 +21,7 @@ Author: Sandrine Lefranc, 2014
 #----------------------------Imports-------------------------------------------
 
 
+from __future__ import print_function
 # system module
 import logging
 
@@ -60,7 +61,7 @@ def sameNbElements(listA, listB, NonZeroRealNb=True):
         listA = [x for x in listA if x != 0]
         listB = [x for x in listB if x != 0]
     if len(listA) != len(listB):
-        print 'ERROR: The A size is different from the B.'
+        print('ERROR: The A size is different from the B.')
     return listA, listB
 
 

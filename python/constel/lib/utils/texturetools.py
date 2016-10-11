@@ -8,6 +8,7 @@
 # CEA, CNRS and INRIA at the following URL "http://www.cecill.info".
 ###############################################################################
 
+from __future__ import print_function
 from soma import aims
 import numpy as np
 
@@ -115,7 +116,7 @@ def remove_labels(tex, labels):
     # relabelize all the labels from 1
     for i in xrange(len(otex_kept_labels_list)):
         current_label = otex_kept_labels_list[i]
-        print "current label:", current_label, " new:", str(i + 1)
+        print("current label:", current_label, " new:", str(i + 1))
         otex_ar[tex_ar == current_label] = i + 1
     return otex
 
@@ -150,7 +151,7 @@ def texture_time(k_max, clusters_id, vertices_patch, vertices_mesh, mode,
             tex[k].arraydata()[vertices_patch] = \
                 clusters_id[k].astype(np.int16)
         if mode == 2:
-            print vertices_patch
+            print(vertices_patch)
             tex[k].arraydata()[vertices_patch] = \
                 clusters_id[k][minid:maxid].astype(np.int16)
 

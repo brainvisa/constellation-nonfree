@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 # Anatomist module
 import anatomist.direct.api as anatomist
 
 # BrainVisa module
 from soma import aims
 
-from PyQt4 import QtGui, QtCore
+from soma.qt_gui.qt_backend import QtGui, QtCore
 import os, sip
 import selection
+import six
 
 class BundlesSelectionAction( selection.SelectionAction ):
   def __init__(self):
@@ -24,7 +26,7 @@ class BundlesSelectionAction( selection.SelectionAction ):
 
   def addReducedObjectToView(self, obj, nref, rot_center, tr, a, window, diffuse_list):
     dup = obj.clone( True ) # shallow copy
-    print 'dup:', dup
+    print('dup:', dup)
     if dup is not None:
       a.registerObject( dup, False ) # False )
       dup.setReferential( nref )
@@ -35,13 +37,13 @@ class BundlesSelectionAction( selection.SelectionAction ):
       a.releaseObject( dup )
       return dup
     else:
-      print 'no dup'
+      print('no dup')
       if obj.objectTypeName( obj.type() ) == 'TEXTURED SURF.':
         mesh = [ x for x in obj \
           if x.objectTypeName( x.type() ) == 'SURFACE' ][0]
       else:
         mesh = obj
-      print 'mesh:', mesh
+      print('mesh:', mesh)
       mesh.setReferential( nref )
       a.theProcessor().execute( 'SetMaterial', objects=[mesh],
                 diffuse=diffuse_list )
@@ -55,9 +57,9 @@ class BundlesSelectionAction( selection.SelectionAction ):
     a = anatomist.cpp.Anatomist()
     nref = anatomist.cpp.Referential()
     if vertex.attributed().has_key( 'center' ):
-      print 'using existing center'
+      print('using existing center')
       cent = aims.Point3df( vertex.attributed()[ 'center' ] )
-      print 'center:', cent
+      print('center:', cent)
     else:
       bb = vertex.boundingbox()
       cent = (bb[0] + bb[1])/2
@@ -67,7 +69,7 @@ class BundlesSelectionAction( selection.SelectionAction ):
     tr = anatomist.cpp.Transformation( nref, graph.getReferential() )
     m = tr.motion()
     rot_center = cent + vdir * self.decal
-    print 'rot_center:', rot_center
+    print('rot_center:', rot_center)
     m.setTranslation( rot_center )
     m *= aims.Motion( [ self.scaling, 0, 0, 0,
                         0, self.scaling, 0, 0,
@@ -87,34 +89,34 @@ class BundlesSelectionAction( selection.SelectionAction ):
     for obj, rot_center, tr in self._stored:
       graph = None
       parents = list( obj.parents() )
-      print 'parents:', parents
+      print('parents:', parents)
       while parents:
         p = parents.pop()
-        print 'test parent:', p
+        print('test parent:', p)
         if p.type() == anatomist.cpp.AObject.GRAPH:
-          print 'parent graph found'
+          print('parent graph found')
           graph = p
           break
         parents += p.parents()
       if graph:
-        print 'reset ref of graph', graph
+        print('reset ref of graph', graph)
         if obj.objectTypeName( obj.type() ) == 'TEXTURED SURF.':
-          print 'obj:', obj.name()
-          print 'children:', [ x for x in obj.get() ]
+          print('obj:', obj.name())
+          print('children:', [ x for x in obj.get() ])
           mesh = [ x for x in obj.get() \
             if x.objectTypeName( x.type() ) == 'SURFACE' ][0]
         else:
           mesh = obj
-        print 'mesh:', mesh
+        print('mesh:', mesh)
         mesh.setReferential( graph.getReferential() )
-      else: print 'graph not found'
+      else: print('graph not found')
     self._stored = []
 
   def edgeSelection( self ):
     try:
       recursion = getattr( self, '_recursion' )
       if recursion:
-        # print "recursion"
+        # print("recursion")
         return
     except:
       pass
@@ -132,27 +134,27 @@ class BundlesSelectionAction( selection.SelectionAction ):
     a = anatomist.Anatomist()
     if gsel:
       for obj in gsel:
-        print 'selected:', obj
+        print('selected:', obj)
         if obj.type() == anatomist.cpp.AObject.GRAPHOBJECT:
-          print 'is a GRAPHOBJECT'
+          print('is a GRAPHOBJECT')
           go = obj.attributed()
           if isinstance( go, aims.Vertex ):
-            print 'is a Vertex'
+            print('is a Vertex')
             vertexlist.add( go )
             #for edge in go.edges():
               #edgeslist.add(edge)
-          else: print 'not a Vertex'
-        else: print 'not a GRAPHOBJECT'
+          else: print('not a Vertex')
+        else: print('not a GRAPHOBJECT')
     else:
-      print 'nothing selected'
+      print('nothing selected')
       for obj in window.Objects():
-        print 'obj:', obj
+        print('obj:', obj)
         if obj.type() == anatomist.cpp.AObject.GRAPH:
-          print 'graph.'
+          print('graph.')
           vertexlist = vertexlist.union( [ x.attributed() for x in obj \
             if isinstance( x.attributed(), aims.Vertex ) ] )
-    print 'vertexlist:', len( vertexlist )
-    print vertexlist
+    print('vertexlist:', len( vertexlist ))
+    print(vertexlist)
     self.releaseObjectsRefs()
     self._storedrefs = []
     obj_to_display = []
@@ -167,7 +169,7 @@ class BundlesSelectionAction( selection.SelectionAction ):
       self._storedrefs.append( nref )
       diffuse_list = [ 1., 0., 0., 1. ]
       for obj in vertex:
-        print 'obj:', type( obj ), obj
+        print('obj:', type( obj ), obj)
         obj_to_display.append(self.addReducedObjectToView(obj, nref, rot_center, tr, a, window, diffuse_list))
       if global_mesh is not None:
         diffuse_list = [ 0.8, 0.8, 0.8, 0.2 ]
@@ -178,20 +180,20 @@ class BundlesSelectionAction( selection.SelectionAction ):
           aedge = edge[ 'ana_object' ]
           diffuse_list = [ 0, 0, 1., 0.5 ]
           for obj in aedge:
-            print 'add small edge object', obj.name()
+            print('add small edge object', obj.name())
             obj_to_display.append(self.addReducedObjectToView(obj, nref, rot_center, tr, a, window, diffuse_list))
 
     del self._recursion
     if hasattr( self, 'secondaryView' ):
       secondview = self.secondaryView
-      print 'secondaryView:', secondview
-      print 'objects:', [ type(x) for x in secondview.Objects() ]
+      print('secondaryView:', secondview)
+      print('objects:', [ type(x) for x in secondview.Objects() ])
       objects = secondview.objects
-      print 'objects, 2:', objects
+      print('objects, 2:', objects)
       secondview.removeObjects( objects )
       secondview.addObjects( obj_to_display )
     else:
-      print 'no secondaryView in', self
+      print('no secondaryView in', self)
 
   def cleanup( self ):
     self._recursion = True
@@ -226,7 +228,7 @@ class BundlesRotationSelectionAction( anatomist.cpp.TrackOblique ):
     v[3] *= -1;
     rot.setVector( v )
     tr = None
-    for tr, (begin_tr_Motion, rot_center) in self.tr_dict.iteritems():
+    for tr, (begin_tr_Motion, rot_center) in six.iteritems(self.tr_dict):
       rot_motion = aims.Motion()
       rot_motion.setTranslation(-rot_center)
       rot_center_translation = aims.Motion()

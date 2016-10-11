@@ -13,6 +13,7 @@
 
 
 # python system module
+from __future__ import print_function
 import argparse
 import numpy
 import sys
@@ -83,7 +84,7 @@ def rearrange_numbering(square_dmat, kmax, n_iter_k=1000):
         for i in numpy.unique(clusterid):
             clusterid[clusterid == i] = labels
             labels += 1
-        print 'clusterid', numpy.unique(clusterid), 'for K =', K
+        print('clusterid', numpy.unique(clusterid), 'for K =', K)
         clusterID.append(clusterid)
     return clusterID
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 # python system modules
+from __future__ import print_function
 import numpy as np
 import optparse
 import sys
@@ -54,20 +55,20 @@ def parseOpts(argv):
 def main():
     parser, (options, args) = parseOpts(sys.argv)
    
-    print 'Opening and reading: ', options.matrix
+    print('Opening and reading: ', options.matrix)
     matrix = aims.read(options.matrix)
     mat = np.asarray(matrix)[:, :, 0, 0].transpose()
     n_sample, n_dim = mat.shape
-    print 'Number of samples: ', n_sample, 'Dimension: ', n_dim
+    print('Number of samples: ', n_sample, 'Dimension: ', n_dim)
 
     if (options.wflag == 2):
-        print 'Per feature whitening'
+        print('Per feature whitening')
         features = scv.whiten(mat)
     elif (options.wflag == 1):
-        print 'Per category (dist and dir) whitening'
+        print('Per category (dist and dir) whitening')
         features = clcm.partialWhiten(mat)
     else:
-        print 'No whitening'
+        print('No whitening')
         features = mat
     
     if (options.dist == 'sqeuclidean' ):
@@ -76,38 +77,38 @@ def main():
         fact = 1
     
     if (options.typer == 'm'):
-        print 'Generating uniform distribution with Monte-carlo'
+        print('Generating uniform distribution with Monte-carlo')
         uniform = clcm.generate_uniform_matrix(features)
     elif (options.typer == 'b'):
-        print 'Generating uniform distribution that will be bootstrapped'
+        print('Generating uniform distribution that will be bootstrapped')
         uniform = clcm.generate_uniform_matrix(features)
     elif (options.typer == 'p'):
-        print 'Reference distribution will be sampled by permutations of the original one'
+        print('Reference distribution will be sampled by permutations of the original one')
         uniform = features.copy()
     
     WB = np.zeros((options.permut, options.kmax + 1))
-    print 'Re-sampling ', options.permut, ' times to estimate uniform Wk'
+    print('Re-sampling ', options.permut, ' times to estimate uniform Wk')
     for iteration in range(options.permut):
         if ((iteration%1) == 0):
-            print '  --> Iteration ', iteration
+            print('  --> Iteration ', iteration)
         if (options.typer == 'm'):
             featuni = clcm.generate_uniform_matrix(features)
         elif (options.typer == 'b'):
             featuni, sampuni, suruni = clcm.bootstrap_resampling(uniform)
         elif (options.typer == 'p'):
             featuni = clcm.permutation_resampling(uniform)
-            print '      Permutation done'
+            print('      Permutation done')
         
         rdist = ssd.squareform(ssd.pdist(featuni, options.dist))
-        print '      Distance matrix done'
+        print('      Distance matrix done')
         for K in range(1, options.kmax + 1):
             uniclusterid, unierror, uninfound = pc.kmedoids(rdist, K, options.niter)
             uniwc = wcDist(rdist, uniclusterid, K, fact)
             #WB[iteration, K] = np.log(uniwc)
             WB[iteration, K] = uniwc
-        print '      Clustering assessed'
+        print('      Clustering assessed')
               
-    print 'Resampling done'
+    print('Resampling done')
     np.save(options.output, WB)
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import constel.lib.utils.matrixtools as clcm
 import constel.lib.clustering.clusterstools as clcc
 import scipy.spatial.distance as ssd
@@ -36,20 +37,20 @@ def parseOpts(argv):
 def main():
     parser, (options, args) = parseOpts(sys.argv)
 
-    print 'Opening and reading: ', options.matrix
+    print('Opening and reading: ', options.matrix)
     matrix = aims.read(options.matrix)
     mat = np.asarray(matrix)[:, :, 0, 0].transpose()
     n_sample, n_dim = mat.shape
-    print 'Number of samples: ', n_sample, 'Dimension: ', n_dim
+    print('Number of samples: ', n_sample, 'Dimension: ', n_dim)
     
     if (options.wflag == 2):
-        print 'Per feature whitening'
+        print('Per feature whitening')
         features = scv.whiten(mat)
     elif (options.wflag == 1):
-        print 'Per category (dist and dir) whitening'
+        print('Per category (dist and dir) whitening')
         features = clcm.partialWhiten(mat)
     else:
-        print 'No whitening'
+        print('No whitening')
         features = mat
         
     if (options.dist == 'sqeuclidean'):
@@ -59,14 +60,14 @@ def main():
     
     distmat = ssd.squareform(ssd.pdist(features, options.dist))
     W = np.zeros(options.kmax + 1)
-    print 'Computing Wk for data'
+    print('Computing Wk for data')
     for K in range(1, options.kmax + 1):
         clusterid, error, nfound = pc.kmedoids(distmat, K, options.niter)
         wc = clcc.wcDist(distmat, clusterid, K, fact)
-        print 'K = ', K, ', error = ', error, ', wcDist = ', wc
+        print('K = ', K, ', error = ', error, ', wcDist = ', wc)
         #W[K] = np.log(wc)
         W[K] = wc
-    print 'Wk = ', W
+    print('Wk = ', W)
     
     inputs = glob.glob('*.npy')
     Wkbparts = []
@@ -75,7 +76,7 @@ def main():
     Wkb = np.vstack(Wkbparts)
     del Wkbparts
               
-    print 'Computing Gap'
+    print('Computing Gap')
     meanWkb = np.mean(Wkb, axis = 0)
     sdWkb = np.std(Wkb, axis = 0)
     gap = np.zeros(options.kmax + 1)
@@ -84,11 +85,11 @@ def main():
         gap[K] = (meanWkb[K] - W[K])
         sW[K] = sdWkb[K] * np.sqrt(1 + 1.0 / float(options.permut))
     
-    print 'MeanWkb =', meanWkb
-    print 'sdWkb =', sdWkb 
-    print 'Gap =', gap
-    print 'STD =', sW  
-    print 'Writing results to ', options.output
+    print('MeanWkb =', meanWkb)
+    print('sdWkb =', sdWkb)
+    print('Gap =', gap)
+    print('STD =', sW)
+    print('Writing results to ', options.output)
     
     fileR = open(options.output, 'w')
     fileR.write('--> Reading:' + options.matrix + '\n')

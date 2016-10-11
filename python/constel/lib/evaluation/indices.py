@@ -24,6 +24,7 @@ Author: S. Lefranc
 #----------------------------Imports-------------------------------------------
 
 
+from __future__ import print_function
 # python system module
 import numpy
 import exceptions
@@ -93,7 +94,7 @@ def compute_cluster_validity(distance, clusterid, K):
 
     Nsample = distance.shape[0]
 
-    print '     step1'
+    print('     step1')
     for i in range(K):
         Di = numpy.zeros(K)
         for j in range(K):
@@ -103,7 +104,7 @@ def compute_cluster_validity(distance, clusterid, K):
         sDB += Di.max()
     sDB = sDB / float(K)
 
-    print '     step2'
+    print('     step2')
     if (K > 2):
         dinter = numpy.array([])
         dintra = numpy.array([])
@@ -113,12 +114,12 @@ def compute_cluster_validity(distance, clusterid, K):
                     dinter = numpy.append(dinter, distance[i, j])
                 else:
                     dintra = numpy.append(dintra, distance[i, j])
-        print dinter.shape, dintra.shape
+        print(dinter.shape, dintra.shape)
         sDunn = dinter.min() / dintra.max()
     else:
         sDunn = 0
 
-    print '     step3'
+    print('     step3')
     if (K > 1):
         B = 0
         W = 0
@@ -131,7 +132,7 @@ def compute_cluster_validity(distance, clusterid, K):
         sCH = B * (Nsample - K) / (W * 10.0 * (K - 1))
     else:
         sCH = 0
-    print '     OK'
+    print('     OK')
     return (1.0 - sDB), sDunn, sCH
 
 def intersection(list1, list2):
@@ -219,13 +220,13 @@ def rand_index(list1, list2):
     contingency_matrix = clccm.contingency_matrix(l1, l2)
 
     Nsample = len(list1)
-    print Nsample
+    print(Nsample)
     sum_c1 = sum(
         comb(n_c, 2, exact=1) for n_c in contingency_matrix.sum(axis=1))
-    print sum_c1
+    print(sum_c1)
     sum_c2 = sum(
         comb(n_k, 2, exact=1) for n_k in contingency_matrix.sum(axis=0))
-    print sum_c2
+    print(sum_c2)
     sum_ = sum(comb(nij, 2, exact=1) for nij in contingency_matrix.flatten())
     prod_ = (sum_c1 * sum_c2) / float(comb(Nsample, 2))
     mean_ = (sum_c2 + sum_c1) / 2.
@@ -387,7 +388,7 @@ def gap_index(matrix, b):
     clusters: vector containing the number of clusters
     """
     matrix = matrix.transpose()
-    print 'Opening and reading: ', matrix
+    print('Opening and reading: ', matrix)
     Nsample = matrix.shape[0]
     x, y = matrix[:, 0], matrix[:, 1]
     xmin = x.min()
