@@ -161,11 +161,11 @@ void makeConnectivityTexture_seedConnectionDensity(
   size_t cortexMeshVertexNb = outputTargetDensityTex[0].nItem();
   outputTargetDensityTex_def[0].reserve(cortexMeshVertexNb);
 
-  for (std::size_t v = 0; v < cortexMeshVertexNb; ++v) {
+  for (size_t v = 0; v < cortexMeshVertexNb; ++v) {
     outputTargetDensityTex_def[0].push_back(0);
   }
 
-  for (std::size_t v = 0; v < cortexMeshVertexNb; ++v) {
+  for (size_t v = 0; v < cortexMeshVertexNb; ++v) {
     if (seedRegionsTex[0][v] == seedRegionLabel) {
       outputTargetDensityTex_def[0][v] = outputTargetDensityTex[0][v];
     }
@@ -181,7 +181,8 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
     // const SparseOrDenseMatrix & connMatrixToAllMesh                  
     const string & connTextureFileName,
     const TimeTexture<short> & seedRegionsTex,
-    size_t seedRegionLabel, size_t seedRegionsNb,
+    size_t seedRegionLabel,
+    int seedRegionsNb,
     double distthresh, double wthresh,
     bool logOption, const string & logFile,
     const string & connMatrixFileName,
@@ -195,22 +196,21 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
     bool verbose) {
   
   if (seedRegionLabel <= 0 or seedRegionLabel > seedRegionsNb)
-    throw runtime_error("No or wrong seedRegionLabel...!");
+    throw runtime_error("No or wrong seedRegionLabel.");
 
   /*
   Computing mat [region vertex][meshVertexNb]
   Read a regions (gyri for example) labeled texture and make a Label Histogram.
-  Assumes the regions (gyri) image is labeled between 1 and regionsNb,
-  background = 0 or lower than 1.
-  Count all the labels greater than regionsNb and the labels of the background.
   */
-  std::vector<std::size_t> * labels_ptr = labelsHistogram(seedRegionsTex,
-                                                          seedRegionsNb,
-                                                          verbose);
-  std::vector<std::size_t> & labels = *labels_ptr;
+  int smallestRegionNb = textureMin(seedRegionsTex);
+  map<short, size_t> *labels_ptr = labelsHistogram(seedRegionsTex,
+                               seedRegionsNb,
+                               smallestRegionNb,
+                               verbose);
+  map<short, size_t> &labels = *labels_ptr;
 
-  vector<size_t> * seedVertexIndex;
-  std::size_t seedRegionLabelVertexNb = labels[seedRegionLabel];
+  vector<size_t> *seedVertexIndex;
+  size_t seedRegionLabelVertexNb = labels[seedRegionLabel];
 
   rc_ptr<Connectivities> extractConnMatrix_ptr(
     connMatrixReducedFromRegion(connMatrixToAllMesh_ptr, seedRegionsTex, 
@@ -222,7 +222,7 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
                                    wthresh, distthresh,
                                    seedRegionsTex, seedRegionLabel);
 
-  Connectivities & extractConnMatrix = *extractConnMatrix_ptr;
+  Connectivities &extractConnMatrix = *extractConnMatrix_ptr;
   //  AllMeshConnMatrix = SparseOrDenseMatrix();
   SparseOrDenseMatrix *mat = connectivitiesToSparseOrDenseMatrix(
       *extractConnMatrix_ptr);
@@ -239,8 +239,8 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
         cout << "Computing ln(1+matrix) and storing resulting file in " <<
         connMatrixFileName << "..." << endl;
       
-      std::size_t colNb = extractConnMatrix[0].size();
-      std::size_t rowsNb = extractConnMatrix.size();
+      size_t colNb = extractConnMatrix[0].size();
+      size_t rowsNb = extractConnMatrix.size();
       
       Connectivities::iterator il, el = extractConnMatrix.end();
       Connectivity::sparse_iterator ic, ec;
@@ -269,17 +269,17 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
     }
     
     //  Write region vertex indexes (ascii format only)
-    std::size_t seedVertexIndex_size = (*seedVertexIndex).size();
+    size_t seedVertexIndex_size = (*seedVertexIndex).size();
     if ((*seedVertexIndex).size() != 0) {
       if (seedRegionVertexIndexType == "text"
           or seedRegionVertexIndexType == "both") {
-        std::fstream findex;
+        fstream findex;
         ostringstream s;
         s << seedRegionVertexIndexFileName << ".txt";
-        findex.open(s.str().c_str(), std::fstream::out);
+        findex.open(s.str().c_str(), fstream::out);
         
-        for (std::size_t i = 0; i < labels[seedRegionLabel]; ++i) {
-          findex << (*seedVertexIndex)[i] << std::endl;
+        for (size_t i = 0; i < labels[seedRegionLabel]; ++i) {
+          findex << (*seedVertexIndex)[i] << endl;
         }
       } else if (seedRegionVertexIndexType == "texture"
                   or seedRegionVertexIndexType == "both") {
@@ -290,7 +290,7 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
         
         seedRegionVertexIndexTex[0].reserve(seedVertexIndex_size);
         
-        for (std::size_t vertex = 0; vertex < seedVertexIndex_size; vertex++) {
+        for (size_t vertex = 0; vertex < seedVertexIndex_size; vertex++) {
           unsigned int val = (*seedVertexIndex)[vertex];
           seedRegionVertexIndexTex[0].push_back((*seedVertexIndex)[vertex]);
         }
@@ -372,35 +372,35 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
 
 int main(int argc, char* argv[]) {
   try {
-    std::string bundleFilename;
+    string bundleFilename;
     Reader<AimsSurfaceTriangle> inMeshAimsR;
-    std::string connMatrixComputingType = "meshclosestpoint";
-    Reader< TimeTexture<short> > seedRegionsTexR;
+    string connMatrixComputingType = "meshclosestpoint";
+    Reader<TimeTexture<short> > seedRegionsTexR;
     AimsSurfaceTriangle inAimsMesh;
-    std::vector< std::string > inTargetMeshesAimsR_files;
+    vector<string> inTargetMeshesAimsR_files;
     TimeTexture<short> seedRegionsTex;
-    std::size_t seedRegionLabel = 0;
-    std::size_t seedRegionsNb = 0;
+    size_t seedRegionLabel = 0;
+    size_t seedRegionsNb = 0;
     double distthresh = 5.0;
     double wthresh = 1.0;
-    std::string motionName = "";
-    std::string connTextureFileName;
-    std::vector<std::string> connTextureToTargetMeshesFileNames;
+    string motionName = "";
+    string connTextureFileName;
+    vector<string> connTextureToTargetMeshesFileNames;
     connTextureToTargetMeshesFileNames.reserve(1);
     connTextureToTargetMeshesFileNames.push_back("");
-    std::string connMatrixFileName = "";
-    std::string connMatrixFormat = "binar_sparse";
+    string connMatrixFileName = "";
+    string connMatrixFormat = "binar_sparse";
     bool verbose = false;
     bool normalize = false;
     double meshesDistanceThreshold = 1.0;
-    float meshClosestPoint_maxDistance = 5.0;//in mm
-    std::string connectivityTextureType = "seed_connection_density";
-    std::string seedRegionVertexIndexFileName;
-    std::string  seedRegionVertexIndexType = "";
+    float meshClosestPoint_maxDistance = 5.0;  //in mm
+    string connectivityTextureType = "seed_connection_density";
+    string seedRegionVertexIndexFileName;
+    string  seedRegionVertexIndexType = "";
     uint length_min = 0;
     uint length_max = 0;
     bool logOption = false;
-    std::string logFile = "";
+    string logFile = "";
     Reader<AimsData<short> > roisMaskR;
     AimsData<short> roisMask;
 
@@ -501,8 +501,6 @@ int main(int argc, char* argv[]) {
     app.initialize();
 
     if (verbose) {
-      cout << "READING INPUTS" << endl;
-      cout << "--------------" << endl;
       cout << "Bundles file: " << bundleFilename << endl;
       cout << "Matrix file: " << connMatrixFileName << endl;
       cout << "Transformation matrix file: " << motionName << endl;
@@ -523,10 +521,8 @@ int main(int argc, char* argv[]) {
     if (inTargetMeshesAimsR_files.empty()) {
       if (verbose) cout << "No target meshes." << endl;
     } else {
-      std::vector<AimsSurfaceTriangle> inAimsTargetMeshes(meshes_nb);
+      vector<AimsSurfaceTriangle> inAimsTargetMeshes(meshes_nb);
       if (verbose) {
-        cout << "READING TARGET MESHES" << endl;
-        cout << "---------------------" << endl;
         cout << "Meshes number: " << meshes_nb << endl;
       }
       for (int meshLabel = 0; meshLabel < meshes_nb; ++meshLabel) {
@@ -549,6 +545,7 @@ int main(int argc, char* argv[]) {
     if (seedRegionsTexR.fileName() != "") { 
       seedRegionsTexR.read(seedRegionsTex);
       seedRegionsNb = textureMax(seedRegionsTex);
+      
       if (verbose) {
         cout << "Initial cortical parcellation: " << flush;
         cout << seedRegionsTex[0].nItem() << " values, " << flush;
@@ -559,18 +556,11 @@ int main(int argc, char* argv[]) {
     }
 
     // Read the mask file (if it exists)
-    if (roisMaskR.fileName()!= "") {
-      if (verbose) cout << "Roi mask volume" << flush;
-      roisMaskR.read(roisMask);
-    }
+    if (roisMaskR.fileName()!= "") roisMaskR.read(roisMask);
 
     Connectivities * connMatrixToAllMesh_ptr = 0;
-    if (verbose) {
-      cout << "PROJECTION OF FIBERS ON THE MESH" << endl;
-      cout << "--------------------------------" << endl;
-    }
 
-    std::vector<Connectivities* > connMatrixCortexToMesh_ptr_vector;
+    vector<Connectivities* > connMatrixCortexToMesh_ptr_vector;
     connMatrixCortexToMesh_ptr_vector.reserve(meshes_nb);
 
     if (connMatrixComputingType == "meshintersectionpoint" ||
@@ -582,8 +572,6 @@ int main(int argc, char* argv[]) {
     else  // connMatrixComputingType == "meshclosestpoint"
       connMatrixToAllMesh_ptr = makeConnMatrix_closestPoint(
           bundleFilename, inAimsMesh, motionName, verbose);
-
-    if (verbose) cout << "PROJECTION DONE." << endl;
 
     if (connectivityTextureType == "seed_connection_density")
       makeConnectivityTexture_seedConnectionDensity(

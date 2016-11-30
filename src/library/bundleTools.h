@@ -62,7 +62,7 @@ namespace constel {
   //---------------------------
   class BundleInteractionReader : public aims::BundleReader {
    public:
-    BundleInteractionReader( const std::string &fileName );
+    BundleInteractionReader(const std::string &fileName);
     virtual ~BundleInteractionReader();
 
    protected:
@@ -131,13 +131,13 @@ namespace constel {
    public:
     CurvilinearAbscissaBundleListener(
         BundleInteractionReader &bundleInteractionReader);
-    virtual void fiberStarted( const aims::BundleProducer &,
-                                 const aims::BundleInfo &,
-                                 const aims::FiberInfo & );
-    virtual void newFiberPoint( const aims::BundleProducer &,
-                                  const aims::BundleInfo &,
-                                  const aims::FiberInfo &,
-                                  const aims::FiberPoint & );
+    virtual void fiberStarted(const aims::BundleProducer &,
+                               const aims::BundleInfo &,
+                               const aims::FiberInfo &);
+    virtual void newFiberPoint(const aims::BundleProducer &,
+                                const aims::BundleInfo &,
+                                const aims::FiberInfo &,
+                                const aims::FiberPoint &);
     virtual ~CurvilinearAbscissaBundleListener();
 
    private:
@@ -155,7 +155,7 @@ namespace constel {
   class MeshIntersectionBundleListener : public aims::BundleListener {
    public:
     MeshIntersectionBundleListener(
-        const AimsSurfaceTriangle & aimsMesh,
+        const AimsSurfaceTriangle &aimsMesh,
         BundleInteractionReader &bundleInteractionReader,
         double meshDistanceThreshold = 0.,
         double meshClosestPointMaxDistance = 1., bool verbose = false);
@@ -179,7 +179,7 @@ namespace constel {
     double _meshClosestPointMaxDistance;
     int _meshIdentity;
     bool _verbose;
-    const AimsSurfaceTriangle & _aimsMesh;
+    const AimsSurfaceTriangle &_aimsMesh;
 
     PolygonsByVertexIndex _meshPolygonsByVertex_Index;
     constel::Mesh _mesh;
@@ -205,7 +205,7 @@ namespace constel {
       : public aims::BundleListener {
    public:
     MeshIntersectionNoSmoothingBundleListener(
-        const AimsSurfaceTriangle & aimsMesh,
+        const AimsSurfaceTriangle &aimsMesh,
         BundleInteractionReader &bundleInteractionReader,
         double meshClosestPointMaxDistance = 7., bool verbose = false);
     virtual void fiberStarted(const aims::BundleProducer &,
@@ -227,7 +227,7 @@ namespace constel {
     double _meshClosestPointMaxDistance;
     bool _verbose;
     int _meshIdentity;
-    const AimsSurfaceTriangle & _aimsMesh;
+    const AimsSurfaceTriangle &_aimsMesh;
 
     PolygonsByVertexIndex _meshPolygonsByVertex_Index;
     constel::Mesh _mesh;
@@ -256,7 +256,7 @@ namespace constel {
       : public MeshIntersectionNoSmoothingBundleListener {
    public:
     MeshIntersectionNoSmoothingFasterBundleListener(
-        const AimsSurfaceTriangle & aimsMesh, AimsData<short> &roisMask,
+        const AimsSurfaceTriangle &aimsMesh, AimsData<short> &roisMask,
         BundleInteractionReader &bundleInteractionReader,
         double meshClosestPointMaxDistance = 7., bool verbose = false);
     virtual void fiberStarted(const aims::BundleProducer &,
@@ -274,7 +274,7 @@ namespace constel {
     virtual ~MeshIntersectionNoSmoothingFasterBundleListener();
 
     protected:
-     AimsData<short>& _roisMask;
+     AimsData<short> &_roisMask;
      bool _antFiberPoint_inRoisMask;
   };
 
@@ -286,7 +286,7 @@ namespace constel {
    public:
     SavingMeshIntersectionBundleListener(
         BundleInteractionReader &bundleInteractionReader,
-        const std::string & fileName);
+        const std::string &fileName);
     virtual void fiberTerminated(const aims::BundleProducer &,
                                   const aims::BundleInfo &,
                                   const aims::FiberInfo &);
@@ -309,15 +309,15 @@ namespace constel {
    public:
     MeshIntersectionMatrixBundleListener(
         BundleInteractionReader &bundleInteractionReader, int meshIdentity,
-        unsigned meshVertexNb, const std::string & file_name = "",
-        const std::string & matrixRowsBundleNames_file_name = "",
+        unsigned meshVertexNb, const std::string &file_name = "",
+        const std::string &matrixRowsBundleNames_file_name = "",
         int bundlesNb = 1);
     virtual void bundleStarted(const aims::BundleProducer &,
-                                const aims::BundleInfo & );
+                                const aims::BundleInfo &);
     virtual void fiberTerminated(const aims::BundleProducer &,
                                   const aims::BundleInfo &,
                                   const aims::FiberInfo &);
-    virtual void noMoreBundle(const aims::BundleProducer & bundleProducer);
+    virtual void noMoreBundle(const aims::BundleProducer &bundleProducer);
     virtual ~MeshIntersectionMatrixBundleListener();
 
    private:
@@ -333,25 +333,27 @@ namespace constel {
   };
 
 
-//-------------//
- //  MeshIntersectionMatrixWithLengthBundleListener //
-//for one mesh first, of meshId = 0, and one bundles per region (basal ganglia for exemple)
-// idem MeshIntersectionMatrixBundleListener, but each connectivity value is weighted with the fiber tract length
-//-------------//
+  //--------------------------------------------------
+  //  MeshIntersectionMatrixWithLengthBundleListener
+  //--------------------------------------------------
+  // for one mesh first, of meshId = 0, and one bundles per region
+  // (basal ganglia for exemple) 
+  // idem MeshIntersectionMatrixBundleListener, but each connectivity value is
+  // weighted with the fiber tract length
   class MeshIntersectionMatrixWithLengthBundleListener
       : public aims::BundleListener {
    public:
     MeshIntersectionMatrixWithLengthBundleListener(
         BundleInteractionReader &bundleInteractionReader, int meshIdentity,
-        unsigned meshVertexNb, const std::string & file_name = "",
-        const std::string & matrixRowsBundleNames_file_name = "",
+        unsigned meshVertexNb, const std::string &file_name = "",
+        const std::string &matrixRowsBundleNames_file_name = "",
         int bundlesNb = 1);
     virtual void bundleStarted(const aims::BundleProducer &,
                                 const aims::BundleInfo &);
     virtual void fiberTerminated(const aims::BundleProducer &,
                                   const aims::BundleInfo &,
                                   const aims::FiberInfo &);
-    virtual void noMoreBundle(const aims::BundleProducer & bundleProducer);
+    virtual void noMoreBundle(const aims::BundleProducer &bundleProducer);
     virtual ~MeshIntersectionMatrixWithLengthBundleListener();
 
 
@@ -427,7 +429,7 @@ namespace constel {
 
     //For histogram creation:
     boost::shared_ptr<AimsData< float > > _meshConnectionsHistoLength_ptr;
-    AimsData< float >  & _meshConnectionsHistoLength;
+    AimsData< float > &_meshConnectionsHistoLength;
     int _connectionLengthMin;
     // correspond to mm, corresponding to a python histogram,
     // with bins = range(_connectionLengthMin,_connectionLengthMax+1)
@@ -440,15 +442,15 @@ namespace constel {
   };
 
 
-  //-------------//
-  //  FiberNameAccordingToMeshIntersectionBundleListener //
-  //-------------//
+  //------------------------------------------------------
+  //  FiberNameAccordingToMeshIntersectionBundleListener 
+  //------------------------------------------------------
   class FiberNameAccordingToMeshIntersectionBundleListener
       : public aims::BundleListener {
    public:
     FiberNameAccordingToMeshIntersectionBundleListener(
         BundleInteractionReader &bundleInteractionReader,
-        const std::string & fileName);
+        const std::string &fileName);
     virtual void fiberTerminated(const aims::BundleProducer &,
                                   const aims::BundleInfo &,
                                   const aims::FiberInfo &);
@@ -471,7 +473,7 @@ namespace constel {
    public:
     FiberNameAccordingToMeshTextureIntersectionBundleListener(
         BundleInteractionReader &bundleInteractionReader,
-        const TimeTexture<short> & labeled_tex, const std::string & fileName);
+        const TimeTexture<short> &labeled_tex, const std::string &fileName);
     virtual void fiberStarted(const aims::BundleProducer &,
                                const aims::BundleInfo &,
                                const aims::FiberInfo &);
@@ -490,7 +492,7 @@ namespace constel {
    protected:
     std::string _fileName;  //fiber names according to intersection points
     std::fstream _file;
-    const Texture<short> & _labeledTex0;
+    const Texture<short> &_labeledTex0;
     std::set<short> _intersectionPointsMeshClosestPointsTexLabels_set;
   };
 
@@ -503,21 +505,21 @@ namespace constel {
    public:
     SubSamplerFromMeshIntersectionBundleListener(
         BundleInteractionReader &bundleInteractionReader, int step);
-    virtual void bundleStarted(const aims::BundleProducer & bundleProducer,
-                                const aims::BundleInfo & bundleInfo );
+    virtual void bundleStarted(const aims::BundleProducer &bundleProducer,
+                                const aims::BundleInfo &bundleInfo);
     virtual void bundleTerminated(const aims::BundleProducer &,
-                                   const aims::BundleInfo & );
-    virtual void fiberStarted(const aims::BundleProducer & bundleProducer,
-                               const aims::BundleInfo & bundleInfo,
-                               const aims::FiberInfo & fiberInfo);
-    virtual void newFiberPoint(const aims::BundleProducer & bundleProducer,
-                                const aims::BundleInfo & bundleInfo,
-                                const aims::FiberInfo & fiberInfo,
-                                const aims::FiberPoint &point );
+                                   const aims::BundleInfo &);
+    virtual void fiberStarted(const aims::BundleProducer &bundleProducer,
+                               const aims::BundleInfo &bundleInfo,
+                               const aims::FiberInfo &fiberInfo);
+    virtual void newFiberPoint(const aims::BundleProducer &bundleProducer,
+                                const aims::BundleInfo &bundleInfo,
+                                const aims::FiberInfo &fiberInfo,
+                                const aims::FiberPoint &point);
     virtual void fiberTerminated(const aims::BundleProducer &,
                                   const aims::BundleInfo &,
-                                  const aims::FiberInfo & );
-    virtual void noMoreBundle(const aims::BundleProducer & bundleProducer);
+                                  const aims::FiberInfo &);
+    virtual void noMoreBundle(const aims::BundleProducer &bundleProducer);
     virtual ~SubSamplerFromMeshIntersectionBundleListener();
 
    private:

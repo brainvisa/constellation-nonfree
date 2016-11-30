@@ -1,4 +1,3 @@
-
 #include <aims/getopt/getopt2.h>
 #include <aims/io/reader.h>
 #include <connectomist/fibertracking/bundlesFusion.h>
@@ -14,82 +13,108 @@ using namespace constel;
 
 
 
-int main( int argc, const char* argv[] )
-{
-  try
-  {
+int main(int argc, const char* argv[]) {
+  try {
     vector<string> fileNameIn;
     string fileNameOut;
     string fileNameOut_notinmesh;
-    string mode="Name1_Name2orNotInMesh";
+    string mode = "Name1_Name2orNotInMesh";
+    string mname;
+    string gyrus;
     rc_ptr<Mesh> mesh;
     rc_ptr<TimeTexture<short> > tex;
     Reader<AimsSurfaceTriangle> r;
-    int addInt =0;
-    Reader< TimeTexture<short> > texR;
-    string mname;
-    std::vector< string > namesList;
-    bool as_regex = false;
-    bool verbose = false;
+    Reader<TimeTexture<short> > texR;
+    vector<string> namesList;
     AffineTransformation3d motion;
-    string gyrus;
-    float cortMinlength = 0;
+    int addInt = 0;
+    bool as_regex = false;
+    bool verbose  = false;
+    float cortMinlength =  0;
     float cortMaxlength = -1;
-    float nimMinlength = -1;
-    float nimMaxlength = -2;
+    float nimMinlength  = -1;
+    float nimMaxlength  = -2;
 
-    AimsApplication app( argc, argv, "Selection of tracking fibers according to a white matter mesh with label texture." );
-    app.addOptionSeries( fileNameIn, "-i", "Bundle File input");
-    app.addOption( fileNameOut, "-o", "Bundle File output");
-    app.addOption( fileNameOut_notinmesh, "-n", "Bundle File output for \"distant fibers\"");
-    app.addOption( r, "--mesh", "input mesh" );
-    app.addOption( texR, "--tex", "labels input texture" );
-    app.addOption( gyrus, "-g", "gyrus name for distant fibers filtering" );
-    app.addOption( mname, "--trs", "transformation from t2 to anat", true );
-    app.addOption( addInt, "--intadd", "int to add to Bundle Names", true );
-    app.addOption( mode, "--mode", "mode of new bundles names : = Name1_Name2 or NameFront, or NameEnd, or NameFront_NameEnd, or Name1_Name2orNotInMesh (default)",true);
-    app.addOptionSeries( namesList, "--names", "list of string containing bundle names to be selected" );
-    app.addOption( as_regex, "-r", "names are regular expressions", true );
-    app.addOption( cortMinlength, "-l", 
-      "minimum length for a \"near cortex\" fiber (default: 0)", true );
-    app.addOption( cortMaxlength, "-L", 
-      "maximum length for a \"near cortex\" fiber (default: no max)", true );
-    app.addOption( nimMinlength, "--nimlmin", 
-      "minimum length for a \"not in mesh\" fiber (default: same as cortex)", 
-      true );
-    app.addOption( nimMaxlength, "--nimlmax", 
-      "maximum length for a \"not in mesh\" fiber (default: same as cortex)", 
-      true );
-    app.addOption( verbose, "--verbose",
-                   "show as much information as possible", true );
+    AimsApplication app(
+        argc, argv,
+        "Selection of tracking fibers according to a white matter mesh with \n\
+        label texture.");
+
+    app.addOptionSeries(fileNameIn, "-i", "Bundle File input");
+    app.addOption(fileNameOut, "-o", "Bundle File output");
+    app.addOption(
+        fileNameOut_notinmesh, "-n",
+        "Bundle File output for \"distant fibers\"");
+    app.addOption(
+        r, "--mesh",
+        "input mesh");
+    app.addOption(
+        texR, "--tex",
+        "labels input texture" );
+    app.addOption(
+        gyrus, "-g",
+        "gyrus name for distant fibers filtering");
+    app.addOption(
+        mname, "--trs",
+        "transformation from t2 to anat", true);
+    app.addOption(
+        addInt, "--intadd",
+        "int to add to Bundle Names", true);
+    app.addOption(
+        mode, "--mode",
+        "mode of new bundles names : = Name1_Name2 or NameFront, or NameEnd,\n\
+        or NameFront_NameEnd, or Name1_Name2orNotInMesh (default)", true);
+    app.addOptionSeries(
+        namesList, "--names",
+        "list of string containing bundle names to be selected");
+    app.addOption(
+        as_regex, "-r",
+        "names are regular expressions", true);
+    app.addOption(
+        cortMinlength, "-l", 
+        "minimum length for a \"near cortex\" fiber (default: 0)", true);
+    app.addOption(
+        cortMaxlength, "-L", 
+        "maximum length for a \"near cortex\" fiber (default: no max)", true);
+    app.addOption(
+        nimMinlength, "--nimlmin",
+        "minimum length for a \"not in mesh\" fiber (default: same as cortex)",
+        true);
+    app.addOption(
+        nimMaxlength, "--nimlmax",
+        "maximum length for a \"not in mesh\" fiber (default: same as cortex)",
+        true);
+    app.addOption(
+        verbose, "--verbose",
+        "show as much information as possible", true);
+
     app.initialize();
+
     rc_ptr<AimsSurfaceTriangle> s;
-    s.reset( r.read() );
+    s.reset(r.read());
     til::Mesh1 mesh0;
     til::convert(mesh0, *s);
-    mesh.reset( new Mesh );
+    mesh.reset(new Mesh);
     *mesh = addNeighborsToMesh(mesh0);
 
-    if( nimMinlength < 0 )
-      nimMinlength = cortMinlength;
-    if( nimMaxlength == -2 )
-      nimMaxlength = cortMaxlength;
+    if (nimMinlength < 0) nimMinlength = cortMinlength;
+    if (nimMaxlength == -2) nimMaxlength = cortMaxlength;
 
-    if( !mname.empty() )
-    {
+    if (!mname.empty()) {
       Reader<AffineTransformation3d> mreader(mname);
       mreader.read(motion);
     }
 
-    if (verbose)
-      std::cout << "reading texture..." << flush;
-      tex.reset( texR.read() );
-    if (verbose)
-    {
-      std::cout << "done" << std::endl;
-      std::cout << "# vertices : " << getVertices(*mesh).size() << std::endl;
-      std::cout << "# faces : " << getFaceIndices(*mesh).size() << std::endl;
-      std::cout << "Texture dim : " << (*tex)[0].nItem() << endl;
+    if (verbose) {
+      cout << "reading texture..." << flush;
+      tex.reset(texR.read());
+    }
+
+    if (verbose) {
+      cout << "done" << endl;
+      cout << "# vertices : " << getVertices(*mesh).size() << endl;
+      cout << "# faces : " << getFaceIndices(*mesh).size() << endl;
+      cout << "Texture dim : " << (*tex)[0].nItem() << endl;
     }
 
     /*  Pipeline structure:
@@ -125,99 +150,87 @@ int main( int argc, const char* argv[] )
 
     // create common elements
 
-    vector<rc_ptr<BundleReader> > bundle( n );
-    vector<rc_ptr<SelectFiberListenerFromMesh> > gyriFilter( n );
+    vector<rc_ptr<BundleReader> > bundle(n);
+    vector<rc_ptr<SelectFiberListenerFromMesh> > gyriFilter(n);
 
-    vector<rc_ptr<SelectBundlesFromNames> > selectCortexBundles( n );
-    vector<rc_ptr<SelectBundlesFromLength> > selectCBundlesFromLength( n );
+    vector<rc_ptr<SelectBundlesFromNames> > selectCortexBundles(n);
+    vector<rc_ptr<SelectBundlesFromLength> > selectCBundlesFromLength(n);
     // regroup cortex bundles by gyrus name
-    rc_ptr<BundlesFusion> cortexRegroup( new BundlesFusion( (int) n ) );
+    rc_ptr<BundlesFusion> cortexRegroup(new BundlesFusion((int) n));
 
-    vector<rc_ptr<SelectBundlesFromNames> > selectNimBundles( n );
-    vector<rc_ptr<SelectBundlesFromLength> > selectNBundlesFromLength( n );
+    vector<rc_ptr<SelectBundlesFromNames> > selectNimBundles(n);
+    vector<rc_ptr<SelectBundlesFromLength> > selectNBundlesFromLength(n);
     // regroup "not in mesh" bundles by gyrus name
-    rc_ptr<BundlesFusion> nimRegroup( new BundlesFusion( (int) n ) );
+    rc_ptr<BundlesFusion> nimRegroup( new BundlesFusion((int) n));
 
     // duplicate branches for all input files
-    for( i=0; i!=n; ++i )
-    {
-      //     Bundles reader creation
+    for (i=0; i!=n; ++i) {
+      // Bundles reader creation
       string fileName = fileNameIn[i];
-      if (verbose) cout << "read bundle" << fileName << endl;
       bundle[i].reset( new BundleReader( fileName ) );
 
       // Set names from mesh/label texture
       gyriFilter[i].reset(
-        new SelectFiberListenerFromMesh( mesh, tex, mode, addInt, motion,
-                                         "" ) );
-      bundle[i]->addBundleListener( *gyriFilter[i] );
+        new SelectFiberListenerFromMesh(mesh, tex, mode, addInt, motion,""));
+      bundle[i]->addBundleListener(*gyriFilter[i]);
 
       // -- 1st branch: near cortex
       // filter labels
-      selectCortexBundles[i].reset( new SelectBundlesFromNames(
-        namesList, verbose, as_regex, true ));
-      gyriFilter[i]->addBundleListener( *selectCortexBundles[i] );
+      selectCortexBundles[i].reset(
+        new SelectBundlesFromNames(namesList, verbose, as_regex, true));
+      gyriFilter[i]->addBundleListener(*selectCortexBundles[i]);
 
       // filter from length
       selectCBundlesFromLength[i].reset(
-        new SelectBundlesFromLength( cortMinlength, cortMaxlength, verbose ) );
-      selectCortexBundles[i]->addBundleListener( 
-        *selectCBundlesFromLength[i] );
+        new SelectBundlesFromLength(cortMinlength, cortMaxlength, verbose));
+      selectCortexBundles[i]->addBundleListener(*selectCBundlesFromLength[i]);
 
       // connect to common cortex fusion element
-      selectCBundlesFromLength[i]->addBundleListener( *cortexRegroup );
+      selectCBundlesFromLength[i]->addBundleListener(*cortexRegroup);
 
       // -- 2nd branch: not in mesh
       // filter labels
       vector<string> notinmesh_names;
-      notinmesh_names.push_back( gyrus + "_notInMesh" );
+      notinmesh_names.push_back(gyrus + "_notInMesh");
       selectNimBundles[i].reset( 
-        new SelectBundlesFromNames( notinmesh_names, verbose, false, true ) );
-      gyriFilter[i]->addBundleListener( *selectNimBundles[i] );
+        new SelectBundlesFromNames(notinmesh_names, verbose, false, true));
+      gyriFilter[i]->addBundleListener(*selectNimBundles[i]);
 
       // filter from length
       selectNBundlesFromLength[i].reset(
-        new SelectBundlesFromLength( nimMinlength, nimMaxlength, verbose ) );
-      selectNimBundles[i]->addBundleListener( *selectNBundlesFromLength[i] );
+        new SelectBundlesFromLength(nimMinlength, nimMaxlength, verbose));
+      selectNimBundles[i]->addBundleListener(*selectNBundlesFromLength[i]);
 
       // regroup bundles by gyrus name
-      selectNBundlesFromLength[i]->addBundleListener( *nimRegroup );
+      selectNBundlesFromLength[i]->addBundleListener(*nimRegroup);
     }
 
     // cortex bundles writer
     rc_ptr< BundleWriter > cortexWriter;
-    cortexWriter.reset( new BundleWriter );
-    cortexWriter->setFileString( fileNameOut );
-    cortexRegroup->addBundleListener( *cortexWriter );
+    cortexWriter.reset(new BundleWriter);
+    cortexWriter->setFileString(fileNameOut);
+    cortexRegroup->addBundleListener(*cortexWriter);
 
     // NIM bundles writer
-    rc_ptr< BundleWriter > nimWriter( new BundleWriter );
-    nimWriter->setFileString( fileNameOut_notinmesh );
-    nimRegroup->addBundleListener( *nimWriter );
+    rc_ptr< BundleWriter > nimWriter(new BundleWriter);
+    nimWriter->setFileString(fileNameOut_notinmesh);
+    nimRegroup->addBundleListener(*nimWriter);
 
     // run all those
-    for( i=0; i<n; ++i )
-    {
-      if (verbose)
-        cout << "process file: " << fileNameIn[i] << endl;
+    for (i = 0; i < n; ++i) {
+      if (verbose) cout << "process file: " << fileNameIn[i] << endl;
       bundle[i]->read();
-      if (verbose)
-        cout << "done for " << fileNameIn[i] << endl;
+      if (verbose) cout << "done for " << fileNameIn[i] << endl;
     }
 
-    if( verbose )
-      cout << "All done.\n";
-
+    if (verbose) cout << "All done.\n";
 
   return EXIT_SUCCESS;
-
   }
-  catch( carto::user_interruption & )
-  {
-  // Exceptions thrown by command line parser (already handled, simply exit)
+  catch (carto::user_interruption &) {
+    // Exceptions thrown by command line parser (already handled, simply exit)
   }
-  catch( exception & e )
-  {
+  catch (exception & e) {
     cerr << e.what() << endl;
   }
 }
