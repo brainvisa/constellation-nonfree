@@ -19,6 +19,34 @@ from scipy.cluster.hierarchy import fcluster
 import fastcluster
 
 
+def nearest_neighbour_profiles(profile, atlas, atlas_classes, indices):
+    """ Compute the nearest neighbour profiles.
+    
+    Parameters
+    ----------
+    profile: numpy.array (mandatory)
+        Individual reduced matrix, shape (region vertices, basins).
+    atlas: numpy.array (mandatory)
+        Group reduced matrix, shape (region vertices, basins).
+    atlas_classes: nupy.array (mandatory)
+        Clustering of the cortical region.
+    indices: numpy.array (mandatory)
+        Vertex indices belonging to the cortical region.
+
+    Returns
+    -------
+    res_classes: numpy.array
+        Individual clustering of the cortical region defined from atlas.
+    """
+    res_classes = numpy.zeros(len(atlas_classes))
+    for l, line in enumerate(profile):
+        distance = numpy.sum((line - atlas)**2, axis=1)
+        atlas_line = numpy.argmin(distance)
+        i = indices[atlas_line]
+        res_classes[indices[l]] = atlas_classes[i]
+    return res_classes
+
+
 def get_centers(clusters_id, kmax_clusters):
     """Get all clusters centers.
 

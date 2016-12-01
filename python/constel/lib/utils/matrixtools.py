@@ -393,4 +393,13 @@ def save_normalization(filename):
     oname = os.path.join(name + "/normalization")
     save_norm = numpy.save(oname, norm_rows)
                 
+def replace_negative_values(matrix, value=0.0):
+    """ Replace the negative values by 0.0 (by default).
+    """
+    mat = aims.read(matrix)
+    mat.muteToDense()
+    numpy.asarray(mat.denseMatrix())[numpy.asarray(mat.denseMatrix()) < 0.0] = 0.0
+    aims.write(mat, matrix)
+    
+    
     

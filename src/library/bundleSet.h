@@ -3,11 +3,10 @@
 
 #include <aims/fibers/bundles.h>
 
-namespace constel
-{
-  typedef std::vector< aims::FiberPoint > Fiber;
-  typedef std::vector< Fiber > Fibers;
-  typedef std::vector< Fibers > BundlesSet;
+namespace constel {
+  typedef std::vector<aims::FiberPoint> Fiber;
+  typedef std::vector<Fiber> Fibers;
+  typedef std::vector<Fibers> BundlesSet;
 }
 
 #endif

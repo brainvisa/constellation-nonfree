@@ -4,26 +4,24 @@
 #include <aims/sparsematrix/sparseMatrix.h>
 #include <constellation/connectivities.h>
 
-namespace constel
-{
+namespace constel {
 
-  aims::SparseMatrix* connectivitiesToSparseMatrix(
-    const Connectivities & conn );
+  aims::SparseMatrix *connectivitiesToSparseMatrix(
+      const Connectivities &conn);
 
-  Connectivities* sparseMatrixToConnectivities(
-    const aims::SparseMatrix & mat );
-
-  void sparseMatrixToConnectivities(
-    const aims::SparseMatrix & mat, Connectivities & conn );
+  Connectivities *sparseMatrixToConnectivities(
+      const aims::SparseMatrix &mat);
 
   void sparseMatrixToConnectivities(
-    const aims::boost_sparse_matrix & mat, Connectivities & conn );
+      const aims::SparseMatrix &mat, Connectivities &conn);
 
-  void writeConnectivities( const Connectivities & conn,
-                            const std::string & filename, bool ascii=false );
+  void sparseMatrixToConnectivities(
+      const aims::boost_sparse_matrix &mat, Connectivities &conn);
 
+  void writeConnectivities(
+      const Connectivities &conn, const std::string &filename,
+      bool ascii=false);
 
 }
-
 #endif
 

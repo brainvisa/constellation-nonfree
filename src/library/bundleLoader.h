@@ -41,68 +41,50 @@
 
 #include <aims/fibers/bundles.h>
 
-namespace constel
-{
+namespace constel {
 
-  class BundleLoader : public aims::BundleListener
-  {
-  public: // typedefs
+  class BundleLoader : public aims::BundleListener {
 
+   public: // typedefs
     typedef aims::FiberPoint Point;
     typedef std::vector<Point> Fiber;
     typedef std::vector<Fiber> Bundle;
 
-  public: // constructors & destructor
-
+   public: // constructors & destructor
     BundleLoader() : m_fibers(new Bundle) {}
     virtual ~BundleLoader() {}
 
-  public: // set & get
-
+   public: // set & get
     carto::rc_ptr<Bundle> getFibers() const { return m_fibers; }
 
-  private: // functions
+   private: // functions
+    void bundleStarted(
+        const aims::BundleProducer &, const aims::BundleInfo &) {}
 
-    void bundleStarted( const aims::BundleProducer &,
-                        const aims::BundleInfo & )
-    {
-    }
+    void bundleTerminated(
+        const aims::BundleProducer &, const aims::BundleInfo &) {}
 
-    void bundleTerminated( const aims::BundleProducer &,
-                           const aims::BundleInfo & )
-    {
-    }
-
-    void fiberStarted( const aims::BundleProducer &,
-                       const aims::BundleInfo &, const aims::FiberInfo & )
-    {
+    void fiberStarted(
+        const aims::BundleProducer &, const aims::BundleInfo &,
+        const aims::FiberInfo &) {
       m_fibers->push_back(Fiber());
     }
 
-    void fiberTerminated( const aims::BundleProducer &,
-                          const aims::BundleInfo &,
-                          const aims::FiberInfo & )
-    {
-    }
+    void fiberTerminated(
+        const aims::BundleProducer &, const aims::BundleInfo &,
+        const aims::FiberInfo &) {}
 
-    void newFiberPoint( const aims::BundleProducer &,
-                        const aims::BundleInfo &, const aims::FiberInfo &,
-                        const aims::FiberPoint & point )
-    {
+    void newFiberPoint(
+        const aims::BundleProducer &, const aims::BundleInfo &,
+        const aims::FiberInfo &, const aims::FiberPoint & point) {
       m_fibers->back().push_back(point);
     }
 
-    void noMoreBundle( const aims::BundleProducer & )
-    {
-    }
+    void noMoreBundle(const aims::BundleProducer &) {}
 
-  private: // data
-
+   private: // data
     carto::rc_ptr<Bundle> m_fibers;
   };
-
 }
-
 #endif
-
 

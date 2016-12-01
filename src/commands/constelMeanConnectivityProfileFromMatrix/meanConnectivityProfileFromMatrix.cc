@@ -10,353 +10,286 @@ using namespace carto;
 using namespace std;
 using namespace constel;
 
-int main( int argc, const char* argv[] )
-{
-  try
-  {
-    Reader< TimeTexture<short> > seedRegionsTexR;
-    TimeTexture<short> seedRegionsTex;
-    size_t seedRegionLabel = 0;
+int main(int argc, const char* argv[]) {
+  try {
+    //-------------------------------------------------------------------------
+    Reader< TimeTexture<short> > corticalParcellationReader;
+    TimeTexture<short> corticalParcellation;
+    int seedLabel = 0;
+    int maxLabel  = 0;
+    int minLabel  = 0;
 
-    size_t seedRegionsNb = 0;
-    string connTextureFileName;
-    string outConnMatrixFileName = "";
-    bool verbose = false;
+    Reader< TimeTexture<short> > secondCorticalParcellationReader;
+    TimeTexture<short> secondCorticalParcellation;
+    int secondMaxLabel = 0;
+    vector<int> secondSeedLabel_vector;
+    secondSeedLabel_vector.reserve(1);
+    secondSeedLabel_vector.push_back(0);
+
+    string inputMatrixFilename;
+    string matrixFormat = "binar_sparse";
+    string connectivityType = "seed_connection_density";
+    string outputMatrixFilename;
+    string outputSeedVertexIndicesTxtFile;
+    string outputMeanProfileFilename;
+    string outputSeedVertexIndicesTextureFile;
+
     bool normalize = false;
-    string connectivityTextureType = "seed_connection_density";
-    string outSeedRegionVertexIndexFileName = "";
-    string outSeedRegionVertexIndexFileNameTex = "";
-    string connMatrixFormat = "binar_sparse";
-    string inConnMatrixFileName;
+    bool verbose = false;
+    //-------------------------------------------------------------------------
+    AimsApplication app(
+      argc, argv,
+      "Compute the connectivity profile(s). \n\
+      Modes supported: (1) mesh_to_mesh (2) oneSeedRegion_to_mesh");
 
-    Reader< TimeTexture<short> > seedRegionsTexR2;
-    TimeTexture<short> seedRegionsTex2;
-    vector<int> seedRegionLabel2_vector;
-    seedRegionLabel2_vector.reserve(1);
-    seedRegionLabel2_vector.push_back(0);
-    size_t seedRegionsNb2 = 0;
-
-    float distthresh = 0;
-    string outSmoothedConnMatrixFileName = "";
-
-    AimsApplication app( argc, argv,
-      "computes and writes connection density texture(s). \n\
-      Modes supported: (1) mesh_to_mesh (2) oneSeedRegion_to_mesh" );
-    app.addOption( connMatrixFormat, "-connfmt",
-      "input connectivity matrix format. \n\
-      Formats supported: (1) .ima (2) binar_sparse (3) ascii_sparse \n\
-      default = binar_sparse", true );
-    app.addOption( inConnMatrixFileName, "-connmatrixfile",
-      "input connectivity matrix filename." );
-    app.addOption( connTextureFileName, "-outconntex",
-      "output mean connectivity texture filename." );
-    app.addOption( seedRegionsTexR, "-seedregionstex",
-      "input region(s) texture." );
-    app.addOption( seedRegionLabel, "-seedlabel", "input seed region label.\n\
+    app.addOption(
+      matrixFormat, "-connfmt",
+      "Input connectivity matrix format. \n\
+      Formats supported: (1) .ima, (2) binar_sparse or (3) ascii_sparse \n\
+      default = binar_sparse", true);
+    app.addOption(
+      inputMatrixFilename, "-connmatrixfile",
+      "Input connectivity matrix filename.");
+    app.addOption(
+      outputMeanProfileFilename, "-outconntex",
+      "Output mean connectivity profile filename.");
+    app.addOption(
+      corticalParcellationReader, "-seedregionstex",
+      "Input initial cortical parcellation (e.g. gyri segmentation).");
+    app.addOption(
+      seedLabel, "-seedlabel",
+      "Input seed region label.\n\
       0 to calculate the mean connectivity for all the regions: \n\
-      mat.shape = ( seedRegionsNb, targetRegionsNb ) \n\
-      -> if seedRegionLabel != 0 : \n\
-      mat.shape = ( seedRegionLabel vertexNb, targetRegionsNb )", true );
-    app.addOption( seedRegionsTexR2, "-seedregionstex2", "second input region texture.\n\
+      mat.shape = (maxLabel, targetRegionsNb) \n\
+      -> if seedLabel != 0 : \n\
+      mat.shape = (seedLabel vertexNb, targetRegionsNb)", true);
+    app.addOption(
+      secondCorticalParcellationReader, "-seedregionstex2",
+      "Second cortical parcellation.\n\
       If you want to study a region in particular, \n\
       the input connectivity matrix correspond to the first seed region",
-      true );
-    app.addOptionSeries( seedRegionLabel2_vector, "-seedlabel2", \
-     "second input seed region label + an -seedregiontex2 entry,\n\
-     to obtain a connectivity profile of a sub region\n\
-      = (of label seedlabel2 in seedregionstex2)\n\
-     of the input seedregion (of label seedlabel)", true );
-    app.addOption( verbose, "-verbose", "for more information.", true );
-    app.addOption( normalize, "-normalize", "normalize connectivity matrix.", true);
-    app.addOption( connectivityTextureType, "-type",
+      true);
+    app.addOptionSeries(
+      secondSeedLabel_vector, "-seedlabel2",
+      "second input seed region label + an -seedregiontex2 entry, \n\
+      to obtain a connectivity profile of a sub region \n\
+      = (of label seedlabel2 in secondCorticalParcellation) \n\
+      of the input seedregion (of label seedlabel)", true);
+    app.addOption(
+      verbose, "-verbose",
+      "For more information.", true);
+    app.addOption(
+      normalize, "-normalize",
+      "Normalize connectivity matrix.", true);
+    app.addOption(
+      connectivityType, "-type",
       "Connectivity types supported: \n\
       (1) seed_mean_connectivity_profile (2) seed_connection_density\n\
-      default = seed_connection_density" );
-    app.addOption( outConnMatrixFileName, "-outconnmatrix",
-      "output connectivity matrix filename of the seed region,\n\
-      size = ( seedRegionVertexNb,meshVertexNb )\n\
-      default = don\'t save", true );
-    app.addOption( outSeedRegionVertexIndexFileName, "-outseedvertex",
-      "output seedlabel region vertex index filename (txt file)", true );
-    app.addOption( outSeedRegionVertexIndexFileNameTex, "-outseedvertextex",
-      "output seedlabel region texture filename (texture file)", true );
+      default = seed_connection_density");
+    app.addOption(
+      outputMatrixFilename, "-outconnmatrix",
+      "Output connectivity matrix filename of the seed region,\n\
+      size = (seedRegionVertexNb,meshVertexNb)\n\
+      default = don\'t save", true);
+    app.addOption(
+      outputSeedVertexIndicesTxtFile, "-outseedvertex",
+      "Output seedlabel region vertex index filename (txt file)", true);
+    app.addOption(
+      outputSeedVertexIndicesTextureFile, "-outseedvertextex",
+      "Output seedlabel region profile filename (texture file)", true);
+
     app.initialize();
+    //-------------------------------------------------------------------------
 
-    if( connMatrixFormat != "binar_sparse"
-        && connMatrixFormat != "ascii_sparse" )
-      throw runtime_error( string( "unknown matrix format " )
-        + connMatrixFormat );
-    if( connectivityTextureType != "seed_connection_density"
-        && connectivityTextureType != "seed_mean_connectivity_profile" )
-      throw runtime_error( string( "unknown connectivity texture type " )
-        + connectivityTextureType );
 
-    //Reading inputs
-    if(verbose) cout << "Reading inputs :" << endl;
+    // Check the input parameters
+    if (matrixFormat != "binar_sparse" && matrixFormat != "ascii_sparse")
+      throw runtime_error(string("Unknown matrix format ") + matrixFormat);
+    if (connectivityType != "seed_connection_density"
+        && connectivityType != "seed_mean_connectivity_profile")
+      throw runtime_error(string("Unknown connectivity texture type ")
+        + connectivityType);
 
-    uint cortexMeshVertexNb = seedRegionsTex[0].nItem();
+    // Read the initial cortical parcellation
+    corticalParcellationReader.read(corticalParcellation);
 
-    if(verbose) cout << "reading seedRegionsTex: " << flush;
-    seedRegionsTexR.read( seedRegionsTex );
-    
-    if(verbose) cout << "Texture dim : " << seedRegionsTex[0].nItem() << flush;
-    seedRegionsNb = textureMax( seedRegionsTex );
-    
-    if(verbose)
-    {
-      cout << ", seedRegionsNb:" << seedRegionsNb << flush;
-      cout << "...done." << endl;
+    // Define the largest region number
+    maxLabel = textureMax(corticalParcellation);
+
+    // Define the smallest region number
+    minLabel = textureMin(corticalParcellation);
+
+    // Check that the cortical region is correct
+    if (seedLabel < minLabel or seedLabel > maxLabel or seedLabel == 0) {
+      throw runtime_error("No or wrong cortical region (seedLabel).");
     }
 
-    if(seedRegionsTexR2.fileName()!="")
-    {
-      if(verbose) cout << "reading seedRegionsTex2: " << flush;
-      seedRegionsTexR2.read( seedRegionsTex2 );
-      
-      if(verbose) cout << "Texture dim : " << seedRegionsTex2[0].nItem() << flush;
-      seedRegionsNb2 = textureMax( seedRegionsTex2 );
-      
-      if(verbose) cout << ", seedRegionsNb2:" << seedRegionsNb2 << flush;
-      if(verbose) cout << "...done." << endl;
-    }
-    else
-    {
-      if(verbose) cout << "no seedRegionsTex2 input...!" << endl;
+    // Read the second cortical parcellation, if it exists
+    if (secondCorticalParcellationReader.fileName() != "") {
+      secondCorticalParcellationReader.read(secondCorticalParcellation);
+      secondMaxLabel = textureMax(secondCorticalParcellation);
     }
 
+    // Compute the number of points for each cortical region
+    map<short, size_t> *labels_ptr = labelsHistogram(corticalParcellation,
+                                                     maxLabel,
+                                                     minLabel,
+                                                     verbose);
     if (verbose)
-    {
-      cout << "seedRegionLabel : " << seedRegionLabel << endl;
-      cout << "Reading inputs done." << endl << endl;
-    }
+      cout << "Number of points of the cortical region: "
+        << (*labels_ptr)[seedLabel] << "/" << corticalParcellation[0].nItem()
+        << endl;
 
-    vector< size_t > * labels_ptr
-      = labelsHistogram( seedRegionsTex, seedRegionsNb, verbose );
-    vector< size_t > & labels = *labels_ptr;
-    Connectivities * connMatrixToAllMesh_ptr = 0;
-
+    // Compute the index of the each cortical region vertex
+    Connectivities *connMatrixToAllMesh_ptr = 0;
     vector<size_t> seedVertexIndex;
-    seedVertexIndex.reserve( labels[seedRegionLabel] );
-    if(verbose)
-      cout << "labels[seedRegionLabel]:" << labels[seedRegionLabel] << endl;
-    for(size_t i = 0; i < seedRegionsTex[0].nItem(); ++i)
-    {
-      if (seedRegionsTex[0][i]==seedRegionLabel)
-      {
+    seedVertexIndex.reserve((*labels_ptr)[seedLabel]);
+    for (size_t i = 0; i < corticalParcellation[0].nItem(); ++i)
+      if (corticalParcellation[0][i] == seedLabel)
         seedVertexIndex.push_back(i);
-      }
-    }
-
-    if( verbose ) cout << "reading matrix...\n";
     
+    // Read the connectivity matrix
     aims::SparseOrDenseMatrix AllMeshConnMatrix;
-    Reader<aims::SparseOrDenseMatrix> spmreader( inConnMatrixFileName );
-    spmreader.read( AllMeshConnMatrix );
-    
-    cout << "connectivity matrix is read as " << ( AllMeshConnMatrix.isDense() ? "dense" : "sparse" ) << " matrix" << endl;
+    Reader<aims::SparseOrDenseMatrix> spmreader(inputMatrixFilename);
+    spmreader.read(AllMeshConnMatrix);
 
-    connMatrixToAllMesh_ptr = 0;
-
-    if( seedRegionsTexR2.fileName().empty() )
-    {
-    }
-    else // seedRegionsTexR2 is specified
-    {
-      connMatrixToAllMesh_ptr
-        = new constel::Connectivities( labels[seedRegionLabel],
-            til::SparseVector<double>(AllMeshConnMatrix.getSize2() ) );
-      Connectivities & connMatrixToAllMesh = *connMatrixToAllMesh_ptr;
-      if(AllMeshConnMatrix.getSize1() == labels[seedRegionLabel])
-      {
+    // If second initial cortical parcellation is specified
+    if (secondCorticalParcellationReader.fileName() != "") {
+      connMatrixToAllMesh_ptr = new constel::Connectivities(
+          (*labels_ptr)[seedLabel],
+          til::SparseVector<double>(AllMeshConnMatrix.getSize2()));
+      if (AllMeshConnMatrix.getSize1() == (*labels_ptr)[seedLabel]) {
         if (verbose)
-          cout << "input connectivity matrix corresponds to seed region" << endl;
-        for (size_t i = 0; i < labels[seedRegionLabel]; ++i)
-        {
-          connMatrixToAllMesh[seedVertexIndex[i]]
+          cout << "Connectivity matrix corresponds to seed region" << endl;
+        for (size_t i = 0; i < (*labels_ptr)[seedLabel]; ++i) {
+          (*connMatrixToAllMesh_ptr)[seedVertexIndex[i]]
             = AllMeshConnMatrix.getSparseRow
               <til::SparseVector<double> >((int32_t)i);
         }
-      }
-      else
-      {
+      } else {
         if (verbose)
-          cout << "input connectivity matrix corresponds to all the mesh" << endl;
-        for (size_t i = 0; i < seedVertexIndex.size(); ++i)
-        {
-          connMatrixToAllMesh[seedVertexIndex[i]]
+          cout << "Connectivity matrix corresponds to all the mesh" << endl;
+        for (size_t i = 0; i < seedVertexIndex.size(); ++i) {
+          (*connMatrixToAllMesh_ptr)[seedVertexIndex[i]]
             = AllMeshConnMatrix.getSparseRow
               <til::SparseVector<double> >((int32_t)seedVertexIndex[i]);
         }
       }
       AllMeshConnMatrix = SparseOrDenseMatrix();
-      SparseOrDenseMatrix *mat2 = connectivitiesToSparseOrDenseMatrix( *connMatrixToAllMesh_ptr );
+      SparseOrDenseMatrix *mat2 = connectivitiesToSparseOrDenseMatrix(
+          *connMatrixToAllMesh_ptr);
       AllMeshConnMatrix = *mat2;
       delete mat2;
-      /* delete connMatrixToAllMesh_ptr;
-      connMatrixToAllMesh_ptr = 0; */
     }
-    if(verbose)
-      cout << "OK" << endl;
 
-    if (connectivityTextureType == "seed_connection_density")
-    {
-      /*
-      Computing densityTexture:
-      */
+    /* Compute the density profile
+    - outputDensityTex: texture of the connection density of the seed region
+      towards all the other vertex of the mesh
+    - outputTargetDensityTex: texture of the connection density of the entire
+      mesh towards the seed region */
+    if (connectivityType == "seed_connection_density") {
       TimeTexture<float> outputTargetDensityTex;
-      outputTargetDensityTex = densityTexture( AllMeshConnMatrix, seedVertexIndex );
-      if (verbose)
-        cout << "Writing connectivity Density texture:" << connTextureFileName
-          << endl;
-      Writer< TimeTexture<float> > wt( connTextureFileName );
-      wt.write( outputTargetDensityTex );
-    }
-    else // connectivityTextureType == "seed_mean_connectivity_profile"
-    {
+      outputTargetDensityTex = densityTexture(AllMeshConnMatrix,
+                                              seedVertexIndex);
+      Writer< TimeTexture<float> > wt(outputMeanProfileFilename);
+      wt.write(outputTargetDensityTex);
 
-      if (seedRegionLabel <= 0 or seedRegionLabel > seedRegionsNb)
-      {
-        throw runtime_error("no or wrong seedRegionLabel...!");
-      }
-      //Computing mat [region vertex][meshVertexNb]
-      // Read a regions (gyri for example) labeled texture and make a Label Histogram
-      // Assumes the regions (gyri) image is labeled between 1 and regionsNb, background = 0 or lower than 1
-      // Count all the labels greater than regionsNb and the labels of the background
-
-      vector< size_t > * labels_ptr
-        = labelsHistogram( seedRegionsTex, seedRegionsNb, verbose);
-      vector< size_t > & labels = *labels_ptr;
-
-      if( seedRegionsTexR2.fileName().empty() ) //no second input region
-      {
-        size_t seedRegionLabelVertexNb = labels[seedRegionLabel];
-        
-        if (normalize)
-          connMatrixNormalize( AllMeshConnMatrix );
-        if( outConnMatrixFileName != "" )
-        {
-          Writer<SparseOrDenseMatrix> w( outConnMatrixFileName );
-          w.write( AllMeshConnMatrix );
+    } else { // Compute the mean connectivity profile
+      // No second cortical parcellation
+      if (secondCorticalParcellationReader.fileName().empty()) {
+        if (normalize) connMatrixNormalize(AllMeshConnMatrix);
+        if (outputMatrixFilename != "") {
+          Writer<SparseOrDenseMatrix> w(outputMatrixFilename);
+          w.write(AllMeshConnMatrix);
         }
 
         // Write region vertex indexes (ascii format only)
-        size_t seedVertexIndex_size = seedVertexIndex.size();
-        if (seedVertexIndex.size()!=0)
-        {
-          if( !outSeedRegionVertexIndexFileName.empty() )
-          {
-            fstream findex;
-            ostringstream s;
-            findex.open( outSeedRegionVertexIndexFileName.c_str(),
-                         fstream::out );
-            for (size_t i = 0; i < labels[seedRegionLabel]; ++i)
-            {
-              findex << seedVertexIndex[i] << endl;
+        if (matrixFormat == "ascii_sparse") {
+          if (seedVertexIndex.size() != 0) {
+            if (!outputSeedVertexIndicesTxtFile.empty()) {
+              fstream findex;
+              ostringstream s;
+              findex.open(outputSeedVertexIndicesTxtFile.c_str(),
+                          fstream::out);
+              for (size_t i = 0; i < (*labels_ptr)[seedLabel]; ++i) {
+                findex << seedVertexIndex[i] << endl;
+              }
+            }
+
+            if (!outputSeedVertexIndicesTextureFile.empty()) {
+              TimeTexture<unsigned int> seedRegionVertexIndexTex;
+              seedRegionVertexIndexTex[0].reserve(seedVertexIndex.size());
+              for (size_t vertex = 0; vertex < seedVertexIndex.size();
+                   vertex++) {
+                unsigned int val = seedVertexIndex[vertex];
+                seedRegionVertexIndexTex[0].push_back(seedVertexIndex[vertex]);
+              }
+              Writer<TimeTexture<unsigned int > > w(
+                outputSeedVertexIndicesTextureFile);
+              w.write(seedRegionVertexIndexTex);
             }
           }
-          if( !outSeedRegionVertexIndexFileNameTex.empty() )
-          {
-            TimeTexture< unsigned int > seedRegionVertexIndexTex;
-            cout << "seedVertexIndex_size:" << seedVertexIndex_size << endl;
-            seedRegionVertexIndexTex[0].reserve(seedVertexIndex_size);
-            for (size_t vertex = 0; vertex < seedVertexIndex_size; vertex++)
-            {
-              unsigned int val = seedVertexIndex[vertex];
-              seedRegionVertexIndexTex[0].push_back(seedVertexIndex[vertex]);
-            }
-            cout << "seedRegionVertexIndexTex0.nItem():"
-              << seedRegionVertexIndexTex.nItem() << ", "
-              << seedRegionVertexIndexTex[0].nItem() << endl;
-            Writer<TimeTexture<unsigned int > > w(
-              outSeedRegionVertexIndexFileNameTex );
-            w.write(seedRegionVertexIndexTex);
-          }
-        }
-        else
-        {
-          cout << "seedVertexIndex size = 0" << endl;
         }
 
-        /*
-        Computing densityTexture:
-        outputDensityTex: texture of the connection density of the seed region towards all the other vertex of the mesh
-        outputTargetDensityTex: texture of the connection density of the entire mesh towards the seed region
-        */
         TimeTexture<float> outputTargetDensityTex;
-        outputTargetDensityTex = meshDensityTexture( AllMeshConnMatrix );
-        if (verbose)
-          cout << "Writing mean connectivity profile texture:"
-            << connTextureFileName << endl;
-        Writer<TimeTexture<float> > wt( connTextureFileName );
-        wt.write( outputTargetDensityTex );
+        outputTargetDensityTex = meshDensityTexture(AllMeshConnMatrix);
+        Writer<TimeTexture<float> > wt(outputMeanProfileFilename);
+        wt.write(outputTargetDensityTex);
 
-      }
-      else //there is a second input region (sub region of the first input seed region)
-      {
-
-        int seedLabel2_nb = seedRegionLabel2_vector.size();
+      } else { // Second cortical parcellation (sub region of the first input seed region)
+        int seedLabel2_nb = secondSeedLabel_vector.size();
         TimeTexture<float> outputTargetDensityTex_allLabels2(
-          seedLabel2_nb, cortexMeshVertexNb);
-        for (int i = 0; i < seedLabel2_nb; ++i)
-        {
-          int seedRegionLabel2 = seedRegionLabel2_vector[i];
+          seedLabel2_nb, corticalParcellation[0].nItem());
+        for (int i = 0; i < seedLabel2_nb; ++i) {
+          int secondSeedLabel = secondSeedLabel_vector[i];
 
-          if(verbose)
-          {
-            cout << "seedRegionLabel2:" << seedRegionLabel2 << endl;
-            cout << "seedRegionsNb2:" << seedRegionsNb2 << endl;
-          }
-          vector< size_t > * labels2_ptr
-            = labelsHistogram(seedRegionsTex2, seedRegionsNb2, verbose);
-          vector< size_t > & labels2 = *labels2_ptr;
+          map<short, size_t> *labels2_ptr = labelsHistogram(
+              secondCorticalParcellation,
+              secondMaxLabel,
+              minLabel,
+              verbose);
 
-          vector<size_t> * seedVertexIndex2 = 0;
-          size_t seedRegionLabelVertexNb2 = labels2[seedRegionLabel2];
-          if(verbose)
-            cout << "seedRegionLabelVertexNb2:" << seedRegionLabelVertexNb2
-              << endl;
+          vector<size_t> *secondSeedVertexIndex = 0;
+          size_t seedRegionLabelVertexNb2 = (*labels2_ptr)[secondSeedLabel];
+
           Connectivities * extractConnMatrix_ptr
             = connMatrixRegionExtract(
-              AllMeshConnMatrix, seedRegionsTex2, seedRegionLabel2,
-              seedRegionLabelVertexNb2, & seedVertexIndex2 );
+              AllMeshConnMatrix, secondCorticalParcellation, secondSeedLabel,
+              seedRegionLabelVertexNb2, & secondSeedVertexIndex);
           AllMeshConnMatrix = SparseOrDenseMatrix();
-          SparseOrDenseMatrix *mat2 = connectivitiesToSparseOrDenseMatrix( *extractConnMatrix_ptr );
+          SparseOrDenseMatrix *mat2 = connectivitiesToSparseOrDenseMatrix(
+              *extractConnMatrix_ptr);
           AllMeshConnMatrix = *mat2;
+
           delete mat2;
           delete extractConnMatrix_ptr;
-          if(normalize)
-            connMatrixNormalize( AllMeshConnMatrix );
+
+          if (normalize) connMatrixNormalize(AllMeshConnMatrix);
+
           TimeTexture<float> outputTargetDensityTex
-            = meshDensityTexture( AllMeshConnMatrix );
-          if (verbose)
-            cout << "Writing mean connectivity profile texture:"
-              << connTextureFileName << endl;
+            = meshDensityTexture(AllMeshConnMatrix);
           size_t tex_size = outputTargetDensityTex[0].nItem();
-          cout << "tex_size:" << tex_size << endl;
-          for (size_t v = 0; v < tex_size; ++v)
-          {
+          for (size_t v = 0; v < tex_size; ++v) {
             outputTargetDensityTex_allLabels2[i].item(v)
               = outputTargetDensityTex[0][v]/float(seedRegionLabelVertexNb2);
           }
-          delete seedVertexIndex2;
+          delete secondSeedVertexIndex;
           delete labels2_ptr;
         }
-        Writer<TimeTexture<float> > wt( connTextureFileName );
-        wt.write( outputTargetDensityTex_allLabels2 );
+        Writer<TimeTexture<float> > wt(outputMeanProfileFilename);
+        wt.write(outputTargetDensityTex_allLabels2);
       }
-      delete labels_ptr;
     }
-
+    delete labels_ptr;
     delete connMatrixToAllMesh_ptr;
 
     return EXIT_SUCCESS;
   }
-  catch( user_interruption & )
-  {
-  }
-  catch( exception & e )
-  {
+  catch(user_interruption &) {}
+
+  catch(exception & e) {
     cerr << e.what() << endl;
   }
+
   return EXIT_FAILURE;
 }

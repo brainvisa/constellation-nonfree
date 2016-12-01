@@ -1,19 +1,32 @@
 #!/usr/bin/env python
+###############################################################################
+# This software and supporting documentation are distributed by CEA/NeuroSpin,
+# Batiment 145, 91191 Gif-sur-Yvette cedex, France. This software is governed
+# by the CeCILL license version 2 under French law and abiding by the rules of
+# distribution of free software. You can  use, modify and/or redistribute the
+# software under the terms of the CeCILL license version 2 as circulated by
+# CEA, CNRS and INRIA at the following URL "http://www.cecill.info".
+###############################################################################
+
+"""
+This script does the following:
+*
+
+Main dependencies: PyAims library
+
+Author: Sandrine Lefranc, 2015
+"""
+
+
+#----------------------------Imports-------------------------------------------
+
 
 # python system modules
 from __future__ import print_function
 from optparse import OptionParser
+import pylab
 import numpy
 import sys
-
-try :
-  import constel.lib.evaluation.indices as cv
-except :
-  pass
-
-
-
-import pylab
 
 # soma
 from soma import aims
@@ -28,14 +41,19 @@ from constel.lib.utils.texturetools import texture_time
 from scipy.spatial.distance import pdist, squareform
 
 
+#----------------------------Functions-----------------------------------------
+
+
 class MatplotlibFig(object):
     def __init__(self, fig):
         self._fig = fig
     def __del__(self):
         mainThreadActions().call(pylab.close, self._fig)
 
+
 def validate( self ):
   import constel.lib.evaluation.indices as cv
+
 
 def parseOpts(argv):
     description = """Connectivity-based parcellation of the patch.
@@ -71,6 +89,9 @@ def parseOpts(argv):
     return parser, parser.parse_args(argv)
 
 
+#----------------------------Main program--------------------------------------
+
+
 def main():
     parser, (options, args) = parseOpts(sys.argv)
     
@@ -81,9 +102,12 @@ def main():
     reduced_matrix = aims.read(options.group_matrix)
     reduced_matrix = numpy.asarray(reduced_matrix)[:, :, 0, 0]
 
+    # Compute the distance matrix
+    distmat = pdist(reduced_matrix, metric='euclidean'))
+
     if options.study == 'avg':
         # generate the squareform distance matrix
-        distance_matrix = squareform(pdist(reduced_matrix, metric='euclidean'))
+        distance_matrix = squareform(distmat)
     
         # generate several array containing the number of the cluster to which 
         # each item was assigned
@@ -99,10 +123,8 @@ def main():
                 clusterid[clusterid == item] = i + 1
             item_number.append(clusterid)
     else:
-        # compute the distance matrix
-        dmat = scipy.spatial.distance.pdist(reduced_matrix, 'euclidean')  
         # compute linkage ward
-        Z = fastcluster.linkage(dmat, method='ward', preserve_input=False)
+        Z = fastcluster.linkage(distmat, method='ward', preserve_input=False)
         # labelization between 1 to nb
         clusterid = []
         for nb in range(1, n_clusters + 1):
@@ -142,17 +164,7 @@ def main():
                 options.kmax, item_number, vertices_patch, nb_vertices, 1)
 
         aims.write(clusters, str(options.clustering_time[index]))
-#    print(reduced_matrix.shape)
- #   asw = []
-  #  for k in range(2, 12 + 1):
-   #     s = cv.silhouette_score(reduced_matrix, k)
-    #    print('ASW is ', s, 'for K =', k)
-     #   asw.append(s)
-#    aswOpt = max(asw)
-#    print('The larger ASW is', aswOpt)
-#    list_k = range(12+1)
-#    list_k = [x for x in list_k if x != 0 and x != 1]
-#    fig = mainThreadActions().call(p.silhouette_score_plot, asw, list_k)
-#    return MatplotlibFig(fig)
+
+
 if __name__ == "__main__":
     main()

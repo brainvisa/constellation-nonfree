@@ -5,13 +5,12 @@
 #include <vector>
 #include <set>
 
-namespace constel
-{
+namespace constel {
 
   typedef til::SparseVector<double> Connectivity;
-  typedef std::vector< Connectivity > Connectivities;
+  typedef std::vector<Connectivity> Connectivities;
   typedef std::vector<std::vector<std::size_t> > CNeighborhoods;
-  typedef std::vector< std::pair<std::size_t, double> > QuickMap;
+  typedef std::vector<std::pair<std::size_t, double> > QuickMap;
   typedef std::vector<QuickMap> Connection;
   typedef std::vector<Connection> BundleConnections;
   typedef boost::shared_ptr<BundleConnections> BundleConnections_shared_ptr;
@@ -22,6 +21,5 @@ namespace constel
   typedef std::vector<PolygonsByVertexIndex> PolygonsByVertexIndex_collection;
 
 }
-
 #endif
 
