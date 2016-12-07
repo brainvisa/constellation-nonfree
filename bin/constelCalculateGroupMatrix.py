@@ -71,7 +71,6 @@ def main():
         shapex = None
         shapey = 0
         for matrix in options.list_matrices:
-            print(matrix)
             reduced_matrix = aims.read(matrix)
             reduced_matrix = numpy.asarray(reduced_matrix)[:, :, 0, 0]
             if shapex is None:
@@ -85,9 +84,7 @@ def main():
             reduced_matrix = numpy.asarray(reduced_matrix)[:, :, 0, 0]
             l[:, shifty:(shifty+reduced_matrix.shape[1])] = reduced_matrix
             shifty += reduced_matrix.shape[1]
-        print("1: ", l.shape)
         l = resize_matrix(aims.Volume(l))
-        print("2: ", l.getSize())
         aims.write(l, options.matrix)
     else: #avg
         # generate a list of asarray
@@ -96,10 +93,8 @@ def main():
             reduced_matrix = aims.read(matrix)
             reduced_matrix = numpy.asarray(reduced_matrix)[:, :, 0, 0]
             list_matrices.append(reduced_matrix.astype('float32'))
-            print(reduced_matrix.shape)
         sum_matrix = [sum(i) for i in zip(*list_matrices)]
         averaged_matrix = numpy.array(sum_matrix) / len(list_matrices)
-        print(averaged_matrix.shape)
         averaged_matrix = resize_matrix(aims.Volume(averaged_matrix))
         aims.write(averaged_matrix, options.matrix)
 

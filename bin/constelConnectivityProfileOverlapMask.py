@@ -77,7 +77,6 @@ def main():
     fnames = args.profiles
 
     for idx, fname in enumerate(fnames):
-        print(fname)
         # read the file with aims
         aimsprofile = aims.read(fname)
 
