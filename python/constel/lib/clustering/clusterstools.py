@@ -1,22 +1,38 @@
 #!/usr/bin/env python
+###############################################################################
+# This software and supporting documentation are distributed by CEA/NeuroSpin,
+# Batiment 145, 91191 Gif-sur-Yvette cedex, France. This software is governed
+# by the CeCILL license version 2 under French law and abiding by the rules of
+# distribution of free software. You can  use, modify and/or redistribute the
+# software under the terms of the CeCILL license version 2 as circulated by
+# CEA, CNRS and INRIA at the following URL "http://www.cecill.info".
+###############################################################################
 
-# python system modules
+"""
+Cluster utilities.
+"""
+
+
+#----------------------------Imports-------------------------------------------
+
+# python system import
 from __future__ import print_function
 from tempfile import mkdtemp
 import os.path as path
-import numpy
 import struct
+import numpy
 import os
 
-# scipy
+# scipy library
 import scipy
-import scipy.cluster.vq
-import scipy.spatial.distance
-dst = scipy.spatial.distance.euclidean
+from scipy.cluster import vq
+from scipy.spatial.distance import euclidean
 from scipy.cluster.hierarchy import fcluster
 
 # fastcluster
 import fastcluster
+
+#------------------------------------------------------------------------------
 
 
 def nearest_neighbour_profiles(profile, atlas, atlas_classes, indices):
@@ -66,7 +82,6 @@ def get_centers(clusters_id, kmax_clusters):
     i = 0
     centers = numpy.array([])
     while (centers.size < kmax_clusters):
-        print(i)
         c = clusters_id[i]
         if ((numpy.where(centers == c)[0]).size == 0):
             centers = numpy.append(centers, numpy.array([int(c)]))
@@ -165,7 +180,7 @@ def distToCenters(distance_matrix, centers, clusters_id, kmax_clusters):
 
 def sse(tab):
     """Sum square error function"""
-    v = 0.5*numpy.sum(numpy.square(tab))
+    v = 0.5 * numpy.sum(numpy.square(tab))
     return v
 
 
@@ -218,13 +233,13 @@ def gap(data, refs=None, nrefs=20, ks=range(1, 11)):
         # kmc = centers
         (kmc, kml) = scipy.cluster.vq.kmeans2(data, k)
         print("labels -->", kml, "centers -->", kmc)
-        disp = sum([dst(data[m, :], kmc[kml[m], :]) for m in range(shape[0])])
+        disp = sum([euclidean(data[m, :], kmc[kml[m], :]) for m in range(shape[0])])
 
         refdisps = scipy.zeros((rands.shape[2],))
         for j in range(rands.shape[2]):
             (kmc, kml) = scipy.cluster.vq.kmeans2(rands[:, :, j], k)
             refdisps[j] = sum(
-                [dst(rands[m, :, j], kmc[kml[m], :]) for m in range(shape[0])])
+                [euclidean(rands[m, :, j], kmc[kml[m], :]) for m in range(shape[0])])
         gaps[i] = scipy.log(scipy.mean(refdisps)) - scipy.log(disp)
 
     return gaps
@@ -478,6 +493,7 @@ def dunn_index(distance_matrix, clusters_id):
                     distance_intra, distance_matrix[i, j])
     dunn_index = distance_inter.min() / distance_intra.max()
     return dunn_index
+
 
 def krzanowski_lai_index(distance_matrix, clusters_id, kmax_clusters):
     """Evaluate the optimal number of clusters.
