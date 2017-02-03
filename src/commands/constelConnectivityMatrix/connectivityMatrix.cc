@@ -142,7 +142,7 @@ Connectivities* makeConnMatrix_closestPoint(
 void makeConnectivityTexture_seedConnectionDensity(
     Connectivities* connMatrixToAllMesh_ptr,
     const string & connTextureFileName,
-    TimeTexture<short> & seedRegionsTex, size_t seedRegionLabel,
+    TimeTexture<short> & seedRegionsTex, int seedRegionLabel,
     bool verbose) {
   // Computing densityTexture:
   if (connMatrixToAllMesh_ptr)
@@ -181,7 +181,7 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
     // const SparseOrDenseMatrix & connMatrixToAllMesh                  
     const string & connTextureFileName,
     const TimeTexture<short> & seedRegionsTex,
-    size_t seedRegionLabel,
+    int seedRegionLabel,
     int maxLabel,
     double distthresh, double wthresh,
     bool logOption, const string & logFile,
@@ -194,15 +194,14 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
     int meshes_nb,
     vector<Connectivities*> & connMatrixCortexToMesh_ptr_vector,
     bool verbose) {
-  
-  if (seedRegionLabel <= 0 or seedRegionLabel > maxLabel)
-    throw runtime_error("No or wrong seedRegionLabel.");
 
   /*
   Computing mat [region vertex][meshVertexNb]
   Read a regions (gyri for example) labeled texture and make a Label Histogram.
   */
   int minLabel = textureMin(seedRegionsTex);
+  if (seedRegionLabel <= minLabel or seedRegionLabel > maxLabel)
+    throw runtime_error("No or wrong seedRegionLabel.");
   map<short, size_t> *labels_ptr = labelsHistogram(seedRegionsTex,
                                                     maxLabel,
                                                     minLabel,
@@ -379,7 +378,7 @@ int main(int argc, char* argv[]) {
     AimsSurfaceTriangle inAimsMesh;
     vector<string> inTargetMeshesAimsR_files;
     TimeTexture<short> seedRegionsTex;
-    size_t seedRegionLabel = 0;
+    int seedRegionLabel = 0;
     size_t maxLabel = 0;
     double distthresh = 5.0;
     double wthresh = 1.0;
@@ -501,13 +500,6 @@ int main(int argc, char* argv[]) {
     app.initialize();
 
     if (verbose) {
-      cout << "Bundles file: " << bundleFilename << endl;
-      cout << "Matrix file: " << connMatrixFileName << endl;
-      cout << "Transformation matrix file: " << motionName << endl;
-      cout << "Matrix computing type: " << connMatrixComputingType << endl;
-      cout << "Smoothing (in mm): " << distthresh << endl;
-      cout << "Weight threshold: " << wthresh << endl;
-      cout << "Normalization: " << normalize << endl;
       cout << "Cortical region: " << seedRegionLabel << endl;
     }
 
