@@ -13,13 +13,9 @@ This script does the following:
 *
 
 Main dependencies: PyAims library
-
-Author: Sandrine Lefranc, 2015
 """
 
-
 #----------------------------Imports-------------------------------------------
-
 
 # python system modules
 from __future__ import print_function
@@ -37,9 +33,12 @@ from Pycluster import kmedoids
 # constellation
 from constel.lib.utils.texturetools import texture_time
 
+# fastcluster module
+import fastcluster
+
 # scipy
 from scipy.spatial.distance import pdist, squareform
-
+from scipy.cluster.hierarchy import fcluster
 
 #----------------------------Functions-----------------------------------------
 
@@ -103,7 +102,7 @@ def main():
     reduced_matrix = numpy.asarray(reduced_matrix)[:, :, 0, 0]
 
     # Compute the distance matrix
-    distmat = pdist(reduced_matrix, metric='euclidean'))
+    distmat = pdist(reduced_matrix, metric='euclidean')
 
     if options.study == 'avg':
         # generate the squareform distance matrix
@@ -152,7 +151,7 @@ def main():
         if options.study == 'concat': 
             max_index = min_index + len(vertices_patch)
             clusters = texture_time(options.kmax, 
-                                    item_number, 
+                                    clusterid, 
                                     vertices_patch, 
                                     nb_vertices, 
                                     2,
