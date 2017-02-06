@@ -76,7 +76,6 @@ def main():
         for label in labels.nonzero()[0]:
             num_vert = len(numpy.where(clusters == label)[0])
             measures.append(num_vert)
-        print "m: ", measures
         #######################################################################
         # surface
         #######################################################################
@@ -96,7 +95,6 @@ def main():
             l1 = clusters[polygon[2]]
             clusters_areas[l1] += triangle_area / 3
         clusters_areas = clusters_areas[1:] # delete the background
-        print "c: ", clusters_areas
         #######################################################################
         # moyenne
         #######################################################################
@@ -112,7 +110,6 @@ def main():
         for i in range(len(measures)):
             measures_table.append([measures[i], clusters_areas[i]])
         ftable[k - 1] = measures_table
-    print ftable
 
     with open(args.stats_file, "wb") as csvfile:
         csv_writer = csv.writer(csvfile, delimiter=",")
