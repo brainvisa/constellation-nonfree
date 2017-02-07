@@ -107,9 +107,9 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         self.aims_seed_gyri = seed_gyri
         self.seed_gyri = [a.toAObject(gyri) for gyri in seed_gyri]
         self.matrix = matrix
-        self.clusters_matrix = []
+        self.clusters_matrix = {}
         self.viewing_column = 0
-        self.curves_columns = range(measurements[0].shape[1])
+        self.curves_columns = range(measurements.values()[0].shape[1])
         self.selected_cluster_boundaries = a.toAObject(aims.AimsTimeSurface(2))
 
         # 3D views area
@@ -127,12 +127,12 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         self.create_silhouette_dock()
 
         # build and display table
-        self.build_table(0)
+        self.build_table(measurements.keys()[0])
         self.table.horizontalHeader().sectionDoubleClicked.connect(
             self.display_column)
 
         # build and display curves
-        self.display_curves(0)
+        self.display_curves(measurements.keys()[0])
         
         
     def __del__(self):
@@ -170,7 +170,7 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         table_wid.setLayout(QtGui.QVBoxLayout())
         self.column_label = QtGui.QLabel(
             'displaying: <b>%s</b>'
-            % self.measurements[0].columns[self.viewing_column])
+            % self.measurements.values()[0].columns[self.viewing_column])
         table_wid.layout().addWidget(self.column_label)
         table = QtGui.QTableWidget()
         table_wid.layout().addWidget(table)
@@ -286,14 +286,15 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         lay = QtGui.QVBoxLayout()
         slider_panel.setLayout(lay)
         w.layout().addWidget(slider_panel)
-        self.cluster_slider_label = QtGui.QLabel('2')
+        values = self.measurements.keys()
+        self.cluster_slider_label = QtGui.QLabel(str(values[0]))
         self.cluster_slider = QtGui.QSlider()
         lay.addWidget(QtGui.QLabel('K:'))
         lay.addWidget(self.cluster_slider_label)
         lay.addWidget(self.cluster_slider)
         self.cluster_slider.setInvertedAppearance(True)
         self.cluster_slider.setInvertedControls(True)
-        self.cluster_slider.setRange(2, len(self.measurements) + 1)
+        self.cluster_slider.setRange(values[0], values[-1])
         self.cluster_slider.setPageStep(1)
         self.cluster_slider.valueChanged.connect(self.time_changed)
 
@@ -341,7 +342,7 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         for measure_tex in self.measure_tex:
             measure_tex.setPalette('Yellow-red-fusion')
             measure_tex.setName(
-                self.measurements[0].columns[self.viewing_column])
+                self.measurements.values()[0].columns[self.viewing_column])
         self.make_measurements_texture()
         for mesh, measure_tex in zip(self.meshes, self.measure_tex):
             self.measure_fusions.append(a.fusionObjects(
@@ -374,14 +375,15 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
 
     def make_measurements_texture(self):
         col = self.viewing_column
-        timestep = self.cluster_slider.value() - 2
+        k = self.cluster_slider.value()
+        timestep = k - self.measurements.keys()[0]
         for atex, ctex, measure_tex in zip(self.aims_measure_tex,
                                            self.aims_clusters,
                                            self.measure_tex):
             ndata = len(ctex[0].data())
             arr = np.zeros((ndata,), dtype=np.float32)
             if len(ctex) > timestep:
-                measurements = self.measurements[timestep]
+                measurements = self.measurements[k]
                 values = measurements[measurements.columns[col]]
                 for label in range(len(values)):
                     value = values[label]
@@ -407,7 +409,7 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         info_text = '''<h1%s>Cluster %d info:</h1>
 Num of clusters (K): <b>%d</b><br/>
 ''' \
-            % (text_col, cluster, timestep + 2)
+            % (text_col, cluster, timestep)
         patch = self.get_patch(timestep, mesh, ivertex)
         if patch[0] is not None:
             if patch[1] is not None:
@@ -474,7 +476,7 @@ Num of clusters (K): <b>%d</b><br/>
 
 
     def cluster_selected(self, timestep, label, mesh, ivert):
-        timestep = self.cluster_slider.value() - 2
+        timestep = self.cluster_slider.value()
         self.print_cluster_info(timestep, label, mesh, ivert)
         self.set_curve_cursor(timestep, label)
         self.select_table_row(timestep, label)
@@ -485,7 +487,7 @@ Num of clusters (K): <b>%d</b><br/>
 
 
     def update_clusters_boundaries(self):
-        timestep = self.cluster_slider.value() - 2
+        timestep = self.cluster_slider.value() - self.measurements.keys()[0]
         for mesh, aims_clusters, boundaries in zip(self.meshes,
                                                    self.aims_clusters,
                                                    self.clusters_boundaries):
@@ -505,7 +507,7 @@ Num of clusters (K): <b>%d</b><br/>
         if mesh is None or label == 0:
             return
         mesh_index = self.meshes.index(mesh)
-        timestep = self.cluster_slider.value() - 2
+        timestep = self.cluster_slider.value() - self.measurements.keys()[0]
         cluster_tex0 = self.aims_clusters[mesh_index][timestep]
         cluster_tex = self.aims_clusters[mesh_index].__class__()
         cluster_tex[0].assign(cluster_tex0.data())
@@ -521,7 +523,7 @@ Num of clusters (K): <b>%d</b><br/>
 
 
     def update_clusters_texture(self):
-        timestep = self.cluster_slider.value() - 2
+        timestep = self.cluster_slider.value() - self.measurements.keys()[0]
         for clusters, aims_clusters in zip(self.clusters, self.aims_clusters):
             t = min(timestep, len(aims_clusters) - 1)
             texture = aims.TimeTexture('S16')
@@ -532,7 +534,7 @@ Num of clusters (K): <b>%d</b><br/>
 
     def time_changed(self, value):
         self.cluster_slider_label.setText(str(value))
-        timestep = value - 2
+        timestep = value
         self.build_table(timestep)
         self.display_curves(timestep)
         self.make_measurements_texture()
@@ -545,7 +547,7 @@ Num of clusters (K): <b>%d</b><br/>
 
     def display_column(self, col):
         if self.viewing_column != col:
-            name = self.measurements[0].columns[col]
+            name = self.measurements.values()[0].columns[col]
             self.column_label.setText('displaying: <b>%s</b>' % name)
             self.viewing_column = col
             self.make_measurements_texture()
@@ -602,7 +604,7 @@ Num of clusters (K): <b>%d</b><br/>
         dialog.setLayout(lay)
         lwid = QtGui.QListWidget()
         lay.addWidget(lwid)
-        lwid.addItems(self.measurements[0].columns)
+        lwid.addItems(self.measurements.values()[0].columns)
         lwid.setSelectionMode(lwid.ExtendedSelection)
         for col in self.curves_columns:
             lwid.item(col).setSelected(True)
@@ -619,7 +621,7 @@ Num of clusters (K): <b>%d</b><br/>
         if res:
             self.curves_columns = [item.row()
                                    for item in lwid.selectedIndexes()]
-            timestep = self.cluster_slider.value() - 2
+            timestep = self.cluster_slider.value()
             self.display_curves(timestep)
 
 
@@ -642,28 +644,25 @@ Num of clusters (K): <b>%d</b><br/>
         self.cluster_time_fig.canvas.draw()
 
 
-    def build_matrix_by_cluster(self, timestep):
+    def build_matrix_by_cluster(self, k):
         if self.matrix is None:
             return None
-        if len(self.clusters_matrix) > timestep \
-                and self.clusters_matrix[timestep] is not None:
-            return self.clusters_matrix[timestep]
+        if k in self.clusters_matrix:
+            return self.clusters_matrix[k]
+        timestep = k - self.measurements.keys()[0]
         matrix = self.matrix
         a_mat = np.asarray(matrix)
         a_mat = a_mat.reshape(a_mat.shape[:2])
         clusters_arr = self.aims_clusters[0][timestep].arraydata() ## WARNING use tex 0
         new_matrix = matrixtools.compute_mclusters_by_nbasins_matrix(
             a_mat, clusters_arr, mode='mean')
-        if len(self.clusters_matrix) <= timestep:
-            self.clusters_matrix += [None] * (timestep
-                                              - len(self.clusters_matrix) + 1)
-        self.clusters_matrix[timestep] = new_matrix
+        self.clusters_matrix[k] = new_matrix
         return new_matrix
 
 
     def display_matrix(self):
-        timestep = self.cluster_slider.value() - 2
-        matrix = self.build_matrix_by_cluster(timestep)
+        k = self.cluster_slider.value()
+        matrix = self.build_matrix_by_cluster(k)
         if len(self.matrix_fig.axes) == 0:
             # no axes yet. Create them
             bgcolor = self.palette().color(QtGui.QPalette.Base)
@@ -676,7 +675,7 @@ Num of clusters (K): <b>%d</b><br/>
         axes.set_xlabel('basins')
         axes.set_ylabel('clusters')
         axes.set_yticks(range(matrix.shape[0] + 1))
-        axes.set_yticklabels([str(x) for x in range(1, matrix.shape[0] + 2)])
+        axes.set_yticklabels([str(x) for x in range(1, matrix.shape[0] + 1)])
         axes.imshow(matrix, aspect='auto', interpolation='none')
         self.matrix_fig.canvas.draw()
 
@@ -699,6 +698,37 @@ Num of clusters (K): <b>%d</b><br/>
             self.matrix_fig.canvas.draw()
 
 
+def load_measurements(measurements_filename):
+    measurements = {}
+    with open(measurements_filename) as f:
+        title = f.readline().strip()[1:-1]
+        columns = eval(title)
+        lnum = 1
+        #k0 = 0
+        for l in f.xreadlines():
+            lnum += 1
+            t = l.find(',')
+            k = int(l[:t].strip())
+            #if k0 == 0:
+                #k0 = k
+            table = np.zeros((k, len(columns)))
+            meas = l[t+1:].strip()
+            for i in range(k):
+                if meas[0] != '"':
+                    raise SyntaxError('missing double quote, line: %d' % lnum)
+                t = meas[1:].find('"')
+                m = eval(meas[1:t+1])
+                table[i,:len(m)] = m
+                meas = meas[t+2:].strip()
+                if meas:
+                    if meas[0] != ',':
+                        raise SyntaxError('missing coma, line: %d' % lnum)
+                    meas = meas[1:]
+            measurements[k] = pandas.DataFrame(table, columns=columns)
+    #print('measurements:', measurements)
+    return measurements
+
+
 def load_clusters_instpector_files(mesh_filenames, clusters_filenames,
                                    measurements_filenames,
                                    seed_gyri_filenames=[],
@@ -713,11 +743,14 @@ def load_clusters_instpector_files(mesh_filenames, clusters_filenames,
     clusters = []
     seed_gyri = []
     matrix = None
+    measurements = {}
     for mesh_filename in mesh_filenames:
         meshes.append(aims.read(mesh_filename))
     for clusters_filename in clusters_filenames:
         clusters.append(aims.read(clusters_filename))
-    measurements = None
+    if measurements_filenames:
+        for measurements_filename in measurements_filenames:
+            measurements.update(load_measurements(measurements_filename))
     for seed_gyri_filename in seed_gyri_filenames:
         seed_gyri.append(aims.read(seed_gyri_filename))
 
