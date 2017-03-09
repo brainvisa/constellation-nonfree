@@ -200,7 +200,7 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
   Read a regions (gyri for example) labeled texture and make a Label Histogram.
   */
   int minLabel = textureMin(seedRegionsTex);
-  if (seedRegionLabel <= minLabel or seedRegionLabel > maxLabel)
+  if (seedRegionLabel < minLabel or seedRegionLabel > maxLabel)
     throw runtime_error("No or wrong seedRegionLabel.");
   map<short, size_t> *labels_ptr = labelsHistogram(seedRegionsTex,
                                                     maxLabel,
@@ -209,7 +209,7 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
   map<short, size_t> &labels = *labels_ptr;
 
   vector<size_t> *seedVertexIndex;
-  size_t seedRegionLabelVertexNb = labels[seedRegionLabel];
+  int seedRegionLabelVertexNb = labels[seedRegionLabel];
 
   rc_ptr<Connectivities> extractConnMatrix_ptr(
     connMatrixReducedFromRegion(connMatrixToAllMesh_ptr, seedRegionsTex, 
