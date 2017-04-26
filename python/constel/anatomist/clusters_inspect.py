@@ -9,7 +9,7 @@ from matplotlib import pyplot
 from soma import aims
 import numpy as np
 import weakref
-import pandas
+from soma.aims import pandas
 import six
 from constel.lib.utils import matrixtools
 
@@ -729,10 +729,10 @@ def load_measurements(measurements_filename):
     return measurements
 
 
-def load_clusters_instpector_files(mesh_filenames, clusters_filenames,
-                                   measurements_filenames,
-                                   seed_gyri_filenames=[],
-                                   matrix_filename=None):
+def load_clusters_inspector_files(mesh_filenames, clusters_filenames,
+                                  measurements_filenames,
+                                  seed_gyri_filenames=[],
+                                  matrix_filename=None):
     if len(mesh_filenames) != len(clusters_filenames):
         raise ValueError('meshes and clusters numbers do not match')
     if len(seed_gyri_filenames) != 0 \
@@ -800,7 +800,7 @@ if __name__ == '__main__':
 
     if use_ex_num == 0:
         meshes, clusters, measurements, seed_gyri, matrix \
-            = load_clusters_instpector_files(
+            = load_clusters_inspector_files(
                 #['/neurospin/archi-public/DataBaseArchi/FreeSurfer/fs_archi_v5.3.0/group_analysis/01to40/average_brain/averagebrain.white.mesh'],
                 ['/neurospin/archi-public/DataBaseArchi/FreeSurfer/fs_archi_v5.1.0/001/surf/bh.r.aims.white.inflated.gii'],
                 ['/neurospin/archi-public/Users/lefranc/archi/bv_archi/proba27/subjects/group_analysis/01to40/connectivity_clustering/avg/fs01to40/lh.supramarginal/smooth3.0/avgSubject/01to40_avg_fs01to40_lh.supramarginal_avgSubject_clusteringTime.gii'],
@@ -810,14 +810,14 @@ if __name__ == '__main__':
                 '/neurospin/archi-public/Users/lefranc/archi/bv_archi/proba27/subjects/group_analysis/01to40/connectivity_clustering/avg/fs01to40/lh.supramarginal/smooth3.0/01to40_avg_fs01to40_lh.supramarginal_matrix.ima')
     elif use_ex_num == 1:
         meshes, clusters, measurements, seed_gyri, matrix \
-            = load_clusters_instpector_files(
+            = load_clusters_inspector_files(
                 ['/neurospin/population/HCP/S500-1/100307/T1w/fsaverage_LR32k/100307.L.inflated.32k_fs_LR.surf.gii', '/neurospin/population/HCP/S500-1/100307/T1w/fsaverage_LR32k/100307.R.inflated.32k_fs_LR.surf.gii'],
                 ['/neurospin/archi-public/Users/lefranc/archi/bv_archi/proba27/subjects/group_analysis/01to40/connectivity_clustering/avg/fs01to40/lh.supramarginal/smooth3.0/avgSubject/01to40_avg_fs01to40_lh.supramarginal_avgSubject_clusteringTime.gii', '/neurospin/archi-public/Users/lefranc/archi/bv_archi/proba27/subjects/group_analysis/01to40/connectivity_clustering/avg/fs01to40/lh.supramarginal/smooth3.0/avgSubject/01to40_avg_fs01to40_lh.supramarginal_avgSubject_clusteringTime.gii'],
                 None,
                 ['/neurospin/population/HCP/S500-1/100307/MNINonLinear/fsaverage_LR32k/100307.L.aparc.32k_fs_LR.label.gii', '/neurospin/population/HCP/S500-1/100307/MNINonLinear/fsaverage_LR32k/100307.R.aparc.32k_fs_LR.label.gii'])
     elif use_ex_num == 2:
         meshes, clusters, measurements, seed_gyri, matrix \
-            = load_clusters_instpector_files(
+            = load_clusters_inspector_files(
                 ['/neurospin/archi-public/DataBaseArchi/FreeSurfer/fs_archi_v5.3.0/001/surf/bh.r.aims.white.inflated_sequence.gii'],
                 ['/neurospin/archi-public/Users/lefranc/archi/bv_archi/proba27/subjects/group_analysis/01to39/connectivity_clustering/avg/fs01to39/lh.postcentral/smooth3.0/avgSubject/01to39_avg_fs01to39_lh.postcentral_avgSubject_clusteringTime.gii'],
                 None,
