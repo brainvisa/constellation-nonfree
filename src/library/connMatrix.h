@@ -32,7 +32,7 @@ namespace constel {
   Connectivities *connMatrixReducedFromRegion(
     Connectivities *allMeshConnMatrix,
     const TimeTexture<short> &seedRegionsTexture,
-    int seedRegionLabel, std::size_t seedRegionLabelVertexNb,
+    int seedRegionLabel, int seedRegionLabelVertexNb,
     std::vector<std::size_t> **seedVertexIndex = 0, bool verbose = false);
 
   Connectivities *connMatrixRegionExtractTargetsRegroup(

@@ -746,7 +746,7 @@ namespace constel {
   Connectivities * connMatrixReducedFromRegion(
     Connectivities * AllMeshconnMatrixToAllMesh_ptr,
     const TimeTexture<short> & seedRegionsTex, int seedRegionLabel,
-    size_t seedRegionLabelVertexNb,
+    int seedRegionLabelVertexNb,
     vector<size_t> ** seedVertexIndex, bool verbose) {
     if (verbose) cout << "Start connMatrixReducedFromRegion" << endl;
     Connectivities &AllMeshconnMatrixToAllMesh

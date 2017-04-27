@@ -9,24 +9,40 @@
 ###############################################################################
 
 """
-This script does the following:
-* check if two lists are the same number of elements.
-* check no empty list.
-
-Main dependencies:
-
-Author: Sandrine Lefranc, 2014
+Mesh utilities.
 """
 
 #----------------------------Imports-------------------------------------------
 
-
-from __future__ import print_function
 # system module
+from __future__ import print_function
 import numpy
 
-
 #----------------------------Function------------------------------------------
+
+
+def mesh_surface_area(vertices, polygons):
+    """Compute surface area.
+    
+    Parameters
+    ----------
+    verts : numpy array of floats
+        Array containing (x, y, z) coordinates for mesh vertices.
+    polygons : numpy array of ints
+        List of length-3 lists of integers.
+
+    Returns
+    -------
+    area : float
+        Surface area of mesh.
+    """
+    # indexing to define two vector arrays from triangle vertices
+    a = verts[:, 0, :] - verts[:, 1, :]
+    b = verts[:, 0, :] - verts[:, 2, :]
+    # area of triangle in 3D = 1/2 * Euclidean norm of cross product
+    triangle_area = numpy.sqrt(
+        numpy.linalg.norm((numpy.cross(a, b)).sum(axis=1), 2).sum()) / 2.
+    return triangle_area
 
 
 def frame(data):

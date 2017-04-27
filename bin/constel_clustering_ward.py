@@ -82,11 +82,9 @@ def main():
         tex = aims.read(options.gyri_tex[i])
         vertices_patch = numpy.where(tex[0].arraydata() == options.patch)[0]
         max_index = min_index + len(vertices_patch)
-        print(max_index)
         clusters = texture_time(options.kmax, clusterid, vertices_patch,
                                 nb_vertices, 2, min_index, max_index)
         min_index += len(vertices_patch)
-        print(min_index)
         aims.write(clusters, str(options.tex_time[i]))
 
 if __name__ == "__main__":

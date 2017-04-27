@@ -8,6 +8,12 @@
 # CEA, CNRS and INRIA at the following URL "http://www.cecill.info".
 ###############################################################################
 
+"""
+Texture utilities.
+"""
+
+#----------------------------Imports-------------------------------------------
+
 from __future__ import print_function
 from soma import aims
 import numpy as np
@@ -29,6 +35,8 @@ steam_handler = logging.StreamHandler()
 steam_handler.setLevel(logging.INFO)
 # steam_handler.setFormatter(formatter)
 logger.addHandler(steam_handler)
+
+#------------------------------------------------------------------------------
 
 
 def identify_patch_number(fname):
@@ -277,7 +285,9 @@ def concatenate_texture(cortical_parcellations, time_step):
     final_rseg: str
         The complete cortical parcellation.
     """
+    print(cortical_parcellations)
     for idx, filename in enumerate(cortical_parcellations):
+        print(filename)
         roiseg = aims.read(filename)
         rseg = numpy.array(roiseg[time_step[idx]].arraydata())
         if idx == 0:

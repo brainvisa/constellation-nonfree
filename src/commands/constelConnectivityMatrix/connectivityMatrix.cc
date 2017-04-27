@@ -142,7 +142,7 @@ Connectivities* makeConnMatrix_closestPoint(
 void makeConnectivityTexture_seedConnectionDensity(
     Connectivities* connMatrixToAllMesh_ptr,
     const string & connTextureFileName,
-    TimeTexture<short> & seedRegionsTex, size_t seedRegionLabel,
+    TimeTexture<short> & seedRegionsTex, int seedRegionLabel,
     bool verbose) {
   // Computing densityTexture:
   if (connMatrixToAllMesh_ptr)
@@ -181,8 +181,8 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
     // const SparseOrDenseMatrix & connMatrixToAllMesh                  
     const string & connTextureFileName,
     const TimeTexture<short> & seedRegionsTex,
-    size_t seedRegionLabel,
-    int seedRegionsNb,
+    int seedRegionLabel,
+    int maxLabel,
     double distthresh, double wthresh,
     bool logOption, const string & logFile,
     const string & connMatrixFileName,
@@ -194,23 +194,22 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
     int meshes_nb,
     vector<Connectivities*> & connMatrixCortexToMesh_ptr_vector,
     bool verbose) {
-  
-  if (seedRegionLabel <= 0 or seedRegionLabel > seedRegionsNb)
-    throw runtime_error("No or wrong seedRegionLabel.");
 
   /*
   Computing mat [region vertex][meshVertexNb]
   Read a regions (gyri for example) labeled texture and make a Label Histogram.
   */
-  int smallestRegionNb = textureMin(seedRegionsTex);
+  int minLabel = textureMin(seedRegionsTex);
+  if (seedRegionLabel < minLabel or seedRegionLabel > maxLabel)
+    throw runtime_error("No or wrong seedRegionLabel.");
   map<short, size_t> *labels_ptr = labelsHistogram(seedRegionsTex,
-                               seedRegionsNb,
-                               smallestRegionNb,
-                               verbose);
+                                                    maxLabel,
+                                                    minLabel,
+                                                    verbose);
   map<short, size_t> &labels = *labels_ptr;
 
   vector<size_t> *seedVertexIndex;
-  size_t seedRegionLabelVertexNb = labels[seedRegionLabel];
+  int seedRegionLabelVertexNb = labels[seedRegionLabel];
 
   rc_ptr<Connectivities> extractConnMatrix_ptr(
     connMatrixReducedFromRegion(connMatrixToAllMesh_ptr, seedRegionsTex, 
@@ -379,8 +378,8 @@ int main(int argc, char* argv[]) {
     AimsSurfaceTriangle inAimsMesh;
     vector<string> inTargetMeshesAimsR_files;
     TimeTexture<short> seedRegionsTex;
-    size_t seedRegionLabel = 0;
-    size_t seedRegionsNb = 0;
+    int seedRegionLabel = 0;
+    size_t maxLabel = 0;
     double distthresh = 5.0;
     double wthresh = 1.0;
     string motionName = "";
@@ -501,13 +500,6 @@ int main(int argc, char* argv[]) {
     app.initialize();
 
     if (verbose) {
-      cout << "Bundles file: " << bundleFilename << endl;
-      cout << "Matrix file: " << connMatrixFileName << endl;
-      cout << "Transformation matrix file: " << motionName << endl;
-      cout << "Matrix computing type: " << connMatrixComputingType << endl;
-      cout << "Smoothing (in mm): " << distthresh << endl;
-      cout << "Weight threshold: " << wthresh << endl;
-      cout << "Normalization: " << normalize << endl;
       cout << "Cortical region: " << seedRegionLabel << endl;
     }
 
@@ -544,12 +536,12 @@ int main(int argc, char* argv[]) {
     // number of different regions in this parcellation
     if (seedRegionsTexR.fileName() != "") { 
       seedRegionsTexR.read(seedRegionsTex);
-      seedRegionsNb = textureMax(seedRegionsTex);
+      maxLabel = textureMax(seedRegionsTex);
       
       if (verbose) {
         cout << "Initial cortical parcellation: " << flush;
         cout << seedRegionsTex[0].nItem() << " values, " << flush;
-        cout << seedRegionsNb << " regions." << endl;
+        cout << maxLabel << " regions." << endl;
       }
     } else {
       throw runtime_error("ERROR: No or wrong seedRegionsTex input.");
@@ -580,7 +572,7 @@ int main(int argc, char* argv[]) {
     else if (connectivityTextureType == "seed_mean_connectivity_profile")
       makeConnectivityTexture_seedMeanConnectivityProfile(
           connMatrixToAllMesh_ptr, connTextureFileName, seedRegionsTex,
-          seedRegionLabel, seedRegionsNb, distthresh, wthresh, logOption,
+          seedRegionLabel, maxLabel, distthresh, wthresh, logOption,
           logFile, connMatrixFileName, inAimsMesh, normalize, connMatrixFormat,
           seedRegionVertexIndexType, seedRegionVertexIndexFileName,
           connTextureToTargetMeshesFileNames, meshes_nb,

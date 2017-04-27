@@ -90,7 +90,6 @@ def main():
     otex = basinTex_ar
     for i in range(len(otex_kept_labels)):
         current_label = otex_kept_labels[i]
-        print("current label:", current_label, " new:", str(i + 1))
         otex[basinTex_ar == current_label] = i + 1
 
     # create a time texture object
