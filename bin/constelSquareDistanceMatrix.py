@@ -5,7 +5,7 @@ from __future__ import print_function
 import numpy as np
 import optparse
 import sys
-
+import nibabel as nib
 # scipy
 from scipy.spatial.distance import pdist
 
@@ -34,7 +34,9 @@ def main():
     parser, (options, args) = parseOpts(sys.argv)
     
     # matrix loading
-    matrix = np.load(options.matrix)
+    img = nib.load(options.matrix)
+    matrix = img.get_data()
+    #matrix = np.load(options.matrix)
     m, n = matrix.shape
 
     #######################################################################

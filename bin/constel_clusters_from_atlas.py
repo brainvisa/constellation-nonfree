@@ -73,11 +73,17 @@ def main():
 
     # read the individual reduced matrix, shape (region vertices, basins)
     rmatrix = aims.read(args.reduce_matrix)
-    rmat = numpy.asarray(rmatrix)[:, :, 0, 0].T
+    rmat = numpy.asarray(rmatrix)[:, :, 0, 0]
+    if rmat.shape[0] < rmat.shape[1]:
+        rmat = numpy.transpose(rmat)
+    print("rmat: ", rmat.shape)
 
     # read the group reduced matrix, shape (region vertices, basins)
     atlas = aims.read(args.atlas_matrix)
     amat = numpy.asarray(atlas)[:, :, 0, 0]
+    if amat.shape[0] < amat.shape[1]:
+        amat = numpy.transpose(amat)
+    print("amat: ", amat.shape)
 
     # read the clustering texture of the cortical region
     # (e.g. gyrus of FreeSurfer)

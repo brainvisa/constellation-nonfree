@@ -9,17 +9,10 @@
 ###############################################################################
 
 """
-This script does the following:
-*
-*
-
-Main dependencies: PyAims library
-
-Author: Sandrine Lefranc, 2015
+Matrix utilities.
 """
 
 #----------------------------Imports-------------------------------------------
-
 
 # python system module
 import os
@@ -30,7 +23,6 @@ import exceptions
 
 #soma
 from soma import aims
-
 
 #----------------------------Functions-----------------------------------------
 
@@ -190,7 +182,7 @@ def generate_uniform_matrix(features):
     return uniform_matrix
 
 
-def orderDataMatrix(mat, labels):
+def order_data_matrix(mat, labels):
     """
     inputs:
             mat: matrix of observations, shape = (n,p), n observations, p attributes
@@ -213,7 +205,7 @@ def orderDataMatrix(mat, labels):
     return order_mat, sortLabels
 
 
-def euclidianDistance(v1, v2):
+def euclidian_distance(v1, v2):
     """
     input:
           v1, v2: two vectors, shape (1,p) (numpy arrays)
@@ -224,7 +216,7 @@ def euclidianDistance(v1, v2):
     return numpy.sqrt(dist)
 
 
-def euclidianDistanceMatrix(matrix):
+def euclidian_distance_matrix(matrix):
     """
     """
     (n, p) = matrix.shape
@@ -235,7 +227,7 @@ def euclidianDistanceMatrix(matrix):
         euclidian_dist_matrix[i][i] = 0
         for j in xrange(0, i):
             v2 = matrix[j]
-            dist_value = euclidianDistance(v1, v2)
+            dist_value = euclidian_distance(v1, v2)
             euclidian_dist_matrix[i][j] = dist_value
             euclidian_dist_matrix[j][i] = dist_value
     return euclidian_dist_matrix
@@ -389,9 +381,10 @@ def save_normalization(filename):
         line_i = mat[i]
         norm_i = numpy.linalg.norm(line_i)
         norm_rows.append(norm_i)
-    name = os.path.dirname(filename)
-    oname = os.path.join(name + "/normalization")
-    save_norm = numpy.save(oname, norm_rows)
+    name1 = filename.split('.')[0]
+    name2 = filename.split('.')[1]
+    norm_name = name1 + name2 + "_normalization"
+    save_norm = numpy.save(norm_name, norm_rows)
                 
 def replace_negative_values(matrix, value=0.0):
     """ Replace the negative values by 0.0 (by default).

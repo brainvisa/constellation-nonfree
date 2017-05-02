@@ -8,7 +8,7 @@ import sys
 
 # soma_workflow
 import soma_workflow.client as swf
-
+import nibabel as nib
 # soma
 from soma.path import find_in_path
 
@@ -35,7 +35,9 @@ def main():
     parser, (options, args) = parseOpts(sys.argv)
     
     # matrix loading
-    matrix = np.load(options.matrix)
+    img = nib.load()
+    matrix = img.get_data()
+    #matrix = np.load(options.matrix)
     m, n = matrix.shape
     
     # create the file to receive the elements of the distance matrix
