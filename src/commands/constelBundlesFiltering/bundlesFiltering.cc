@@ -1,6 +1,6 @@
 #include <aims/getopt/getopt2.h>
 #include <aims/io/reader.h>
-#include <connectomist/fibertracking/bundlesFusion.h>
+#include <aims/fibers/bundlesFusion.h>
 #include <constellation/selectFiberListenerFromMesh.h>
 #include <constellation/selectBundlesFromNames.h>
 #include <constellation/selectBundlesFromLength.h>
@@ -8,7 +8,6 @@
 using namespace aims;
 using namespace carto;
 using namespace std;
-using namespace comist;
 using namespace constel;
 
 

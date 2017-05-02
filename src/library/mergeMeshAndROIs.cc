@@ -1,17 +1,13 @@
 #include <constellation/mergeMeshAndROIs.h>
-#include <connectomist/fibertracking/bundleRegroup.h>
+#include <aims/fibers/bundleRegroup.h>
 #include <constellation/selectFiberListenerFromMesh.h>
 #include <constellation/bundleTools.h>
-#include <connectomist/fibertracking/bundleSampler.h>
+#include <aims/fibers/bundleSampler.h>
 #include <cartobase/config/verbose.h>
 
 using namespace aims;
 using namespace carto;
 using namespace std;
-using namespace constel;
-using namespace comist;
-using namespace constel;
-
 
 namespace constel {
   

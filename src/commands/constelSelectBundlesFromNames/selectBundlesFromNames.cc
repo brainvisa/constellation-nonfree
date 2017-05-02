@@ -1,13 +1,12 @@
 #include <aims/getopt/getopt2.h>
 #include <aims/resampling/linearInterpolator.h>
-#include <connectomist/features/bundles_features.h>
+#include <aims/fibers/bundles_features.h>
 #include <cartobase/config/verbose.h>
 #include <constellation/selectBundlesFromNames.h>
 
 using namespace std;
 using namespace carto;
 using namespace aims;
-using namespace comist;
 using namespace constel;
 
 
