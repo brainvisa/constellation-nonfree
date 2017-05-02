@@ -1,14 +1,12 @@
 #include <aims/getopt/getopt2.h>
 #include <aims/io/reader.h>
-#include <connectomist/fibertracking/bundleRegroup.h>
+#include <aims/fibers/bundleRegroup.h>
 #include <constellation/selectFiberListenerFromMesh.h>
 
 using namespace aims;
 using namespace carto;
 using namespace std;
-using namespace comist;
 using namespace constel;
-
 
 
 int main(int argc, const char* argv[]) {
