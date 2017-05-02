@@ -31,10 +31,15 @@ import exceptions
 from math import log
 
 # Pycluster librairy
-import Pycluster as pc
+from Pycluster import kmedoids
 
 # scipy
-from scipy.spatial.distance import pdist, squareform
+from scipy.spatial.distance import squareform
+from scipy.spatial.distance import pdist
+
+# scikit-learn library
+from sklearn.metrics import silhouette_score
+from sklearn.metrics import silhouette_samples
 from scipy.misc import comb
 
 # contel module
@@ -45,42 +50,94 @@ import constel.lib.utils.matrixtools as clccm
 #----------------------------Functions-----------------------------------------
 
 
-def silhouette_score(X, K):
+def silhouette_index(matrix, cluster_number):
     """Average silhouette method.
-    
+
     The average silhouette approach measures the quality of a clustering. It
     determines how welle each object lies within its cluster. A high average
     silhouette width indicates a good clustering.
     Average silhouette method computes the average silhouette of observations
     for different values of k. The optimal number of clusters k is the one that
     maximize the average silhouette over a range of possible values for k.
-    
-    reference: [Kaufman and Rousseeuw, 1990]
-    """
-    n = X.shape[0]
 
-    dist = pc.distancematrix(X, dist='e')
-    NiterK = 100
-    clusterid, error, nfound = pc.kmedoids(dist, K, NiterK)
+    reference: [Kaufman and Rousseeuw, 1990]
+
+    Parameters
+    ----------
+    matrix: numpy.array (mandatory)
+        The connectivity matrix.
+    cluster_number: int (mandatory)
+        The number of the cluster.
+
+    Returns
+    -------
+    asw_score: float
+        The average silhouette width value for all the samples.
+    sample_silhouette: list of float
+        The silhouette scores for each sample.
+    """
+    # Calculate the distance matrix.
+    dmat = squareform(pdist(matrix, metric="euclidean"))
+
+    nbiteration = 100 # arbitrary
+    clusterid, error, nfound = kmedoids(dmat, cluster_number, nbiteration)
+
+    # Rename the cluster id between 0 and the number of different values - 1.
     labels = 0
     for i in numpy.unique(clusterid):
         clusterid[clusterid == i] = labels
         labels += 1
-    cl = len(numpy.unique(clusterid))
-    distance = squareform(pdist(X))
-    kIndices = [numpy.flatnonzero(clusterid == k) for k in range(cl)]
 
-    a = numpy.zeros(n)
-    b = numpy.zeros(n)
-    for i in range(n):
-        a[i] = numpy.mean(
-            [distance[i][ind] for ind in kIndices[clusterid[i]] if ind != i])
-        b[i] = numpy.min(
-            [numpy.mean(distance[i][ind]) for k,
-             ind in enumerate(kIndices) if clusterid[i] != k])
-    s = (b - a) / numpy.maximum(a, b)
-    score = numpy.mean(s)
-    return score
+    # Compute the average silhouette width (asw) score, average value for all
+    # samples.
+    asw_score = silhouette_score(matrix, clusterid)
+    
+    # Compute the silhouette scores for each sample.
+    sample_silhouette = silhouette_samples(matrix, clusterid)
+    
+    return asw_score, sample_silhouette, clusterid
+
+
+def dunn_score(matrix, cluster_number):
+    """Compute the Dunn index.
+
+    reference: [Dunn, 1974]
+
+    Parameters
+    ----------
+    matrix: numpy.array (mandatory)
+        The connectivity matrix.
+    cluster_number: int (mandatory)
+        The number of the cluster.
+
+    Returns
+    -------
+    dunn_score:
+    """
+    # Calculate the distance matrix.
+    dmat = squareform(pdist(matrix, metric="euclidean"))
+
+    nbiteration = 100 # arbitrary
+    clusterid, error, nfound = kmedoids(dmat, cluster_number, nbiteration)
+
+    # Rename the cluster id between 0 and the number of different values - 1.
+    labels = 0
+    for i in numpy.unique(clusterid):
+        clusterid[clusterid == i] = labels
+        labels += 1
+
+    if (cluster_number > 2):
+        dinter = numpy.array([])
+        dintra = numpy.array([])
+        for i in range(dmat.shape[0]):
+            for j in range(i + 1, dmat.shape[0]):
+                if (clusterid[i] != clusterid[j]):
+                    dinter = numpy.append(dinter, dmat[i, j])
+                else:
+                    dintra = numpy.append(dintra, dmat[i, j])
+        sDunn = numpy.min(dinter) / numpy.max(dintra)
+
+    return sDunn
 
 
 def compute_cluster_validity(distance, clusterid, K):
@@ -318,7 +375,7 @@ def jaccard_distance(list1, list2):
 
 def cramer_v(list1, list2):
     """Cramer's V is a measure of association between two nominal variables
-    and it is calculated based on chi-square statistic. Use the Cramer’s V
+    and it is calculated based on chi-square statistic. Use the Cramer's V
     statistic to assess the relative strength of the derived association.
 
     Parameters
@@ -355,7 +412,7 @@ def cramer_v(list1, list2):
 
     # expected frequency of occurrence in each cell:
     # the probability that a cluster number represents a given class is
-    # given by the cluster’s proportion of the row total.
+    # given by the cluster's proportion of the row total.
     ef = (row_sum * col_sum) / float(n)
 
     # chi square stats:
@@ -371,7 +428,7 @@ def cramer_v(list1, list2):
     # Measuring strength of an association, is independent of the order of
     # cluster labelling in the cross-matching of one cluster allocation
     # against another
-    # Cramer’s V ranges from -1 to 1 for 2X2 tables
+    # Cramer's V ranges from -1 to 1 for 2X2 tables
     es = numpy.sqrt(chi2 / (n * (k - 1)))
 
     return es

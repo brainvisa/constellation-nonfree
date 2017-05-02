@@ -8,15 +8,6 @@
 # CEA, CNRS and INRIA at the following URL "http://www.cecill.info".
 ###############################################################################
 
-"""
-This script does the following:
-*
-
-Main dependencies: PyAims library
-
-Author: Sandrine Lefranc, 2015
-"""
-
 
 #----------------------------Imports-------------------------------------------
 
@@ -24,6 +15,7 @@ Author: Sandrine Lefranc, 2015
 # system module
 import os
 import sys
+import csv
 import json
 import numpy
 import argparse
@@ -37,13 +29,21 @@ from soma import aims
 
 # constel module
 try:
-    import constel.lib.evaluation.indices as cv
+    from constel.lib.evaluation.indices import silhouette_index
 except:
     pass
 
 
 #----------------------------Functions-----------------------------------------
 
+# Command parameters
+doc = """
+Average Silhouette Width
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Calculate the average silhouette width in order to find the optimal number of
+clusters.
+"""
 
 def mylist(string):
     return json.loads(string)
@@ -55,17 +55,12 @@ def parse_args(argv):
     # creating a parser
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        description=textwrap.dedent("""\
-            -------------------------------------------------------------------
-            Calculate the average silhouette width in order to find the optimal
-            number of clusters.
-            -------------------------------------------------------------------
-            """))
+        description=textwrap.dedent(doc))
 
     # adding arguments
     parser.add_argument(
         "matrices", type=mylist,
-        help="List of the individual reduced matrix")
+        help="List of the individual reduced matrix.")
     parser.add_argument(
         "kmax", type=int,
         help="The max number of clusters.")
@@ -78,6 +73,9 @@ def parse_args(argv):
     parser.add_argument(
         "-r", "--removek2", action="store_true", dest="ignore_k2",
         help="Ignore K=2 in the research of the optimal number of clusters.")
+    parser.add_argument(
+        "-c", "--scores", action="store_true", dest="save_scores",
+        help="Write the ASW values (.npy) on the disk.")
 
     # parsing arguments
     return parser, parser.parse_args(argv)
@@ -113,10 +111,11 @@ def create_page(name_matrix, matrix, kmax, ybound=[0., 1.], ignore_k2=False):
     tvals.append("ASW (%)")
     dict_clusters = {}
     for idx, k in enumerate(range(2, kmax + 1)):
-        s = cv.silhouette_score(matrix.T, k)
+        asw_score, sample_silhouette, clusterid = silhouette_index(matrix.T, k)
         tkeys.append(k)
-        tvals.append(round(s, 4) * 100)
-        dict_clusters[k] = s
+        tvals.append(round(asw_score, 4) * 100)
+        dict_clusters[k] = asw_score
+    print dict_clusters
 
     table = []
     table.append(tkeys)
@@ -150,6 +149,8 @@ def create_page(name_matrix, matrix, kmax, ybound=[0., 1.], ignore_k2=False):
                  "The optimal number of clusters is " + str(kopt) + ".",
                  color="red")
     ax3.axis("off")
+
+    return dict_clusters
 
 
 #----------------------------Main program--------------------------------------
@@ -185,10 +186,21 @@ def main():
         red_mat = aims.read(matrix)
         rmat = numpy.asarray(red_mat)[:, :, 0, 0]
         if rmat.shape[0] > rmat.shape[1]:
-            mat = rmat.T
-        create_page(matrix, mat, args.kmax, args.ybound, args.ignore_k2)
+            rmat = rmat.T
+        dict_clusters = create_page(matrix,
+                                    rmat,
+                                    args.kmax,
+                                    args.ybound,
+                                    args.ignore_k2)
         # Done with the page
         pp.savefig()
+        if args.save_scores:
+            matrix_name = '.'.join(matrix.split('.')[:-1])
+            asw_name = matrix_name + "_asw.csv"
+            with open(asw_name, 'wb') as csv_file:
+                writer = csv.writer(csv_file)
+                for key, value in dict_clusters.items():
+                    writer.writerow([key, value])
 
     # Write the PDF document to the disk
     pp.close()

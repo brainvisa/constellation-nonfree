@@ -43,6 +43,7 @@ def parse_args(argv):
     parser.add_argument("clusters", type=str, help="")
     parser.add_argument("white_mesh", type=str, help="")
     parser.add_argument("kmax", type=int, help="")
+    parser.add_argument("matrix", type=str, help="")
     parser.add_argument("stats_file", type=str, help="")
 
     return parser, parser.parse_args(argv)
@@ -86,8 +87,7 @@ def main():
             a = verts[:, 0, :][idx] - verts[:, 1, :][idx]
             b = verts[:, 0, :][idx] - verts[:, 2, :][idx]
             # area of triangle in 3D = 1/2 * Euclidean norm of cross product
-            triangle_area = numpy.sqrt(
-                numpy.linalg.norm(numpy.cross(a, b), 2).sum()) / 2.
+            triangle_area = numpy.linalg.norm(numpy.cross(a, b), 2).sum() / 2.
             l1 = clusters[polygon[0]]
             clusters_areas[l1] += triangle_area / 3
             l1 = clusters[polygon[1]]
@@ -98,6 +98,13 @@ def main():
         #######################################################################
         # moyenne
         #######################################################################
+        mat = aims.read(args.matrix)
+        m = numpy.asarray(mat)[:, :, 0, 0]
+        if m.shape[0] > m.shape[1]:
+            m = numpy.transpose(numpy.asarray(mat)[:, :, 0, 0])
+        smat = numpy.sum(mat, axis=1)
+        
+            
         #m = mean(data)
         #######################################################################
         # variance
@@ -113,6 +120,9 @@ def main():
 
     with open(args.stats_file, "wb") as csvfile:
         csv_writer = csv.writer(csvfile, delimiter=",")
+        row = []
+        row.extend([["Number of vertex", "Surface", "Variance", "Ecart type"]])
+        csv_writer.writerow(row)
         for lid in sorted(ftable.keys()):
             row = [lid]
             row.extend(["{0}".format(elem) for elem in ftable[lid]])

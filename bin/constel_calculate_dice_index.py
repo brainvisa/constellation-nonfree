@@ -98,8 +98,9 @@ def main():
         atlas_clusters,
         timestep1=args.individual_time_step,
         timestep2=args.atlas_time_step)
+    print(dice)
 
-    nb_clusters = args.individual_time_step + 2
+    nb_clusters = args.atlas_time_step + 2
 
     # The stem plot
     f = pyplot.figure()
@@ -120,12 +121,12 @@ def main():
                 linewidth=2,
                 linestyle="solid")
     pyplot.margins(0.1, 0.1)
-    pyplot.ylabel("Dice index")
-    pyplot.xlabel("Clusters (k)")
+    pyplot.ylabel("Dice index", fontsize=18)
+    pyplot.xlabel("Clusters (k)", fontsize=18)
     pyplot.title(
         "Parcellation with {0} clusters for the cortical region: '{1}'".format(
             nb_clusters,
-            args.cortical_region))
+            args.cortical_region), fontsize=18)
     f.savefig(args.ofile)
 
 
