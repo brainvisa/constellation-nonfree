@@ -66,7 +66,8 @@ for label in labelnames:
             v1_idx, v2_idx, nb_connections = map(float, line.strip().split())
             if v1_idx in idx:
                 itemindex = numpy.where(idx == v1_idx)[0]
-                connectome[itemindex[0], v2_idx] = nb_connections
+                connectome[numpy.int(itemindex[0]),
+                           numpy.int(v2_idx)] = nb_connections
     vol = aims.Volume(connectome.astype(float))
     smat = aims.SparseOrDenseMatrix()
     smat.setMatrix(vol)
