@@ -19,12 +19,11 @@ Main dependencies:
 Author: Sandrine Lefranc, 2015
 """
 
-#----------------------------Imports-------------------------------------------
+# ---------------------------Imports-------------------------------------------
 
 
 # python module
 import logging
-import glob
 import os
 
 # soma module
@@ -40,7 +39,7 @@ steam_handler.setLevel(logging.DEBUG)
 logger.addHandler(steam_handler)
 
 
-#----------------------------Functions-----------------------------------------
+# ---------------------------Functions-----------------------------------------
 
 
 def load_fiber_tracts(directory, formats):
@@ -58,17 +57,23 @@ def load_fiber_tracts(directory, formats):
     fnames: list
         list of bundles files
     """
+    bundles = []
     if formats == "bundles":
-        logger.debug(os.path.join(directory, "*.bundles"))
-        patterns = [os.path.join(directory, "*.bundles")]
+        for root, dirs, files in os.walk(directory):
+            for f in files:
+                end = os.path.basename(os.path.splitext(f)[0])[-1]
+                if f.endswith(".bundles") and end.isdigit():
+                    bundles.append(os.path.join(root, f))
     elif formats == "trk":
-        patterns = [str(directory) + "/*.trk"]
+        for root, dirs, files in os.walk(directory):
+            for f in files:
+                end = os.path.basename(os.path.splitext(f)[0])[-1]
+                if f.endswith(".trk") and end.isdigit():
+                    bundles.append(os.path.join(root, f))
     else:
         logger.error("Format unsupported. Use .bundles or .trk formats.")
-    fnames = []
-    for pattern in patterns:
-        fnames.extend(glob.glob(pattern))
-    return fnames
+
+    return bundles
 
 
 def write_transfo2file(transformation_matrix, filename):
