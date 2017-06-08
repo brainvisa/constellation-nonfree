@@ -12,16 +12,16 @@
 Texture utilities.
 """
 
-#----------------------------Imports-------------------------------------------
-
-from __future__ import print_function
-from soma import aims
-import numpy as np
+# ---------------------------Imports-------------------------------------------
 
 # System import
+from __future__ import print_function
 import logging
 import numpy
 import re
+
+# Soma module
+from soma import aims
 
 # Define logger
 logger = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ steam_handler.setLevel(logging.INFO)
 # steam_handler.setFormatter(formatter)
 logger.addHandler(steam_handler)
 
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 
 def identify_patch_number(fname):
@@ -116,7 +116,7 @@ def remove_labels(tex, labels):
         otex_ar[otex_ar == l] = 0
 
     # keep only the labels different of zero
-    otex_kept_labels = np.unique(otex_ar)
+    otex_kept_labels = numpy.unique(otex_ar)
     otex_kept_labels_list = otex_kept_labels.tolist()
     if otex_kept_labels_list.count(0) != 0:
         otex_kept_labels_list.remove(0)
@@ -157,11 +157,11 @@ def texture_time(k_max, clusters_id, vertices_patch, vertices_mesh, mode,
         tex[k].resize(vertices_mesh, 0)
         if mode == 1:
             tex[k].arraydata()[vertices_patch] = \
-                clusters_id[k].astype(np.int16)
+                clusters_id[k].astype(numpy.int16)
         if mode == 2:
             print(vertices_patch)
             tex[k].arraydata()[vertices_patch] = \
-                clusters_id[k][minid:maxid].astype(np.int16)
+                clusters_id[k][minid:maxid].astype(numpy.int16)
 
     return tex
 

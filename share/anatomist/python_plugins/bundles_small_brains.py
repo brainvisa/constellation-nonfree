@@ -20,12 +20,13 @@ import six
 #                           Selection Action
 ############################################################################
 
+
 class SmallBrainSelectionAction(anatomist.cpp.Action):
     def __init__(self):
         anatomist.cpp.Action.__init__(self)
         self.scaling = 0.1
-        self.distance = 20#mm
-        self.display_all = True # display all small brains on main view
+        self.distance = 20  # mm
+        self.display_all = True  # display all small brains on main view
         self._displayed_vertices = {}
 
     def name(self):
@@ -35,30 +36,30 @@ class SmallBrainSelectionAction(anatomist.cpp.Action):
         return False
 
     def addReducedObjectToView(self, aimsvertex, obj, nref, rot_center, tr, a,
-            window, diffuse_list):
-        dup = obj.clone(True) # shallow copy
+                               window, diffuse_list):
+        dup = obj.clone(True)  # shallow copy
         memo1 = self._displayed_vertices.setdefault(aimsvertex, {})
         memo = memo1.setdefault('objects', [])
         if dup is not None:
             a.registerObject(dup, False)
             dup.setReferential(nref)
             a.theProcessor().execute('SetMaterial', objects=[dup],
-                diffuse=diffuse_list)
+                                     diffuse=diffuse_list)
             window.registerObject(dup)
             memo.append([anatomist.cpp.rc_ptr_AObject(dup), rot_center, tr])
             a.releaseObject(dup)
             return dup
         else:
-            if obj.objectTypeName( obj.type() ) == 'TEXTURED SURF.':
-                mesh = [ x for x in obj \
-                  if x.objectTypeName( x.type() ) == 'SURFACE' ][0]
+            if obj.objectTypeName(obj.type()) == 'TEXTURED SURF.':
+                mesh = [x for x in obj
+                        if x.objectTypeName(x.type()) == 'SURFACE'][0]
             else:
                 mesh = obj
-            mesh.setReferential( nref )
-            a.theProcessor().execute( 'SetMaterial', objects=[mesh],
-                diffuse=diffuse_list )
+            mesh.setReferential(nref)
+            a.theProcessor().execute('SetMaterial', objects=[mesh],
+                                     diffuse=diffuse_list)
             mesh.notifyObservers()
-            memo.append([anatomist.cpp.rc_ptr_AObject( obj ), rot_center, tr])
+            memo.append([anatomist.cpp.rc_ptr_AObject(obj), rot_center, tr])
             return obj
 
     def computeTransformation(self, graph, vertex):
@@ -112,8 +113,8 @@ class SmallBrainSelectionAction(anatomist.cpp.Action):
             scaling = aimsgraph['small_brains_scaling']
 
         m *= aims.AffineTransformation3d([scaling, 0, 0, 0,
-                          0, scaling, 0, 0,
-                          0, 0, scaling, 0])
+                                          0, scaling, 0, 0,
+                                          0, 0, scaling, 0])
         m2 = aims.AffineTransformation3d()
         m2.setTranslation(-gcent)
         m *= m2
@@ -124,7 +125,7 @@ class SmallBrainSelectionAction(anatomist.cpp.Action):
         nref = anatomist.cpp.Referential()
         tr = anatomist.cpp.Transformation(nref, graph.getReferential())
         tr.motion().fromMatrix(m.toMatrix())
-        sip.transferto(tr, None) # don't delete tr
+        sip.transferto(tr, None)  # don't delete tr
         tr.registerTrans()
         return nref, tr, rot_center
 
@@ -156,17 +157,18 @@ class SmallBrainSelectionAction(anatomist.cpp.Action):
                     parents += p.parents()
                 if graph:
                     if obj.objectTypeName(obj.type()) == 'TEXTURED SURF.':
-                        mesh = [x for x in obj.get() \
-                            if x.objectTypeName(x.type()) == 'SURFACE'][0]
+                        mesh = [x for x in obj.get()
+                                if x.objectTypeName(x.type()) == 'SURFACE'][0]
                     else:
                         mesh = obj
                     mesh.setReferential(graph.getReferential())
         if not keep:
             self._displayed_vertices = {}
         else:
-            self._displayed_vertices = dict([(vertex, value) \
-                for vertex, value in six.iteritems(self._displayed_vertices) \
-                if vertex in keep])
+            self._displayed_vertices = dict(
+                [(vertex, value)
+                 for vertex, value in six.iteritems(self._displayed_vertices)
+                 if vertex in keep])
         if refs:
             a.theProcessor().execute('DeleteElement', elements=refs)
 
@@ -188,8 +190,9 @@ class SmallBrainSelectionAction(anatomist.cpp.Action):
         vertexlist = set()
         for obj in window.Objects():
             if obj.type() == anatomist.cpp.AObject.GRAPH:
-                vertexlist = vertexlist.union([x.attributed() for x in obj \
-                    if isinstance(x.attributed(), aims.Vertex)])
+                vertexlist = vertexlist.union(
+                    [x.attributed() for x in obj
+                     if isinstance(x.attributed(), aims.Vertex)])
         self.displayObjects(vertexlist, mode='set')
 
     def getClickedObject(self, x, y):
@@ -197,7 +200,7 @@ class SmallBrainSelectionAction(anatomist.cpp.Action):
         obj = window.objectAtCursorPosition(x, y)
         if obj is None:
             return None
-        parents = [ obj ]
+        parents = [obj]
         while parents:
             parent = parents.pop(0)
             if parent.type() == anatomist.cpp.AObject.GRAPHOBJECT:
@@ -227,10 +230,11 @@ class SmallBrainSelectionAction(anatomist.cpp.Action):
                 if isinstance(go, aims.Vertex):
                     vertexlist.add(go)
         if len(vertexlist) == 0:
-          for obj in window.Objects():
-              if obj.type() == anatomist.cpp.AObject.GRAPH:
-                  vertexlist = vertexlist.union([x.attributed() for x in obj \
-                      if isinstance(x.attributed(), aims.Vertex)])
+            for obj in window.Objects():
+                if obj.type() == anatomist.cpp.AObject.GRAPH:
+                    vertexlist = vertexlist.union(
+                        [xx.attributed() for xx in obj
+                         if isinstance(xx.attributed(), aims.Vertex)])
         self.displayObjects(vertexlist, mode=mode)
 
     def displayObjects(self, vertexlist, mode):
@@ -255,22 +259,34 @@ class SmallBrainSelectionAction(anatomist.cpp.Action):
                 continue
             graph = list(vertex.parents())[0]
             nref, tr, rot_center = self.computeRefAndTransformation(graph,
-                vertex)
+                                                                    vertex)
             global_mesh = None
             if 'global_mesh' in graph.graph():
                 global_mesh = graph.graph()['global_mesh']
             vmemo['referential'] = nref
             diffuse_list = [1., 0., 0., 1.]
             for obj in vertex:
-                #print('obj:', type(obj), obj)
-                obj_to_display.append(self.addReducedObjectToView(aimsvertex,
-                    obj, nref, rot_center, tr, a, window, diffuse_list))
+                # print('obj:', type(obj), obj)
+                obj_to_display.append(
+                    self.addReducedObjectToView(aimsvertex,
+                                                obj,
+                                                nref,
+                                                rot_center,
+                                                tr,
+                                                a,
+                                                window,
+                                                diffuse_list))
             if global_mesh is not None:
                 diffuse_list = [0.8, 0.8, 0.8, 0.2]
                 rmesh = self.addReducedObjectToView(aimsvertex, global_mesh,
-                    nref, rot_center, tr, a, window, diffuse_list)
+                                                    nref,
+                                                    rot_center,
+                                                    tr,
+                                                    a,
+                                                    window,
+                                                    diffuse_list)
                 a.execute('SetMaterial', objects=[rmesh],
-                    selectable_mode='always_selectable')
+                          selectable_mode='always_selectable')
             for edge in aimsvertex.edges():
                 if 'ana_object' in edge:
                     aedge = edge['ana_object']
@@ -316,22 +332,24 @@ class SmallBrainsRotationAction(anatomist.cpp.TrackOblique):
         return 'SmallBrainsRotationAction'
 
     def beginTrackball(self, x, y, globalX, globalY):
-        super(SmallBrainsRotationAction, self).beginTrackball(x, y,
-            globalX, globalY )
+        super(SmallBrainsRotationAction, self).beginTrackball(x,
+                                                              y,
+                                                              globalX,
+                                                              globalY )
         self.tr_dict = {}
         action = self.view().controlSwitch().getAction(
             'SmallBrainSelectionAction')
         for vert_objs in action._displayed_vertices.itervalues():
             stored = vert_objs.get('objects', [])
             for obj, rot_center, tr in stored:
-                if not tr in self.tr_dict:
-                    self.tr_dict[tr] \
-                        = aims.AffineTransformation3d(tr.motion()), rot_center
+                if tr not in self.tr_dict:
+                    self.tr_dict[tr] = aims.AffineTransformation3d(
+                        tr.motion()), rot_center
 
     def moveTrackball(self, x, y, globalX, globalY):
         rot = self.rotation(x, y)
         v = rot.vector()
-        v[3] *= -1;
+        v[3] *= -1
         rot.setVector(v)
         tr = None
         for tr, (begin_tr_AffineTransformation3d, rot_center) \
@@ -341,8 +359,10 @@ class SmallBrainsRotationAction(anatomist.cpp.TrackOblique):
             rot_center_translation = aims.AffineTransformation3d()
             rot_center_translation.setTranslation(rot_center)
             rot_motion \
-                = rot_center_translation * aims.AffineTransformation3d(rot) \
-                    * rot_motion * begin_tr_AffineTransformation3d
+                = (rot_center_translation *
+                   aims.AffineTransformation3d(rot) *
+                   rot_motion *
+                   begin_tr_AffineTransformation3d)
             tr.motion().fromMatrix(rot_motion.toMatrix())
         if tr:
             tr.unregisterTrans()
@@ -373,7 +393,7 @@ class SmallBrainsScaleAction(anatomist.cpp.Action):
 
     def moveScale(self, x, y, globalX, globalY):
         ydiff = self.y - y
-        zfac = math.exp( 0.01 * ydiff )
+        zfac = math.exp(0.01 * ydiff)
         scale = self.initscale * zfac
         tr = None
         for tr, (begin_tr_AffineTransformation3d, rot_center) \
@@ -413,13 +433,13 @@ class SmallBrainsTranslateAction(anatomist.cpp.Action):
         # be taken there, but what if several graphs have different distances
         # otherwise, default to the action distance
         self.initial_distance = action.distance
-        graphs = [obj for obj in self.view().aWindow().Objects() \
-            if obj.objectTypeName(obj.type()) == 'GRAPH']
+        graphs = [obj for obj in self.view().aWindow().Objects()
+                  if obj.objectTypeName(obj.type()) == 'GRAPH']
         for graph in graphs:
             if 'small_brains_distance' in graph.attributed():
                 self.initial_distance \
                     = graph.attributed()['small_brains_distance']
-                break # take just the first for now.
+                break  # take just the first for now.
 
     def moveTranslate(self, x, y, globalX, globalY):
         # Warning: this action modifies /sets the graphs
@@ -502,8 +522,7 @@ class SmallBrainsControl(anatomist.cpp.Control3D):
     the regions contain only fibers).
     '''
     def __init__(self):
-        super(SmallBrainsControl, self).__init__(30,
-            'SmallBrainsControl')
+        super(SmallBrainsControl, self).__init__(30, 'SmallBrainsControl')
 
     def eventAutoSubscription(self, pool):
         # plug parent control actions
@@ -554,7 +573,8 @@ class SmallBrainsControl(anatomist.cpp.Control3D):
 iconname = __file__
 if iconname.endswith('.pyc') or iconname.endswith('.pyo'):
     iconname = iconname[:-1]
-iconname = os.path.join(os.path.dirname(os.path.realpath(iconname)),'bundles_small_brains.png')
+iconname = os.path.join(
+    os.path.dirname(os.path.realpath(iconname)), 'bundles_small_brains.png')
 pix = QtGui.QPixmap(iconname)
 anatomist.cpp.IconDictionary.instance().addIcon('SmallBrainsControl', pix)
 ad = anatomist.cpp.ActionDictionary.instance()
@@ -566,4 +586,3 @@ cd = anatomist.cpp.ControlDictionary.instance()
 cd.addControl('SmallBrainsControl', SmallBrainsControl, 30)
 cm = anatomist.cpp.ControlManager.instance()
 cm.addControl('QAGLWidget3D', '', 'SmallBrainsControl')
-

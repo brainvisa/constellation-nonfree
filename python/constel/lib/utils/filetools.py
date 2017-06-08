@@ -9,19 +9,13 @@
 ###############################################################################
 
 """
-This script does the following:
-* read the file to create a list with the content of the file
-* select the number corresponding to a name of ROI from a given file
-
-Main dependencies:
-
-Author: Sandrine Lefranc, 2015
+Files utilities.
 """
 
-#----------------------------Imports-------------------------------------------
+# ---------------------------Imports-------------------------------------------
 
 
-#----------------------------Functions-----------------------------------------
+# ---------------------------Functions-----------------------------------------
 
 
 def read_file(filename, mode=0):
@@ -74,13 +68,34 @@ def select_ROI_number(filename, ROIname):
     s = read_file(filename)
 
     ROIlabel = s.keys()[s.values().index(ROIname)]
-    #ROIlabel = list(s.keys())[list(s.values()).index(ROIname) # python3
+    # ROIlabel = list(s.keys())[list(s.values()).index(ROIname) # python3
     return ROIlabel
+
+
+def select_ROI_name(filename, ROInb):
+    """Select the name corresponding to a number of ROI from a given file.
+
+    Parameters
+    ----------
+    filename: str (mandatory)
+        the file with all names and labels of ROIs
+    ROInb: str (mandatory)
+        the selected ROI name in the file
+
+    Return
+    ------
+    ROIname: str
+    """
+    s = read_file(filename)
+
+    ROIname = s.values()[s.keys().index(ROInb)]
+    # ROIname = list(s.values())[list(s.keys()).index(ROInb) # python3
+    return ROIname
 
 
 def delete_regions_in_nomenclature(nomenclature, regions, up_nomenclature):
     """ Remove some regions in the cortical region nomenclature.
-    
+
     Parameters
     ----------
     nomenclature: string (mandatory)
@@ -90,14 +105,14 @@ def delete_regions_in_nomenclature(nomenclature, regions, up_nomenclature):
         List of the cortical regions to delete.
     up_nomenclature: string (mandatory)
         The name (with directory) of the nomenclature without the regions.
-    
+
     Returns
     -------
     up_nomenclature: list
         The nomenclature without the regions.
     """
     with open(nomenclature) as f:
-        #content = f.readlines()
+        # content = f.readlines()
         with open(up_nomenclature, "w") as output:
             for line in f:
                 if line.split()[0] not in regions:
@@ -108,7 +123,7 @@ def delete_regions_in_nomenclature(nomenclature, regions, up_nomenclature):
 
 def add_region_in_nomenclature(nomenclature, new_region, number_region):
     """Add a new name in the cortical region nomenclature.
-    
+
     Parameters
     ----------
     nomenclature: string (mandatory)
@@ -122,6 +137,3 @@ def add_region_in_nomenclature(nomenclature, new_region, number_region):
     with open(nomenclature, "a") as f:
         new_line = str(number_region) + " " + new_region + "\n"
         f.writelines(new_line)
-    
-
-    

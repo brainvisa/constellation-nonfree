@@ -40,7 +40,7 @@ import fastcluster
 from scipy.spatial.distance import pdist, squareform
 from scipy.cluster.hierarchy import fcluster
 
-#----------------------------Functions-----------------------------------------
+# ---------------------------Functions-----------------------------------------
 
 
 class MatplotlibFig(object):
@@ -56,15 +56,15 @@ def validate( self ):
 
 def parseOpts(argv):
     description = """Connectivity-based parcellation of the patch.
-    
-    The joint connectivity matrix (concatenated or averaged) is computed.    
+
+    The joint connectivity matrix (concatenated or averaged) is computed.
     WARNING
     -------
-        For concatenated approach, the number of subjects should be small 
+        For concatenated approach, the number of subjects should be small
         to be easily used in this context.
         Alternatively, use "constelClusteringWard.py"
-        
-    The patch is clustered using the classical kmedoids algorithm applied on 
+
+    The patch is clustered using the classical kmedoids algorithm applied on
     the euclidean distance matrix between the joint connectivity profiles.
     """
 
@@ -72,10 +72,10 @@ def parseOpts(argv):
 
     parser.add_option('-m', '--avgmesh', dest='mesh',
                       help='input: averaged mesh for a group of subjects')
-    parser.add_option('-l', '--label', dest='patch',type='int',
+    parser.add_option('-l', '--label', dest='patch', type='int',
                       help='region of interest number')
     parser.add_option('-t', '--gyri', dest='gyri_texture',
-                      action='append', 
+                      action='append',
                       help='input: list of gyri segmentation')
     parser.add_option('-a', '--kmax', dest='kmax', type='int')
     parser.add_option('-s', '--study', dest='study',
@@ -88,12 +88,12 @@ def parseOpts(argv):
     return parser, parser.parse_args(argv)
 
 
-#----------------------------Main program--------------------------------------
+# ---------------------------Main program--------------------------------------
 
 
 def main():
     parser, (options, args) = parseOpts(sys.argv)
-    
+
     #########################################################################
     #                        clustering algorithm                           #
     #########################################################################
@@ -101,22 +101,32 @@ def main():
     reduced_matrix = aims.read(options.group_matrix)
     reduced_matrix = numpy.asarray(reduced_matrix)[:, :, 0, 0]
 
+    r = range(reduced_matrix.shape[0])
+    numpy.random.shuffle(r)
+    s = [r.index(i) for i in range(reduced_matrix.shape[0])]
     # Compute the distance matrix
-    distmat = pdist(reduced_matrix, metric='euclidean')
+    distmat = pdist(reduced_matrix[r], metric='euclidean')
 
     if options.study == 'avg':
         # generate the squareform distance matrix
         distance_matrix = squareform(distmat)
-    
-        # generate several array containing the number of the cluster to which 
+
+        # generate several array containing the number of the cluster to which
         # each item was assigned
         # i.e., one array by given nclusters (number_clusters)
         item_number = []
+        import time
+        numpy.random.seed(int(time.time() * 1000000) % 0x100000000)
         for number_clusters in range(2, options.kmax + 1):
-            # implements the k-medoids clustering algorithm (min of two clusters)
-            # **ref**: http://bonsai.hgc.jp/~mdehoon/software/cluster/cluster.pdf
+            # implements the k-medoids clustering algorithm
+            # (min of two clusters)
+            # **ref**
+            # http://bonsai.hgc.jp/~mdehoon/software/cluster/cluster.pdf
+            idx_medoids = numpy.random.randint(number_clusters, 
+                                               size=reduced_matrix.shape[0])
             clusterid, err, nfound = kmedoids(
-                distance_matrix, nclusters=number_clusters, npass=100)
+                distance_matrix, nclusters=number_clusters, npass=10)
+            clusterid = clusterid[s]
             # rename the clusters from 1 to kmax
             for i, item in enumerate(numpy.unique(clusterid)):
                 clusterid[clusterid == item] = i + 1
@@ -130,8 +140,8 @@ def main():
             print("Trying {nb} cluster(s)".format(nb=nb))
             clusters = fcluster(Z, criterion='maxclust', t=nb)
             clusterid.append(clusters)
-        
-        
+
+
     #########################################################################
     #                        time texture of clusters                       #
     #########################################################################

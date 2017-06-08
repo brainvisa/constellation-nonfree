@@ -18,7 +18,7 @@ Author: Sandrine Lefranc, 2015
 """
 
 
-#----------------------------Imports-------------------------------------------
+# ---------------------------Imports-------------------------------------------
 
 
 # python system modules
@@ -34,7 +34,7 @@ from soma import aims
 from constel.lib.utils.matrixtools import resize_matrix
 
 
-#----------------------------Functions-----------------------------------------
+# ---------------------------Functions-----------------------------------------
 
 
 def parseOpts(argv):
@@ -44,27 +44,27 @@ def parseOpts(argv):
 
     parser = optparse.OptionParser(desc)
 
-    parser.add_option("-m", "--matrices", 
+    parser.add_option("-m", "--matrices",
                       dest="list_matrices",
-                      action="append", 
+                      action="append",
                       help="list of reduced matrices")
-    parser.add_option("-o", "--output", 
-                      dest="matrix", 
+    parser.add_option("-o", "--output",
+                      dest="matrix",
                       help="output matrix (averaged or concatenated)")
-    parser.add_option("-s", "--study", 
+    parser.add_option("-s", "--study",
                       dest="study",
                       help="Choice 'avg' or 'concat'")
 
     return parser, parser.parse_args(argv)
 
 
-#----------------------------Main program--------------------------------------
+# ---------------------------Main program--------------------------------------
 
 
 def main():
     parser, (options, args) = parseOpts(sys.argv)
- 
-    # two cases: 
+
+    # two cases:
     # (1) concatenated matrix: M(vertices_patch_concatenated, basins)
     # (2) averaged matrix: M(vertices_patch, basins)
     if options.study == 'concat':
@@ -86,7 +86,7 @@ def main():
             shifty += reduced_matrix.shape[1]
         l = resize_matrix(aims.Volume(l))
         aims.write(l, options.matrix)
-    else: #avg
+    else:  # avg
         # generate a list of asarray
         list_matrices = []
         for matrix in options.list_matrices:

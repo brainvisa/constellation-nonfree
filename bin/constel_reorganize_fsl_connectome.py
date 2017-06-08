@@ -12,6 +12,7 @@
 
 # System module
 import os
+import glob
 import numpy
 import argparse
 
@@ -25,17 +26,13 @@ description = """Compute the connectogram from the FSL outputs."""
 parser = argparse.ArgumentParser(description=description)
 
 parser.add_argument(
+    'probtrackx_dir',
+    type=str,
+    help='Input directory with probtrackx results.')
+parser.add_argument(
     'vertex_labels',
     type=str,
     help='List of labels for both hemispheres.')
-parser.add_argument(
-    'fdt_matrix',
-    type=str,
-    help='Vertex to vertex connectivity.')
-parser.add_argument(
-    'coords',
-    type=str,
-    help='Coords to vertex connectivity.')
 parser.add_argument(
     'label',
     type=int,
@@ -50,11 +47,19 @@ args = parser.parse_args()
 # ---------------------------Main program--------------------------------------
 
 # define the variables
+probtrackx_dir = args.probtrackx_dir
 vlabels = args.vertex_labels
-fdt_matrix = args.fdt_matrix
 outdir = args.outdir
 label = args.label
-coords = args.coords
+
+if not os.path.isdir(probtrackx_dir):
+    raise ValueError(
+        "'{0}' is not a correct directory.".format(probtrackx_dir))
+
+coords = glob.glob(os.path.join(probtrackx_dir,
+                                "coords_for_fdt_matrix*"))[0]
+fdt_matrix = glob.glob(os.path.join(probtrackx_dir,
+                                    "fdt_matrix*.dot"))[0]
 
 if not os.path.isdir(outdir):
     os.makedirs(outdir)
@@ -95,6 +100,10 @@ with open(fdt_matrix, 'r') as f:
 vol = aims.Volume(connectome.astype(float))
 smat = aims.SparseOrDenseMatrix()
 smat.setMatrix(vol)
-output_connectome = os.path.join(outdir,
+subject = os.path.basename(probtrackx_dir)
+sdir = os.path.join(outdir, subject)
+if not os.path.isdir(sdir):
+    os.makedirs(sdir)
+output_connectome = os.path.join(sdir,
                                  'connectome_label' + str(label) + '.imas')
 aims.write(smat, output_connectome)

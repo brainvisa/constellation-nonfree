@@ -9,14 +9,7 @@
 ###############################################################################
 
 """
-This script does the following:
-* load fiber tracts files from a given directory
-* write the transformation matrix in a given file
-* check if the fiber tracts file is empty
-
-Main dependencies:
-
-Author: Sandrine Lefranc, 2015
+Fiber utilities.
 """
 
 # ---------------------------Imports-------------------------------------------

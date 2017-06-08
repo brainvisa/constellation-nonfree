@@ -9,20 +9,13 @@
 ###############################################################################
 
 """
-This script does the following:
-* check if two lists are the same number of elements.
-* check no empty list.
-
-Main dependencies:
-
-Author: Sandrine Lefranc, 2014
+Misc utilities.
 """
 
-#----------------------------Imports-------------------------------------------
+# ---------------------------Imports-------------------------------------------
 
-
+# System module
 from __future__ import print_function
-# system module
 import logging
 
 # Define logger
@@ -35,7 +28,7 @@ steam_handler.setLevel(logging.INFO)
 logger.addHandler(steam_handler)
 
 
-#----------------------------Functions-----------------------------------------
+# ---------------------------Functions-----------------------------------------
 
 
 def sameNbElements(listA, listB, NonZeroRealNb=True):
