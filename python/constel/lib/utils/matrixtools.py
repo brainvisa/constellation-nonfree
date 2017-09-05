@@ -12,19 +12,18 @@
 Matrix utilities.
 """
 
-#----------------------------Imports-------------------------------------------
+# ---------------------------Imports-------------------------------------------
 
-# python system module
-import os
+# System module
 import csv
 import numpy
 import itertools
 import exceptions
 
-#soma
+# Soma module
 from soma import aims
 
-#----------------------------Functions-----------------------------------------
+# ---------------------------Functions-----------------------------------------
 
 
 def calculate_percentage(matrix):
@@ -184,11 +183,16 @@ def generate_uniform_matrix(features):
 
 def order_data_matrix(mat, labels):
     """
-    inputs:
-            mat: matrix of observations, shape = (n,p), n observations, p attributes
-            labels: numpy array of shape (n) corresponding to the labels of observations
+    Parameters
+    ----------
+        mat:
+            matrix of observations, shape = (n,p), n observations, p attributes
+        labels: numpy array
+            of shape (n) corresponding to the labels of observations
 
-    output:   order_mat: ordered matrix, of shape (n,p)
+    Returns
+    -------
+        order_mat: ordered matrix, of shape (n,p)
             labels: ordered labels
     """
     (n, p) = mat.shape
@@ -207,10 +211,12 @@ def order_data_matrix(mat, labels):
 
 def euclidian_distance(v1, v2):
     """
-    input:
-          v1, v2: two vectors, shape (1,p) (numpy arrays)
-    output:
-          dist(v1,v2)
+    Parameters
+    ----------
+        v1, v2: two vectors, shape (1,p) (numpy arrays)
+    Returns
+    -------
+        dist(v1,v2)
     """
     dist = ((v1 - v2) ** 2).sum()
     return numpy.sqrt(dist)
@@ -340,14 +346,14 @@ def contingency_matrix(labels1, labels2):
     contingency_matrix = numpy.array([zip(
         labels1, labels2).count(x) for x in itertools.product(
         classes, repeat=2)]).reshape(n, n)
-    #contingency_matrix = numpy.bincount(
-        #n * (labels1 - 1) + (labels2 - 1), minlength = n * n).reshape(n, n)
+    # contingency_matrix = numpy.bincount(
+    # n * (labels1 - 1) + (labels2 - 1), minlength = n * n).reshape(n, n)
     return contingency_matrix
 
 
 def partialWhiten(features):
     """Normalize the data (sigma = 1) per category.
-    
+
     Parameters
     ----------
         features
@@ -365,9 +371,10 @@ def partialWhiten(features):
     white = numpy.hstack((dist, direc))
     return white
 
+
 def save_normalization(filename):
     """Save the normalization.
-    
+
     Parameters
     ----------
     filename: str (mandatory)
@@ -375,7 +382,6 @@ def save_normalization(filename):
     matrix = aims.read(filename)
     mat = numpy.array(matrix)[:, :, 0, 0]
     rows = mat.shape[0]
-    cols = mat.shape[1]
     norm_rows = []
     for i in range(rows):
         line_i = mat[i]
@@ -384,15 +390,14 @@ def save_normalization(filename):
     name1 = filename.split('.')[0]
     name2 = filename.split('.')[1]
     norm_name = name1 + name2 + "_normalization"
-    save_norm = numpy.save(norm_name, norm_rows)
-                
+    numpy.save(norm_name, norm_rows)
+
+
 def replace_negative_values(matrix, value=0.0):
     """ Replace the negative values by 0.0 (by default).
     """
     mat = aims.read(matrix)
     mat.muteToDense()
-    numpy.asarray(mat.denseMatrix())[numpy.asarray(mat.denseMatrix()) < 0.0] = 0.0
+    numpy.asarray(
+        mat.denseMatrix())[numpy.asarray(mat.denseMatrix()) < 0.0] = 0.0
     aims.write(mat, matrix)
-    
-    
-    

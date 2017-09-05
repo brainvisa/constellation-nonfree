@@ -13,12 +13,10 @@ Cluster utilities.
 """
 
 
-#----------------------------Imports-------------------------------------------
+# ---------------------------Imports-------------------------------------------
 
 # python system import
 from __future__ import print_function
-from tempfile import mkdtemp
-import os.path as path
 import struct
 import numpy
 import os
@@ -32,12 +30,12 @@ from scipy.cluster.hierarchy import fcluster
 # fastcluster
 import fastcluster
 
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 
 def nearest_neighbour_profiles(profile, atlas, atlas_classes, indices):
     """ Compute the nearest neighbour profiles.
-    
+
     Parameters
     ----------
     profile: numpy.array (mandatory)
@@ -233,13 +231,16 @@ def gap(data, refs=None, nrefs=20, ks=range(1, 11)):
         # kmc = centers
         (kmc, kml) = scipy.cluster.vq.kmeans2(data, k)
         print("labels -->", kml, "centers -->", kmc)
-        disp = sum([euclidean(data[m, :], kmc[kml[m], :]) for m in range(shape[0])])
+        disp = sum(
+            [euclidean(data[m, :], kmc[kml[m], :])
+             for m in range(shape[0])])
 
         refdisps = scipy.zeros((rands.shape[2],))
         for j in range(rands.shape[2]):
             (kmc, kml) = scipy.cluster.vq.kmeans2(rands[:, :, j], k)
             refdisps[j] = sum(
-                [euclidean(rands[m, :, j], kmc[kml[m], :]) for m in range(shape[0])])
+                [euclidean(rands[m, :, j], kmc[kml[m], :])
+                 for m in range(shape[0])])
         gaps[i] = scipy.log(scipy.mean(refdisps)) - scipy.log(disp)
 
     return gaps
@@ -295,9 +296,9 @@ def ward_method(dmat_file, n, output_dir, n_clusters):
 
     # initialization of the distance matrix as vector
     # memory map
-#    a = numpy.memmap('test.mymemmap', dtype=numpy.single, mode='w+', shape=(n*(n-1)/2,))
-#    del a
-#    dist_mat = numpy.memmap('test.mymemmap', dtype=numpy.single, mode='r+', shape=(n*(n-1)/2,))
+# a = numpy.memmap('test.mymemmap', dtype=numpy.single, mode='w+', shape=(n*(n-1)/2,))
+# del a
+# dist_mat = numpy.memmap('test.mymemmap', dtype=numpy.single, mode='r+', shape=(n*(n-1)/2,))
     dist_mat = numpy.zeros((n*(n-1)/2,))
 
     # number of iteration to generate the distance matrix
@@ -338,7 +339,7 @@ def ward_method(dmat_file, n, output_dir, n_clusters):
         clusters = fcluster(Z, criterion='maxclust', t=nb)
         clusterid.append(clusters)
     return clusterid
-    
+
     # save the clusterid
     output_clusterid = output_dir + '/clusterid.npy'
     numpy.save(output_clusterid, clusterid)
@@ -527,7 +528,7 @@ def krzanowski_lai_index(distance_matrix, clusters_id, kmax_clusters):
     clusters_id: (array)
         This array stores the cluster number to which each item was assigned
         by the clustering algorithm
-    
+
     Return
     ------
     kl_index:
@@ -536,9 +537,7 @@ def krzanowski_lai_index(distance_matrix, clusters_id, kmax_clusters):
         maximum value of the index
     """
     kl_index = 0
-    W = 0    
+    W = 0
 
     centers = get_centers(clusters_id, kmax_clusters)
     centroids = get_centroid(distance_matrix)
-
-    

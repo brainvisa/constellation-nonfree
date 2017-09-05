@@ -12,18 +12,18 @@
 Mesh utilities.
 """
 
-#----------------------------Imports-------------------------------------------
+# ---------------------------Imports-------------------------------------------
 
 # system module
 from __future__ import print_function
 import numpy
 
-#----------------------------Function------------------------------------------
+# ---------------------------Function------------------------------------------
 
 
-def mesh_surface_area(vertices, polygons):
+def mesh_surface_area(verts, polygons):
     """Compute surface area.
-    
+
     Parameters
     ----------
     verts : numpy array of floats
@@ -47,7 +47,7 @@ def mesh_surface_area(vertices, polygons):
 
 def frame(data):
     """
-    
+
     Parameters
     ----------
         data: (mandatory)
@@ -59,17 +59,17 @@ def frame(data):
     y = data.shape[0] + 2
     new = [x * [0]] * y
     new = numpy.array(new)
-    
+
     for i in range(1, y - 1):
         for j in range(1, x - 1):
             new[i][j] = data[i - 1][j - 1]
-            
-    return new 
+
+    return new
 
 
 def dilatation(img):
     """Dilatation of the image.
-    
+
     Parameters
     ----------
         img: (mandatory)
@@ -86,17 +86,17 @@ def dilatation(img):
             dilate[h] = max(
                 [img[i - 1][j - 1], img[i][j - 1], img[i + 1][j - 1],
                  img[i - 1][j], img[i][j], img[i + 1][j], img[i - 1][j + 1],
-                 img[i][j + 1], img[i + 1][j + 1]]) 
+                 img[i][j + 1], img[i + 1][j + 1]])
             h += 1
-    
+
     dilate = numpy.array(dilate)
-    dilate = numpy.reshape(dilate,(img.shape[0] - 2, img.shape[1] - 2)) 
+    dilate = numpy.reshape(dilate, (img.shape[0] - 2, img.shape[1] - 2))
     return dilate
 
 
 def erosion(img):
     """Erosion of the image.
-    
+
     Parameters
     ----------
         img: (mandatory)
@@ -108,13 +108,13 @@ def erosion(img):
     erode = [0] * (img.shape[1] - 2) * (img.shape[0] - 2)
     h = 0
     for i in range(1, img.shape[0] - 1):
-        for j in range(1,img.shape[1] - 1):
-            erode[h]=min(
+        for j in range(1, img.shape[1] - 1):
+            erode[h] = min(
                 [img[i - 1][j - 1], img[i][j - 1], img[i + 1][j - 1],
                  img[i - 1][j], img[i][j], img[i + 1][j], img[i - 1][j + 1],
-                 img[i][j + 1], img[i + 1][j + 1]]) 
+                 img[i][j + 1], img[i + 1][j + 1]])
             h += 1
-    
+
     erode = numpy.array(erode)
     erode = numpy.reshape(erode, (img.shape[0] - 2, img.shape[1] - 2))
     return erode
@@ -122,7 +122,7 @@ def erosion(img):
 
 def verts_to_bbox(verts):
     """Determine the min and max of each axis.
-    
+
     Parameters
     ----------
         verts: (mandatory)
@@ -182,11 +182,11 @@ def transform_mesh_to_volume(white_meshes):
         p -= (a[0])
         p = numpy.round(p)
         t[p[0], p[1], p[2]] = 1
-    
+
     print(t[numpy.where(t > 0)])
-    
+
     # 2D
-    t = numpy.max(t, axis=2)  
+    t = numpy.max(t, axis=2)
 
     # add frame
     t_frame = frame(t)
@@ -196,7 +196,7 @@ def transform_mesh_to_volume(white_meshes):
     dilate = dilatation(t_frame)
     # opening
     opening = dilatation(erose)
-    # closing    
+    # closing
     closing = erosion(dilate)
-    
+
     return t, t_frame, dilate, erose, opening, closing

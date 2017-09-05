@@ -21,11 +21,11 @@ Main dependencies: Pycluster library, scipy and constel
 Author: S. Lefranc
 """
 
-#----------------------------Imports-------------------------------------------
+# ---------------------------Imports-------------------------------------------
 
 
+# System module
 from __future__ import print_function
-# python system module
 import numpy
 import exceptions
 from math import log
@@ -47,7 +47,7 @@ from constel.lib.clustering import clusterstools
 import constel.lib.utils.matrixtools as clccm
 
 
-#----------------------------Functions-----------------------------------------
+# ---------------------------Functions-----------------------------------------
 
 
 def silhouette_index(matrix, cluster_number):
@@ -79,7 +79,7 @@ def silhouette_index(matrix, cluster_number):
     # Calculate the distance matrix.
     dmat = squareform(pdist(matrix, metric="euclidean"))
 
-    nbiteration = 100 # arbitrary
+    nbiteration = 100  # arbitrary
     clusterid, error, nfound = kmedoids(dmat, cluster_number, nbiteration)
 
     # Rename the cluster id between 0 and the number of different values - 1.
@@ -91,10 +91,10 @@ def silhouette_index(matrix, cluster_number):
     # Compute the average silhouette width (asw) score, average value for all
     # samples.
     asw_score = silhouette_score(matrix, clusterid)
-    
+
     # Compute the silhouette scores for each sample.
     sample_silhouette = silhouette_samples(matrix, clusterid)
-    
+
     return asw_score, sample_silhouette, clusterid
 
 
@@ -117,7 +117,7 @@ def dunn_score(matrix, cluster_number):
     # Calculate the distance matrix.
     dmat = squareform(pdist(matrix, metric="euclidean"))
 
-    nbiteration = 100 # arbitrary
+    nbiteration = 100  # arbitrary
     clusterid, error, nfound = kmedoids(dmat, cluster_number, nbiteration)
 
     # Rename the cluster id between 0 and the number of different values - 1.
@@ -192,6 +192,7 @@ def compute_cluster_validity(distance, clusterid, K):
     print('     OK')
     return (1.0 - sDB), sDunn, sCH
 
+
 def intersection(list1, list2):
     """Allows to calculate the cardinal of the intersection of two regions.
 
@@ -224,8 +225,8 @@ def union(list1, list2):
         cardinal of the union.
 
     """
-    intersection = intersection(list1, list2)
-    union = len(list1) + len(list2) - intersection
+    intersec = intersection(list1, list2)
+    union = len(list1) + len(list2) - intersec
     return union
 
 
@@ -252,8 +253,9 @@ def mutual_information(list1, list2):
     log_contingency_nm = numpy.log(contingency_nm)
     contingency_nm /= contingency_sum
     log_outer = -numpy.log(outer[nnz]) + log(pi.sum()) + log(pj.sum())
-    mi = (contingency_nm * (log_contingency_nm - log(contingency_sum))
-          + contingency_nm * log_outer)
+    mi = (contingency_nm *
+          (log_contingency_nm - log(contingency_sum)) +
+          contingency_nm * log_outer)
     mi = mi.sum()
     return mi
 
@@ -346,11 +348,11 @@ def jacard_index(list1, list2):
     ------
         Jaccard index (float)
     """
-    intersection = intersection(list1, list2)
-    union = union(list1, list2)
+    intersec = intersection(list1, list2)
+    un = union(list1, list2)
     if union <= 0:
         raise exceptions.ValueError("both sets are empty")
-    jaccard_id = float(intersection) / union
+    jaccard_id = float(intersec) / un
     return jaccard_id
 
 
@@ -455,6 +457,6 @@ def gap_index(matrix, b):
     for i in xrange(b):
         Xb = numpy.vstack([numpy.random.uniform(xmin, xmax, Nsample), 
                           numpy.random.uniform(ymin, ymax, Nsample)]).T
-        clusterid, error, nfound = pc.kmedoids(matrix, K, 100)
+        clusterid, error, nfound = kmedoids(matrix, K, 100)
 
     pass
