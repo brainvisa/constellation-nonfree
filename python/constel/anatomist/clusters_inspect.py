@@ -372,7 +372,6 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         self.selected_cluster_boundaries.setMaterial(
             line_width=5., diffuse=[0.6, 0.8, 0., 1.])
 
-
     def make_measurements_texture(self):
         col = self.viewing_column
         k = self.cluster_slider.value()

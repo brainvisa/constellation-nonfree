@@ -524,6 +524,22 @@ class SmallBrainsControl(anatomist.cpp.Control3D):
     def __init__(self):
         super(SmallBrainsControl, self).__init__(30, 'SmallBrainsControl')
 
+    def description(self):
+        return '''<html><div align="center"><b>Small brains</b></div>
+<p>This is a very specialized control, working on a graph built externally (BrainVisa viewers), containing a brain mesh, regions, and other things. It displays small copies of the brain mesh close to regions, each possibly having its own texture or fiber bundles attached. Selected small brain(s) can be displayed in a secondary window.
+</p>
+<p>
+<table>
+<tr><td>Left btn:</td><td>Select small brain, or display all if clicking on the background</td></tr>
+<tr><td>+&&lt;shift&&gt;:</td><td>add small brain to 2nd view</td></tr>
+<tr><td>+&&lt;ctrl&&gt;:</td><td>toggle small brain for 2nd view</td></tr>
+<tr><td>&&lt;shift&&gt; + right btn:</td><td>rotate small brains</td></tr>
+<tr><td>&&lt;ctrl&&gt; + right btn:</td><td>scale small brains</td></tr>
+<tr><td>&&lt;shift&&gt; + &&lt;ctrl&&gt; + right btn:</td><td>change distance between region centers and small brains</td></tr>
+</table>
+</p>
+</html>'''
+
     def eventAutoSubscription(self, pool):
         # plug parent control actions
         super(SmallBrainsControl, self).eventAutoSubscription(pool)
