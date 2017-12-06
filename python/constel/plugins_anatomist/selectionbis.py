@@ -52,7 +52,7 @@ class BundlesSelectionAction( selection.SelectionAction ):
       return obj
 
   def computeRefAndTransformation(self, graph, vertex):
-    bb = graph.boundingbox()
+    bb = [aims.Point3df(x[:3]) for x in graph.boundingbox()]
     gcent = (bb[0] + bb[1])/2
     a = anatomist.cpp.Anatomist()
     nref = anatomist.cpp.Referential()
