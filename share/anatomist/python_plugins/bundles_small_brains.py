@@ -63,7 +63,8 @@ class SmallBrainSelectionAction(anatomist.cpp.Action):
             return obj
 
     def computeTransformation(self, graph, vertex):
-        bb = graph.boundingbox()
+        bb = (aims.Point3df(graph.boundingbox()[0][:3]),
+              aims.Point3df(graph.boundingbox()[1][:3]))
         gcent = (bb[0] + bb[1])/2
         aimsgraph = graph.attributed()
         if 'normal' in vertex.attributed():
@@ -86,7 +87,7 @@ class SmallBrainSelectionAction(anatomist.cpp.Action):
         if 'center' in vertex.attributed():
             cent = aims.Point3df(vertex.attributed()['center'])
         else:
-            bb = vertex.boundingbox()
+            bb = [aims.Point3df(x[:3]) for x in vertex.boundingbox()]
             if bb:
                 cent = (bb[0] + bb[1])/2
             else:
