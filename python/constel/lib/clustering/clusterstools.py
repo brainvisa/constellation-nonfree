@@ -33,7 +33,8 @@ import fastcluster
 # -----------------------------------------------------------------------------
 
 
-def nearest_neighbour_profiles(profile, atlas, atlas_classes, indices):
+def nearest_neighbour_profiles(profile, atlas, atlas_classes, indices,
+                               iindices=None, itex_len=0):
     """ Compute the nearest neighbour profiles.
 
     Parameters
@@ -42,22 +43,39 @@ def nearest_neighbour_profiles(profile, atlas, atlas_classes, indices):
         Individual reduced matrix, shape (region vertices, basins).
     atlas: numpy.array (mandatory)
         Group reduced matrix, shape (region vertices, basins).
-    atlas_classes: nupy.array (mandatory)
+    atlas_classes: numpy.array (mandatory)
         Clustering of the cortical region.
     indices: numpy.array (mandatory)
-        Vertex indices belonging to the cortical region.
+        Vertex indices belonging to the cortical region in altlas texture.
+    iindices: numpy.array (optional)
+        Vertex indices belonging to the cortical region in individual texture.
+        If not given, the atlas texture (indices) is taken, which will only
+        work if atlas surface/patch is the same as individual ones.
+    itex_len: int (optional)
+        Length of the individual output texture. If not specified, if iindices
+        is given, its max value will be taken, otherwise the atlas_classes
+        texture is assumed to be also used by the individual.
 
     Returns
     -------
     res_classes: numpy.array
-        Individual clustering of the cortical region defined from atlas.
+        Individual clustering of the cortical region defined from atlas, as a
+        texture array.
     """
-    res_classes = numpy.zeros(len(atlas_classes))
+    ntex = itex_len
+    if ntex == 0:
+        if iindices is not None:
+            ntex = np.max(iindices) + 1
+        else:
+            ntex = len(atlas_classes)
+    if iindices is None:
+        iindices = indices
+    res_classes = numpy.zeros(ntex, dtype=atlas_classes.dtype)
     for l, line in enumerate(profile):
         distance = numpy.sum((line - atlas)**2, axis=1)
         atlas_line = numpy.argmin(distance)
         i = indices[atlas_line]
-        res_classes[indices[l]] = atlas_classes[i]
+        res_classes[iindices[l]] = atlas_classes[i]
     return res_classes
 
 
