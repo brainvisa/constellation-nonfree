@@ -61,6 +61,17 @@ def parse_args(argv):
         "individual_classes",
         help="Individual clustering of the cortical region defined from atlas."
         )
+    parser.add_argument(
+        "individual_patch_texture",
+        nargs='?',
+        help="Individual patch texture for the cortical region. Default: use atlas one."
+        )
+    parser.add_argument(
+        "individual_patch_num",
+        nargs='?',
+        type=int,
+        help="Individual patch number identifier in texture. Default: use atlas."
+        )
 
     # parsing arguments
     return parser, parser.parse_args(argv)
@@ -89,16 +100,40 @@ def main():
     # (e.g. gyrus of FreeSurfer)
     atlas_clusters = aims.read(args.atlas_classes)
 
+    iindices = None
+    if args.individual_patch_texture is not None:
+        if args.individual_patch_num is None:
+            raise ValueError(
+                'individual_patch_num must be specified along with '
+                'individual_patch_texture')
+        ipatch = aims.read(args.individual_patch_texture)
+        iindices = numpy.where(ipatch[0].arraydata()
+                               == args.individual_patch_num)[0]
+        ntex = len(ipatch[0])
+        if len(iindices) != rmat.shape[0]:
+            raise ValueError(
+                'individual matrix and texture do not match. Matrix shape is: '
+                '%d rows, while ind. texture is %s'
+                % (rmat.shape[0], len(iindices)))
+    else:
+        ntex = len(atlas_clusters[0])
+
     # define the nearest neighbour profiles
     indiv_clusters = atlas_clusters.__class__()
     for i in range(len(atlas_clusters)):
         aclusters = atlas_clusters[i].arraydata()
         indices = numpy.where(aclusters != 0)[0]
+        if iindices is None:
+            icindices = indices
+        else:
+            icindices = iindices
         res_classes = nearest_neighbour_profiles(
             rmat,
             amat,
             aclusters,
-            indices)
+            indices,
+            icindices,
+            ntex)
         indiv_clusters[i].assign(res_classes)
     aims.write(indiv_clusters, args.individual_classes)
 
