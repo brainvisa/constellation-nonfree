@@ -86,7 +86,7 @@ def main():
         # initialize a numpy array, the same size as the individual profile
         if idx == 0:
             nvertex = np_profile.shape[0]
-            fvertices = numpy.zeros((nvertex, ))
+            fvertices = numpy.zeros((nvertex, ), dtype=numpy.int16)
 
         # first criteria: a vertex is valid if it pass the cthreshold
         cthreshold = np_profile.max() / 100.
