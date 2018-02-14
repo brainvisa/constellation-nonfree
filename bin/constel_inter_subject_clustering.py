@@ -136,7 +136,7 @@ def main():
         Z = fastcluster.linkage(distmat, method='ward', preserve_input=False)
         # labelization between 1 to nb
         clusterid = []
-        for nb in range(1, n_clusters + 1):
+        for nb in range(1, options.kmax + 1):
             print("Trying {nb} cluster(s)".format(nb=nb))
             clusters = fcluster(Z, criterion='maxclust', t=nb)
             clusterid.append(clusters)
