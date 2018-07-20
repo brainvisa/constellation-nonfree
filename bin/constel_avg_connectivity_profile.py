@@ -27,7 +27,7 @@ import json
 import argparse
 import textwrap
 import shutil
-import subprocess
+import soma.subprocess
 
 # aims module
 from soma import aims
@@ -80,7 +80,7 @@ def main():
                    "-i", tex_filename,
                    "-i", args.meanprofile,
                    "-o", args.meanprofile]
-            subprocess.check_call(cmd)
+            soma.subprocess.check_call(cmd)
 
     # read mean profile
     meanprofile = aims.read(args.meanprofile)

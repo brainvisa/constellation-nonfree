@@ -19,7 +19,7 @@ import sys
 import numpy
 import argparse
 import textwrap
-import subprocess
+import soma.subprocess
 import matplotlib.pyplot as plt
 from operator import itemgetter, add
 from matplotlib.backends.backend_pdf import PdfPages
