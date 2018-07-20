@@ -18,7 +18,7 @@
 import sys
 import argparse
 import textwrap
-import subprocess
+import soma.subprocess
 import matplotlib.pyplot as plt
 
 # aims module
@@ -56,7 +56,7 @@ def main():
            "-verbose"]
 
     # Execute the command
-    subprocess.check_call(cmd)
+    soma.subprocess.check_call(cmd)
 
     # Give the number of curves in the bundle file
     bundles = aims.read(args.fiber_tracts)

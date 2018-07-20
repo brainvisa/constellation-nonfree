@@ -18,7 +18,7 @@
 import sys
 import argparse
 import textwrap
-import subprocess
+import soma.subprocess
 import matplotlib.pyplot as plt
 
 # aims module
