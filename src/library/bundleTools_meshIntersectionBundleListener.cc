@@ -14,10 +14,10 @@ namespace constel {
       const AimsSurfaceTriangle &aimsMesh,
       BundleInteractionReader &bundleInteractionReader,
       double meshDistanceThreshold, double meshClosestPointMaxDistance,
-      bool verbose) : _aimsMesh(aimsMesh),
-                      _meshDistanceThreshold(meshDistanceThreshold),
+      bool verbose) : _meshDistanceThreshold(meshDistanceThreshold),
                       _meshClosestPointMaxDistance(meshClosestPointMaxDistance),
-                      _verbose(verbose) {
+                      _verbose(verbose),
+                      _aimsMesh(aimsMesh) {
     _bundleInteractionReader = &bundleInteractionReader;
     _meshPolygonsByVertex_Index  = constel::surfacePolygonsIndex(_aimsMesh);
     til::Mesh1 mesh0;

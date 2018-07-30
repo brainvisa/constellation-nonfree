@@ -25,6 +25,8 @@ find_package( anatomist-free )
 
 include( "${AIMS-FREE_USE_FILE}" )
 
+set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall" )
+
 add_subdirectory( src/library )
 add_subdirectory( src/commands )
 if( SIP_FOUND AND PYTHON_FOUND AND NUMPY_FOUND AND SIP_FOUND )

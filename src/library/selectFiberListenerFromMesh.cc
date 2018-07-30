@@ -35,9 +35,11 @@ namespace constel {
       rc_ptr<Mesh> mesh, rc_ptr<TimeTexture<short> > tex,
       const string &namesMode, int addInt, const Motion &motion,
       const string &bundlesNamesFileName, int texture_time_step)
-      : d(new Private(*mesh, texture_time_step)), _mesh(mesh), _tex(tex),
-      _namesMode(namesMode), _addInt(addInt), _motion(motion),
-      _file_name(bundlesNamesFileName), _file(0) {
+      : d(new Private(*mesh, texture_time_step)),
+        _file_name(bundlesNamesFileName), _file(0),
+        _mesh(mesh), _tex(tex),
+       _namesMode(namesMode), _addInt(addInt), _motion(motion)
+  {
     if (!_file_name.empty()) {
       _file_internal.open(_file_name.c_str());
       _file = &_file_internal;

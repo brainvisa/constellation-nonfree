@@ -93,7 +93,7 @@ namespace constel {
 
   void AfficheAntFiberPointBundleListener::newFiberPoint(
       const BundleProducer &, const BundleInfo &, const FiberInfo &,
-      const FiberPoint & fiberPoint) {
+      const FiberPoint & /* fiberPoint */) {
     FiberPoint coucouPoint =
         _bundleInteractionReader->_listenedFiberInfo.getAntFiberPoint();
   }

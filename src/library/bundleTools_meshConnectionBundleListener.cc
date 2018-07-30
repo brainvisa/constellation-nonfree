@@ -9,9 +9,10 @@ namespace constel
     BundleInteractionReader &bundleInteractionReader, int meshIdentity,
     bool verbose)
     : _meshIdentity(meshIdentity),
+      _verbose(verbose),
       _bundleMeshConnections(new BundleConnections() ),
-      _bundleMeshConnectionsLength(new ConnectionsLength() ),
-      _verbose(verbose) {
+      _bundleMeshConnectionsLength(new ConnectionsLength() )
+  {
     _bundleInteractionReader = &bundleInteractionReader;
     _bundleMeshConnectionsCount = 0;
   }
@@ -32,7 +33,7 @@ namespace constel
     std::vector<int> fiberMeshIntersectionMeshIdentityVector
       = _bundleInteractionReader->_listenedFiberInfo.getFiberMeshIntersectionMeshIdentityVector();
     int meshId1, meshId2;
-    float l1, l2;
+    float l1;
     for (uint intersectionPoint1 = 0;
          intersectionPoint1 < fiberMeshIntersectionCurvilinearAbscissaVector.size();
          ++intersectionPoint1) {

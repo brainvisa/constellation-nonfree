@@ -44,8 +44,8 @@ namespace constel {
 
   //---------------------------------------------------------------------------
   void SelectBundlesFromLength::fiberStarted(
-      const BundleProducer &, const BundleInfo & bundleInfo,
-      const FiberInfo & fiberInfo) {
+      const BundleProducer &, const BundleInfo & /* bundleInfo */,
+      const FiberInfo & /* fiberInfo */) {
     _fiberLength = 0;
     _fiber.clear();
   }
@@ -72,8 +72,8 @@ namespace constel {
 
   //---------------------------------------------------------------------------
   void SelectBundlesFromLength::newFiberPoint(
-      const BundleProducer &, const BundleInfo & bundleInfo,
-      const FiberInfo & fiberInfo, const FiberPoint &point) {
+      const BundleProducer &, const BundleInfo & /* bundleInfo */,
+      const FiberInfo & /* fiberInfo */, const FiberPoint &point) {
     if (!_fiber.empty())
       _fiberLength += (point - _antFiberPoint).norm();
     _antFiberPoint = point;
