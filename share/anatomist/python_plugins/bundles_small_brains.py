@@ -340,7 +340,7 @@ class SmallBrainsRotationAction(anatomist.cpp.TrackOblique):
         self.tr_dict = {}
         action = self.view().controlSwitch().getAction(
             'SmallBrainSelectionAction')
-        for vert_objs in action._displayed_vertices.itervalues():
+        for vert_objs in six.itervalues(action._displayed_vertices):
             stored = vert_objs.get('objects', [])
             for obj, rot_center, tr in stored:
                 if tr not in self.tr_dict:
@@ -385,7 +385,7 @@ class SmallBrainsScaleAction(anatomist.cpp.Action):
         self.initscale = 1.
         action = self.view().controlSwitch().getAction(
             'SmallBrainSelectionAction')
-        for vert_objs in action._displayed_vertices.itervalues():
+        for vert_objs in six.itervalues(action._displayed_vertices):
             stored = vert_objs.get('objects', [])
             for obj, rot_center, tr in stored:
                 if tr not in self.tr_dict:

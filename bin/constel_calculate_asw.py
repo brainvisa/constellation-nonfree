@@ -11,6 +11,7 @@
 
 #----------------------------Imports-------------------------------------------
 
+from __future__ import print_function
 
 # system module
 import os
@@ -150,7 +151,7 @@ def create_page(name_matrix, matrix, kmax, ybound=[0., 1.],
         tkeys.append(k)
         tvals.append(round(asw_score, 4) * 100)
         dict_clusters[k] = asw_score
-    print dict_clusters
+    print(dict_clusters)
 
     table = []
     table.append(tkeys)
