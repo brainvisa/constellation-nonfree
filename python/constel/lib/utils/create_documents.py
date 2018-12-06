@@ -129,13 +129,13 @@ if __name__ == "__main__":
 
     pp = PdfPages(pdffile)
 
-    for element in dico.iteritems():
+    for element in six.iteritems(dico):
         print(element[0][:2])
         if element[0][:2] != patch:
             pass
 
     if tri:
-        d = sorted(dico.iteritems(), reverse=False, key=itemgetter(0))
+        d = sorted(six.iteritems(dico), reverse=False, key=itemgetter(0))
         d = reduce(add, d)
         labels = []
         nb = []

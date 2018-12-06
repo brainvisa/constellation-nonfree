@@ -15,6 +15,7 @@ Merge the white and nuclei meshes.
 
 #----------------------------Imports-------------------------------------------
 
+from __future__ import print_function
 
 # python system module
 import os
@@ -82,17 +83,17 @@ def main():
 
     # Defines the inputs and outputs arguments
     white_dir = args.white_dir + "/%s/surf"
-    print white_dir
+    print(white_dir)
     nuclei_dir = args.nuclei_dir + "/%s"
-    print nuclei_dir
+    print(nuclei_dir)
     texture_dir = args.texture_dir + "/%s/label"
-    print texture_dir
+    print(texture_dir)
     out_mesh_filename = args.out_mesh_filename + "/white_nuclei_mesh_%s.gii"
-    print out_mesh_filename
+    print(out_mesh_filename)
     out_tex_filename = args.out_tex_filename + "/white_nuclei_tex_%s.gii"
-    print out_tex_filename
+    print(out_tex_filename)
     subjects = sorted([os.path.basename(element) for element in glob.glob(args.nuclei_dir + "/*")])
-    print subjects
+    print(subjects)
 
     # Labels from the volbrain nomenclature.
     # The ventricules are not used.
@@ -122,17 +123,17 @@ def main():
     for subject in subjects:
         tex = aims.read(
             os.path.join(texture_dir % subject, "bh.r.aparc.annot.gii"))
-        print tex
+        print(tex)
         label_max = numpy.max(tex[0].arraydata())
         new_tex = numpy.array(tex[0].arraydata(), copy=True)
 
         wmesh_file = os.path.join(
             white_dir % subject, "bh.r.aims.white.gii")
-        print wmesh_file
+        print(wmesh_file)
         mesh_files = [
             os.path.join(nuclei_dir % subject, "wnuclei_atlas_%d_0.mesh" % i)
             for i in nuclei]
-        print mesh_files
+        print(mesh_files)
         out_mesh = aims.read(wmesh_file)
         for i, meshf in enumerate(mesh_files):
             mesh = aims.read(meshf)

@@ -23,6 +23,7 @@ import soma.subprocess
 import matplotlib.pyplot as plt
 from operator import itemgetter, add
 from matplotlib.backends.backend_pdf import PdfPages
+import six
 
 # aims module
 from soma import aims
@@ -120,13 +121,13 @@ def main():
     pp = PdfPages(args.filename)
     
 
-    for element in dico.iteritems():
+    for element in six.iteritems(dico):
         print(element[0][:2])
         if element[0][:2] != args.label:
             pass
 
     if tri:
-        d = sorted(dico.iteritems(), reverse=False, key=itemgetter(0))
+        d = sorted(six.iteritems(dico), reverse=False, key=itemgetter(0))
         d = reduce(add, d)
         labels = []
         nb = []
