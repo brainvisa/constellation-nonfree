@@ -27,7 +27,6 @@ Author: S. Lefranc
 # System module
 from __future__ import print_function
 import numpy
-import exceptions
 from math import log
 
 # Pycluster librairy
@@ -308,7 +307,7 @@ def bohlandIndex(list1, list2):
     """
     card_set2 = len(list2)
     if card_set2 <= 0:
-        raise exceptions.ValueError("set2 is empty")
+        raise ValueError("set2 is empty")
     intersection = 0
     for i in list2:
         intersection += list1.count(i)
@@ -351,7 +350,7 @@ def jacard_index(list1, list2):
     intersec = intersection(list1, list2)
     un = union(list1, list2)
     if union <= 0:
-        raise exceptions.ValueError("both sets are empty")
+        raise ValueError("both sets are empty")
     jaccard_id = float(intersec) / un
     return jaccard_id
 

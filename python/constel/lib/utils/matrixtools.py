@@ -18,7 +18,6 @@ Matrix utilities.
 import csv
 import numpy
 import itertools
-import exceptions
 
 # Soma module
 from soma import aims
@@ -198,7 +197,7 @@ def order_data_matrix(mat, labels):
     (n, p) = mat.shape
     obs_nb = labels.size
     if n != obs_nb:
-        raise exceptions.ValueError(
+        raise ValueError(
             "matrix dimensions and labels size are not compatible")
     labels_argsort = labels.argsort()
     order_mat = numpy.zeros((n, p), dtype=numpy.float32)
