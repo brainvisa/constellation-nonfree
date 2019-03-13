@@ -5,6 +5,7 @@ import optparse
 import pickle
 import sys
 import os
+import six
 
 #soma_workflow
 import soma_workflow.client as swf
@@ -56,7 +57,7 @@ def main():
     nperm = [npermut] * options.jobs
     
     # run command
-    for j in xrange(options.jobs):
+    for j in six.moves.xrange(options.jobs):
         # limit on the numbers of job
         if j < nadd:
             nperm[j] += 1

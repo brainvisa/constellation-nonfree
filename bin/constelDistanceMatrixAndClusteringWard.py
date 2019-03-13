@@ -6,6 +6,7 @@ import optparse
 import pickle
 import struct
 import sys
+import six
 
 # scipy
 import scipy.cluster._hierarchy_wrap as hier_wrap
@@ -37,7 +38,7 @@ def main():
     nb_add = a.shape[0] % k
     list_iteration = [nb_iteration] * k
     idx = 0
-    for j in xrange(k):
+    for j in six.moves.xrange(k):
         if j<nb_add:
             list_iteration[j] += 1
         x = f.read(list_iteration[j]*8)

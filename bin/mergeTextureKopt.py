@@ -5,8 +5,9 @@ from optparse import OptionParser
 from soma import aims
 import numpy as np
 import sys
+import six
 
-import roca.lib.textureTools as TT
+import constel.lib.utils.texturetools as TT
 
 def usage():
   print("Fusion multi texture for all gyri (by subject)")
@@ -119,7 +120,7 @@ if __name__ == "__main__" : main()
     #tex = aims.read( t )
     #tex_array = tex[0].arraydata()
     #print(tex_array)
-    #for v in xrange(vertex_nb):
+    #for v in six.moves.xrange(vertex_nb):
       #ntex[0].push_back(0)
     #final_valid_vertex_sum = np.ones((0))
     #final_valid_vertex_sum = ntex[0].arraydata()
@@ -141,7 +142,7 @@ if __name__ == "__main__" : main()
   #aims.write( ntex, '/tmp/tex.gii' )
     #vertex_nb = tex[0].nItem()
     #ntex[0].reserve( vertex_nb )
-    #for i in xrange( vertex_nb ):
+    #for i in six.moves.xrange( vertex_nb ):
       #ntex[0].push_back(0)
     #tex_sum = ntex[0].arraydata()
     #valid_vertex = tex_array != 0

@@ -16,6 +16,7 @@ from __future__ import print_function
 import sys
 import numpy
 from optparse import OptionParser
+import six
 
 # soma
 from soma import aims
@@ -77,7 +78,7 @@ def main():
 
     # generate all individual textures time
     min_index = 0
-    for i in xrange(len(options.gyri_tex)):
+    for i in six.moves.xrange(len(options.gyri_tex)):
         # load a texture while identifying vertices of patch
         tex = aims.read(options.gyri_tex[i])
         vertices_patch = numpy.where(tex[0].arraydata() == options.patch)[0]

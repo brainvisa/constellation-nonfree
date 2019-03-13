@@ -5,6 +5,7 @@ import numpy as np
 import optparse
 import pickle
 import sys
+import six
 
 # soma_workflow
 import soma_workflow.client as swf
@@ -67,7 +68,7 @@ def main():
     y = 1
 
     # run command
-    for j in xrange(options.jobs):
+    for j in six.moves.xrange(options.jobs):
         # limit on the numbers of job
         if j < nb_add:
             list_iteration[j] += 1
@@ -86,7 +87,7 @@ def main():
         starting_iteration += list_iteration[j]
         
         # indice of k in triangular distance matrix as vector (hack...)
-        for i in xrange(list_iteration[j]):
+        for i in six.moves.xrange(list_iteration[j]):
             k += x
             x = (m - 1) - y
             y += 1

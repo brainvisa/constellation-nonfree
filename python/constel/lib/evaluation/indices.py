@@ -28,6 +28,7 @@ Author: S. Lefranc
 from __future__ import print_function
 import numpy
 from math import log
+import six
 
 # Pycluster librairy
 from Pycluster import kmedoids
@@ -453,7 +454,7 @@ def gap_index(matrix, b):
     xmax = x.max()
     ymin = y.min()
     ymax = y.max()
-    for i in xrange(b):
+    for i in six.moves.xrange(b):
         Xb = numpy.vstack([numpy.random.uniform(xmin, xmax, Nsample), 
                           numpy.random.uniform(ymin, ymax, Nsample)]).T
         clusterid, error, nfound = kmedoids(matrix, K, 100)

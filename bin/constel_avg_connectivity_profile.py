@@ -28,6 +28,7 @@ import argparse
 import textwrap
 import shutil
 import soma.subprocess
+import six
 
 # aims module
 from soma import aims
@@ -86,7 +87,7 @@ def main():
     meanprofile = aims.read(args.meanprofile)
 
     # mean of the values
-    for i in xrange(meanprofile.nItem()):
+    for i in six.moves.xrange(meanprofile.nItem()):
         val = meanprofile[0][i]
         meanprofile[0][i] = val/len(args.normprofiles)
 
