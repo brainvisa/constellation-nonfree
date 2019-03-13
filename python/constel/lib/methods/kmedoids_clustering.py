@@ -23,6 +23,7 @@ Author: Sandrine Lefranc, 2015
 
 # python modules
 import numpy
+import six
 
 
 # ---------------------------Functions-----------------------------------------
@@ -43,7 +44,7 @@ def kmedoids(distance_matrix, k, tmax=100):
     # initialize a dictionary to represent clusters
     clusters = {}
 
-    for t in xrange(tmax):
+    for t in six.moves.xrange(tmax):
         # determine clusters (arrays of data indices)
         J = numpy.argmin(distance_matrix[:, indices], axis=1)
         for kappa in range(k):

@@ -18,6 +18,7 @@ Matrix utilities.
 import csv
 import numpy
 import itertools
+import six
 
 # Soma module
 from soma import aims
@@ -201,7 +202,7 @@ def order_data_matrix(mat, labels):
             "matrix dimensions and labels size are not compatible")
     labels_argsort = labels.argsort()
     order_mat = numpy.zeros((n, p), dtype=numpy.float32)
-    for i in xrange(n):
+    for i in six.moves.xrange(n):
         order_mat[i, :] = mat[labels_argsort[i], :]
     sortLabels = labels.copy()
     sortLabels.sort()
@@ -226,11 +227,11 @@ def euclidian_distance_matrix(matrix):
     """
     (n, p) = matrix.shape
     euclidian_dist_matrix = numpy.zeros((n, n), dtype=numpy.float)
-    for i in xrange(n):
+    for i in six.moves.xrange(n):
         v1 = matrix[i]
         dist_value = 0
         euclidian_dist_matrix[i][i] = 0
-        for j in xrange(0, i):
+        for j in six.moves.xrange(0, i):
             v2 = matrix[j]
             dist_value = euclidian_distance(v1, v2)
             euclidian_dist_matrix[i][j] = dist_value

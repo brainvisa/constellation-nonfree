@@ -19,6 +19,7 @@ from __future__ import print_function
 import logging
 import numpy
 import re
+import six
 
 # Soma module
 from soma import aims
@@ -122,7 +123,7 @@ def remove_labels(tex, labels):
         otex_kept_labels_list.remove(0)
 
     # relabelize all the labels from 1
-    for i in xrange(len(otex_kept_labels_list)):
+    for i in six.moves.xrange(len(otex_kept_labels_list)):
         current_label = otex_kept_labels_list[i]
         print("current label:", current_label, " new:", str(i + 1))
         otex_ar[tex_ar == current_label] = i + 1
@@ -188,7 +189,7 @@ def add_texture(tex, add_tex, add_value):
         raise ValueError("tex and tex_add have not the same size: "
                          + str(vertices_tex) + " and "
                          + str(vertices_added))
-    for v in xrange(vertices_tex):
+    for v in six.moves.xrange(vertices_tex):
         v_tex_add = add_tex[0][v]
         v_tex = tex[0][v]
         if v_tex_add > 0 and v_tex == 0:
@@ -323,7 +324,7 @@ def create_relationship_region2neighbors(meshname, segname):
     triangles = numpy.asarray([tri.arraydata() for tri in mesh.polygon()])
 
     dict_neighboors = {}
-    for search in xrange(len(texar)):
+    for search in six.moves.xrange(len(texar)):
         neighboors = []
 
         # give the polygons having the nodes "search"

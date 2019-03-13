@@ -8,6 +8,7 @@ import sys
 import nibabel as nib
 # scipy
 from scipy.spatial.distance import pdist
+import six
 
 def parseOpts(argv):
     desc = """Generate a square distance matrix in parallel."""
@@ -56,9 +57,9 @@ def main():
         # starting_iteration and  max iteration required
         square_distance_matrix = np.zeros((options.nb_iteration,m))
         ii = 0
-        for i in xrange(options.starting_iteration, options.nb_iteration + 
+        for i in six.moves.xrange(options.starting_iteration, options.nb_iteration +
                     options.starting_iteration):
-            for j in xrange(m):
+            for j in six.moves.xrange(m):
                 square_distance_matrix[ii,j] = np.sqrt(
                                        sum((matrix[i, :] - matrix[j, :]) * 
                                        (matrix[i, :] - matrix[j, :])))
@@ -69,13 +70,13 @@ def main():
         # advantage over the scipy: noy Memory Error
         size = 0
         count = 0
-        for i in xrange(options.starting_iteration, options.nb_iteration + 
+        for i in six.moves.xrange(options.starting_iteration, options.nb_iteration +
                     options.starting_iteration):
             size += m - i - 1  
         square_distance_matrix = np.zeros((size,))
-        for i in xrange(options.starting_iteration, options.nb_iteration + 
+        for i in six.moves.xrange(options.starting_iteration, options.nb_iteration +
                     options.starting_iteration):
-            for j in xrange(i + 1, m):
+            for j in six.moves.xrange(i + 1, m):
                 square_distance_matrix[count] = (np.sqrt(
                                        sum((matrix[i, :] - matrix[j, :]) * 
                                        (matrix[i, :] - matrix[j, :]))))
@@ -94,16 +95,16 @@ def main():
         
         # upper/right triangular matrix
         k = int(options.id_distmat)
-        for i in xrange(options.starting_iteration, options.nb_iteration + 
+        for i in six.moves.xrange(options.starting_iteration, options.nb_iteration +
                         options.starting_iteration):
-            for j in xrange(i + 1, m):
+            for j in six.moves.xrange(i + 1, m):
                 square_distance_matrix[i][j] = distance_matrix[k]
                 k += 1
                 
         # lower/left triangular matrix
         kk = 0
-        for jj in xrange(m):
-            for ii in xrange(jj, m):
+        for jj in six.moves.xrange(m):
+            for ii in six.moves.xrange(jj, m):
                 if jj == ii:
                     pass
                 elif ii <= (options.starting_iteration - 1):

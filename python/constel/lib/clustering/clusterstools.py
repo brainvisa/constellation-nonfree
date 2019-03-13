@@ -20,6 +20,7 @@ from __future__ import print_function
 import struct
 import numpy
 import os
+import six
 
 # scipy library
 import scipy
@@ -327,7 +328,7 @@ def ward_method(dmat_file, n, output_dir, n_clusters):
 
     # generate the distance matrix from dmat_file to dist_mat (array)
     idx = 0
-    for j in xrange(n_iter):
+    for j in six.moves.xrange(n_iter):
         if j < nb_add:
             list_iteration[j] += 1
         x = f.read(list_iteration[j] * 8)

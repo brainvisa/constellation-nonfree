@@ -22,6 +22,7 @@ Author:
 
 # Soma module
 from soma import aims
+import six
 
 
 # ---------------------------Functions-----------------------------------------
@@ -56,7 +57,7 @@ def merge_bundlegraph_and_roigraph(roi_graph,
     roi_vertices = roi_graph.vertices().list()
     roi_vertices_labels = {}
 
-    for i in xrange(roi_vertices.__len__()):
+    for i in six.moves.xrange(roi_vertices.__len__()):
         # if a given key is available, we keep the vertex
         # and roi_vertices[i]['roi_label'] != 0:
         if "roi_label" in roi_vertices[i]:
