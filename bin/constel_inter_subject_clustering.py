@@ -27,14 +27,8 @@ import sys
 # soma
 from soma import aims
 
-# pycluster
-from Pycluster import kmedoids
-
 # constellation
 from constel.lib.utils.texturetools import texture_time
-
-# fastcluster module
-import fastcluster
 
 # scipy
 from scipy.spatial.distance import pdist, squareform
@@ -108,6 +102,9 @@ def main():
     distmat = pdist(reduced_matrix[r], metric='euclidean')
 
     if options.study == 'avg':
+        # this variant uses kmedoids from the pycluster module
+        from Pycluster import kmedoids
+
         # generate the squareform distance matrix
         distance_matrix = squareform(distmat)
 
@@ -132,6 +129,9 @@ def main():
                 clusterid[clusterid == item] = i + 1
             item_number.append(clusterid)
     else:
+        # this variant uses ward from the fastcluster module
+        import fastcluster
+
         # compute linkage ward
         Z = fastcluster.linkage(distmat, method='ward', preserve_input=False)
         # labelization between 1 to nb
