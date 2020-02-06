@@ -67,7 +67,7 @@ def select_ROI_number(filename, ROIname):
     """
     s = read_file(filename)
 
-    ROIlabel = s.keys()[s.values().index(ROIname)]
+    ROIlabel = s.keys()[list(s.values()).index(ROIname)]
     # ROIlabel = list(s.keys())[list(s.values()).index(ROIname) # python3
     return ROIlabel
 
