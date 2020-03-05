@@ -254,7 +254,7 @@ def main():
         # Done with the page
         pp.savefig()
         if args.save_scores:
-            matrix_name = '.'.join(matrix.split('.')[:-1])
+            matrix_name = '.'.join(matrix.split('.')[:-2])
             asw_name = matrix_name + "_asw.csv"
             with open(asw_name, 'wb') as csv_file:
                 writer = csv.writer(csv_file)
