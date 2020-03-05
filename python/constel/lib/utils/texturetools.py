@@ -160,7 +160,6 @@ def texture_time(k_max, clusters_id, vertices_patch, vertices_mesh, mode,
             tex[k].arraydata()[vertices_patch] = \
                 clusters_id[k].astype(numpy.int16)
         if mode == 2:
-            print(vertices_patch)
             tex[k].arraydata()[vertices_patch] = \
                 clusters_id[k][minid:maxid].astype(numpy.int16)
 
