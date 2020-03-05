@@ -16,6 +16,7 @@ Texture utilities.
 
 # System import
 from __future__ import print_function
+from __future__ import absolute_import
 import logging
 import numpy
 import re
@@ -23,6 +24,8 @@ import six
 
 # Soma module
 from soma import aims
+from six.moves import range
+from six.moves import zip
 
 # Define logger
 logger = logging.getLogger(__name__)
@@ -357,11 +360,11 @@ def create_relationship_region2neighbors(meshname, segname):
     maxtex = max(texar)
 
     # load the labels
-    countries = range(mintex, maxtex + 2)
+    countries = list(range(mintex, maxtex + 2))
 
     for i in countries:
         if i not in dict_neighboors.keys():
-            if i != (len(dict_neighboors.keys()) + 1):
+            if i != (len(list(dict_neighboors.keys())) + 1):
                 dict_neighboors[i] = []
 
     return dict_neighboors

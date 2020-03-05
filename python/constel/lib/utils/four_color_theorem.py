@@ -21,7 +21,9 @@ Author: Sandrine Lefranc, 2016
 
 
 # System import
+from __future__ import absolute_import
 import random
+from six.moves import range
 
 
 # ---------------------------Functions-----------------------------------------
@@ -197,7 +199,7 @@ def build_rules(items):
             else:
                 add_rules[rule] = 1
 
-    rules = add_rules.keys()
+    rules = list(add_rules.keys())
 
     for k, v in add_rules.items():
         if v == 1:

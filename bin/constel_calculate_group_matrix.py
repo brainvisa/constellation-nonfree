@@ -23,6 +23,7 @@ Author: Sandrine Lefranc, 2015
 
 # python system modules
 from __future__ import print_function
+from __future__ import absolute_import
 import sys
 import numpy
 import optparse
@@ -32,6 +33,7 @@ from soma import aims
 
 # constel
 from constel.lib.utils.matrixtools import resize_matrix
+from six.moves import zip
 
 
 # ---------------------------Functions-----------------------------------------

@@ -17,6 +17,7 @@ Cluster utilities.
 
 # python system import
 from __future__ import print_function
+from __future__ import absolute_import
 import struct
 import numpy
 import os
@@ -30,6 +31,7 @@ from scipy.cluster.hierarchy import fcluster
 
 # fastcluster
 import fastcluster
+from six.moves import range
 
 # -----------------------------------------------------------------------------
 
@@ -217,7 +219,7 @@ def entropy(labels):
     return entropy
 
 
-def gap(data, refs=None, nrefs=20, ks=range(1, 11)):
+def gap(data, refs=None, nrefs=20, ks=list(range(1, 11))):
     """Compute the Gap statistic for an nxm dataset in data.
 
     Either give a precomputed set of reference distributions in refs as an

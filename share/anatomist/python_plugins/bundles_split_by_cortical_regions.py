@@ -23,6 +23,7 @@ Author:
 from __future__ import print_function
 
 # soma module
+from __future__ import absolute_import
 from soma import aims
 from soma.aims.meshSplit import meshSplit2
 

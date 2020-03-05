@@ -11,6 +11,7 @@
 # ---------------------------Imports-------------------------------------------
 
 # System module
+from __future__ import absolute_import
 import os
 import glob
 import numpy
@@ -18,6 +19,7 @@ import argparse
 
 # Soma library
 from soma import aims
+from six.moves import range
 
 # ---------------------------Command-line--------------------------------------
 
@@ -71,7 +73,7 @@ np_vlabels = aims_vlabels[0].arraydata()
 #
 idx = numpy.where(np_vlabels == label)[0]
 inv_idx = numpy.zeros((len(np_vlabels)), dtype=int) - 1
-inv_idx[idx] = range(len(idx))
+inv_idx[idx] = list(range(len(idx)))
 
 # Initialize the matrix dimension
 connectome = numpy.zeros((len(idx), len(np_vlabels)))

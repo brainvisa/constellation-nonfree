@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+from __future__ import absolute_import
 import constel.lib.utils.matrixtools as clcm
 import constel.lib.clustering.clusterstools as clcc
 import scipy.spatial.distance as ssd
@@ -11,6 +12,7 @@ import numpy as np
 import optparse
 import glob
 import sys
+from six.moves import range
 
 def parseOpts(argv):
     desc = """Step 1: cluster the observed data, varying the total number of clusters from k = 1:K, giving within-dispersion measures Wk.

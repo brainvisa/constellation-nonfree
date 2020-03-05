@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 # python system modules
+from __future__ import absolute_import
 import numpy as np
 import optparse
 import pickle

@@ -24,6 +24,7 @@ Author: Sandrine Lefranc, 2015
 
 
 # python system module
+from __future__ import absolute_import
 import sys
 import numpy
 import argparse

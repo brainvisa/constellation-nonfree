@@ -1,9 +1,12 @@
 
 from __future__ import print_function
+from __future__ import absolute_import
 import os, sys
 import anatomist.direct.api as ana
 from soma.qt_gui.qt_backend import QtGui, QtCore
 from soma.qt_gui.qt_backend import init_matplotlib_backend
+from six.moves import range
+from six.moves import zip
 init_matplotlib_backend()
 from matplotlib import pyplot
 from soma import aims
@@ -109,7 +112,7 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         self.matrix = matrix
         self.clusters_matrix = {}
         self.viewing_column = 0
-        self.curves_columns = range(measurements.values()[0].shape[1])
+        self.curves_columns = list(range(list(measurements.values())[0].shape[1]))
         self.selected_cluster_boundaries = a.toAObject(aims.AimsTimeSurface(2))
 
         # 3D views area
@@ -127,12 +130,12 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         self.create_silhouette_dock()
 
         # build and display table
-        self.build_table(measurements.keys()[0])
+        self.build_table(list(measurements.keys())[0])
         self.table.horizontalHeader().sectionDoubleClicked.connect(
             self.display_column)
 
         # build and display curves
-        self.display_curves(measurements.keys()[0])
+        self.display_curves(list(measurements.keys())[0])
         
         
     def __del__(self):
@@ -170,7 +173,7 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         table_wid.setLayout(QtGui.QVBoxLayout())
         self.column_label = QtGui.QLabel(
             'displaying: <b>%s</b>'
-            % self.measurements.values()[0].columns[self.viewing_column])
+            % list(self.measurements.values())[0].columns[self.viewing_column])
         table_wid.layout().addWidget(self.column_label)
         table = QtGui.QTableWidget()
         table_wid.layout().addWidget(table)
@@ -286,7 +289,7 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         lay = QtGui.QVBoxLayout()
         slider_panel.setLayout(lay)
         w.layout().addWidget(slider_panel)
-        values = self.measurements.keys()
+        values = list(self.measurements.keys())
         self.cluster_slider_label = QtGui.QLabel(str(values[0]))
         self.cluster_slider = QtGui.QSlider()
         lay.addWidget(QtGui.QLabel('K:'))
@@ -342,7 +345,7 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
         for measure_tex in self.measure_tex:
             measure_tex.setPalette('Yellow-red-fusion')
             measure_tex.setName(
-                self.measurements.values()[0].columns[self.viewing_column])
+                list(self.measurements.values())[0].columns[self.viewing_column])
         self.make_measurements_texture()
         for mesh, measure_tex in zip(self.meshes, self.measure_tex):
             self.measure_fusions.append(a.fusionObjects(
@@ -375,7 +378,7 @@ class ClustersInspectorWidget(QtGui.QMainWindow):
     def make_measurements_texture(self):
         col = self.viewing_column
         k = self.cluster_slider.value()
-        timestep = k - self.measurements.keys()[0]
+        timestep = k - list(self.measurements.keys())[0]
         for atex, ctex, measure_tex in zip(self.aims_measure_tex,
                                            self.aims_clusters,
                                            self.measure_tex):
@@ -486,7 +489,7 @@ Num of clusters (K): <b>%d</b><br/>
 
 
     def update_clusters_boundaries(self):
-        timestep = self.cluster_slider.value() - self.measurements.keys()[0]
+        timestep = self.cluster_slider.value() - list(self.measurements.keys())[0]
         for mesh, aims_clusters, boundaries in zip(self.meshes,
                                                    self.aims_clusters,
                                                    self.clusters_boundaries):
@@ -506,7 +509,7 @@ Num of clusters (K): <b>%d</b><br/>
         if mesh is None or label == 0:
             return
         mesh_index = self.meshes.index(mesh)
-        timestep = self.cluster_slider.value() - self.measurements.keys()[0]
+        timestep = self.cluster_slider.value() - list(self.measurements.keys())[0]
         cluster_tex0 = self.aims_clusters[mesh_index][timestep]
         cluster_tex = self.aims_clusters[mesh_index].__class__()
         cluster_tex[0].assign(cluster_tex0.data())
@@ -522,7 +525,7 @@ Num of clusters (K): <b>%d</b><br/>
 
 
     def update_clusters_texture(self):
-        timestep = self.cluster_slider.value() - self.measurements.keys()[0]
+        timestep = self.cluster_slider.value() - list(self.measurements.keys())[0]
         for clusters, aims_clusters in zip(self.clusters, self.aims_clusters):
             t = min(timestep, len(aims_clusters) - 1)
             texture = aims.TimeTexture('S16')
@@ -546,7 +549,7 @@ Num of clusters (K): <b>%d</b><br/>
 
     def display_column(self, col):
         if self.viewing_column != col:
-            name = self.measurements.values()[0].columns[col]
+            name = list(self.measurements.values())[0].columns[col]
             self.column_label.setText('displaying: <b>%s</b>' % name)
             self.viewing_column = col
             self.make_measurements_texture()
@@ -574,9 +577,9 @@ Num of clusters (K): <b>%d</b><br/>
         data = self.measurements[timestep]
         cols = data.columns[self.curves_columns]
         if len(cols) != 0:
-            axes.set_xticks(range(data.shape[0] + 1))
+            axes.set_xticks(list(range(data.shape[0] + 1)))
             axes.set_xlim((0.8, data.shape[0] + 0.2))
-            axes.plot(range(1, data.shape[0] + 1), data[cols], 'o-')
+            axes.plot(list(range(1, data.shape[0] + 1)), data[cols], 'o-')
             axes.legend(list(cols), loc=(1.02, 0.2), fontsize='x-small',
                         labelspacing=0.5)
         self.curves_fig.canvas.draw()
@@ -603,7 +606,7 @@ Num of clusters (K): <b>%d</b><br/>
         dialog.setLayout(lay)
         lwid = QtGui.QListWidget()
         lay.addWidget(lwid)
-        lwid.addItems(self.measurements.values()[0].columns)
+        lwid.addItems(list(self.measurements.values())[0].columns)
         lwid.setSelectionMode(lwid.ExtendedSelection)
         for col in self.curves_columns:
             lwid.item(col).setSelected(True)
@@ -648,7 +651,7 @@ Num of clusters (K): <b>%d</b><br/>
             return None
         if k in self.clusters_matrix:
             return self.clusters_matrix[k]
-        timestep = k - self.measurements.keys()[0]
+        timestep = k - list(self.measurements.keys())[0]
         matrix = self.matrix
         a_mat = np.asarray(matrix)
         a_mat = a_mat.reshape(a_mat.shape[:2])
@@ -673,7 +676,7 @@ Num of clusters (K): <b>%d</b><br/>
             axes.clear()
         axes.set_xlabel('basins')
         axes.set_ylabel('clusters')
-        axes.set_yticks(range(matrix.shape[0] + 1))
+        axes.set_yticks(list(range(matrix.shape[0] + 1)))
         axes.set_yticklabels([str(x) for x in range(1, matrix.shape[0] + 1)])
         axes.imshow(matrix, aspect='auto', interpolation='none')
         self.matrix_fig.canvas.draw()
@@ -704,7 +707,7 @@ def load_measurements(measurements_filename):
         columns = eval(title)
         lnum = 1
         #k0 = 0
-        for l in f.xreadlines():
+        for l in f:
             lnum += 1
             t = l.find(',')
             k = int(l[:t].strip())

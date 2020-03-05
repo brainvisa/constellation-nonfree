@@ -23,10 +23,13 @@ Author: Sandrine Lefranc, 2015
 
 
 # python modules
+from __future__ import absolute_import
+from __future__ import print_function
 import numpy
 
 # scipy module
 import scipy
+from six.moves import range
 
 
 # ---------------------------Functions-----------------------------------------

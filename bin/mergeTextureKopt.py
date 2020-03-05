@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+from __future__ import absolute_import
 from optparse import OptionParser
 from soma import aims
 import numpy as np

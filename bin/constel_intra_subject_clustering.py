@@ -14,6 +14,7 @@
 
 # python system module
 from __future__ import print_function
+from __future__ import absolute_import
 import argparse
 import numpy
 import sys
@@ -29,6 +30,7 @@ from constel.lib.utils.texturetools import texture_time
 
 # SciPy library
 from scipy.spatial.distance import pdist, squareform
+from six.moves import range
 
 
 # -------------------- definitions of functions -------------------------------

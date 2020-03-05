@@ -22,6 +22,7 @@ Author: Sandrine Lefranc, 2015
 
 
 # system module
+from __future__ import absolute_import
 import os
 import sys
 import json
@@ -32,6 +33,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 # soma module
 from soma import aims
+from six.moves import range
 
 # constel module
 try:
@@ -139,9 +141,9 @@ def create_page(title, measures, name_y, cortical_region, ybound=[0., 1.],
     k_opt = max(dict_clusters.values())
 
     # search the id of the optimal number of clusters
-    kopt = dict_clusters.keys()[dict_clusters.values().index(k_opt)]
+    kopt = list(dict_clusters.keys())[list(dict_clusters.values()).index(k_opt)]
 
-    ax1.plot(dict_clusters.keys(), dict_clusters.values(), "k",
+    ax1.plot(list(dict_clusters.keys()), list(dict_clusters.values()), "k",
              color="red",
              linewidth=3)
 
@@ -154,7 +156,7 @@ def create_page(title, measures, name_y, cortical_region, ybound=[0., 1.],
     if ignore_k2 and kopt == 2:
         del dict_clusters[kopt]
         k_opt = max(dict_clusters.values())
-        kopt = dict_clusters.keys()[dict_clusters.values().index(k_opt)]
+        kopt = list(dict_clusters.keys())[list(dict_clusters.values()).index(k_opt)]
         ax1.annotate("kopt",
                      xy=(kopt, k_opt),
                      xytext=(kopt + 0.5, k_opt + 0.05),
@@ -164,7 +166,7 @@ def create_page(title, measures, name_y, cortical_region, ybound=[0., 1.],
                  " have decided to ignore Kopt=2 clusters.)",
                  color="red")
     else:
-        ax1.plot(dict_clusters.keys(), dict_clusters.values(), "k",
+        ax1.plot(list(dict_clusters.keys()), list(dict_clusters.values()), "k",
                  color="red",
                  linewidth=3)
         ax3.text(0., 0.,

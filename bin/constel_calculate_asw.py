@@ -14,6 +14,7 @@
 from __future__ import print_function
 
 # system module
+from __future__ import absolute_import
 import os
 import sys
 import csv
@@ -24,6 +25,7 @@ import textwrap
 
 # matplotlib. Set it to a non-graphical PDF backend
 import matplotlib
+from six.moves import range
 matplotlib.use("pdf")
 from matplotlib import pyplot
 from matplotlib.backends.backend_pdf import PdfPages
@@ -161,9 +163,9 @@ def create_page(name_matrix, matrix, kmax, ybound=[0., 1.],
     k_opt = max(dict_clusters.values())
 
     # search the id of the optimal number of clusters
-    kopt = dict_clusters.keys()[dict_clusters.values().index(k_opt)]
+    kopt = list(dict_clusters.keys())[list(dict_clusters.values()).index(k_opt)]
 
-    ax1.plot(dict_clusters.keys(), dict_clusters.values(), "k",
+    ax1.plot(list(dict_clusters.keys()), list(dict_clusters.values()), "k",
              color="red",
              linewidth=3)
     # put a grid on the curve
@@ -183,8 +185,8 @@ def create_page(name_matrix, matrix, kmax, ybound=[0., 1.],
         del dict_clusters[kopt]
         k_opt = max([v for k, v in six.iteritems(dict_clusters)
                      if v >= kmin_v])
-        kopt = dict_clusters.keys()[
-            dict_clusters.values().index(k_opt)]
+        kopt = list(dict_clusters.keys())[
+            list(dict_clusters.values()).index(k_opt)]
         ax3.text(0., 0.,
                  "The optimal number of clusters is " + str(kopt)
                  + ".\n (You have decided to ignore Kopt < %d "

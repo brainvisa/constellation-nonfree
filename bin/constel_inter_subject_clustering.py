@@ -19,6 +19,7 @@ Main dependencies: PyAims library
 
 # python system modules
 from __future__ import print_function
+from __future__ import absolute_import
 from optparse import OptionParser
 import pylab
 import numpy
@@ -33,6 +34,7 @@ from constel.lib.utils.texturetools import texture_time
 # scipy
 from scipy.spatial.distance import pdist, squareform
 from scipy.cluster.hierarchy import fcluster
+from six.moves import range
 
 # ---------------------------Functions-----------------------------------------
 
@@ -95,7 +97,7 @@ def main():
     reduced_matrix = aims.read(options.group_matrix)
     reduced_matrix = numpy.asarray(reduced_matrix)[:, :, 0, 0]
 
-    r = range(reduced_matrix.shape[0])
+    r = list(range(reduced_matrix.shape[0]))
     numpy.random.shuffle(r)
     s = [r.index(i) for i in range(reduced_matrix.shape[0])]
     # Compute the distance matrix
