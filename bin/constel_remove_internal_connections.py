@@ -13,6 +13,7 @@
 
 
 # python system modules
+from __future__ import absolute_import
 import textwrap
 import argparse
 import json

@@ -22,6 +22,7 @@ Author: Sandrine Lefranc, 2015
 
 
 # system module
+from __future__ import absolute_import
 import os
 import sys
 import json
@@ -36,6 +37,7 @@ import matplotlib.cm as cm
 
 # soma module
 from soma import aims
+from six.moves import range
 
 # constel module
 try:

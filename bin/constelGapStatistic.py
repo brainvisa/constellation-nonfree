@@ -2,6 +2,7 @@
 
 # python system modules
 from __future__ import print_function
+from __future__ import absolute_import
 import numpy as np
 import optparse
 import sys
@@ -19,6 +20,7 @@ import scipy.cluster.vq as scv
 
 # soma
 from soma import aims
+from six.moves import range
 
 def parseOpts(argv):
     desc = """(1) Cluster the observed data. 

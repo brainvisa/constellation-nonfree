@@ -19,6 +19,7 @@ Main dependencies: PyAims library
 
 # python system modules
 from __future__ import print_function
+from __future__ import absolute_import
 from optparse import OptionParser
 import pylab
 import numpy
@@ -33,6 +34,7 @@ from constel.lib.utils.texturetools import texture_time
 # scipy
 from scipy.spatial.distance import pdist, squareform
 from scipy.cluster.hierarchy import fcluster
+from six.moves import range
 
 # ---------------------------Functions-----------------------------------------
 
@@ -42,7 +44,7 @@ class MatplotlibFig(object):
         self._fig = fig
     def __del__(self):
         mainThreadActions().call(pylab.close, self._fig)
-
+ 
 
 def validate( self ):
   import constel.lib.evaluation.indices as cv
@@ -95,12 +97,12 @@ def main():
     reduced_matrix = aims.read(options.group_matrix)
     reduced_matrix = numpy.asarray(reduced_matrix)[:, :, 0, 0]
 
-    r = range(reduced_matrix.shape[0])
+    r = list(range(reduced_matrix.shape[0]))
     numpy.random.shuffle(r)
     s = [r.index(i) for i in range(reduced_matrix.shape[0])]
     # Compute the distance matrix
     distmat = pdist(reduced_matrix[r], metric='euclidean')
-
+    
     if options.study == 'avg':
         # this variant uses kmedoids from the pycluster module
         from Pycluster import kmedoids
@@ -129,17 +131,17 @@ def main():
                 clusterid[clusterid == item] = i + 1
             item_number.append(clusterid)
     else:
-        # this variant uses ward from the fastcluster module
+        # fastcluster module
         import fastcluster
 
         # compute linkage ward
         Z = fastcluster.linkage(distmat, method='ward', preserve_input=False)
         # labelization between 1 to nb
         clusterid = []
-        for nb in range(1, options.kmax + 1):
+        for nb in range(2, options.kmax + 1):
             print("Trying {nb} cluster(s)".format(nb=nb))
             clusters = fcluster(Z, criterion='maxclust', t=nb)
-            clusterid.append(clusters)
+            clusterid.append(clusters[s])
 
 
     #########################################################################

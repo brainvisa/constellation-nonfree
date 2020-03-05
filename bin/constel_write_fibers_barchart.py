@@ -15,6 +15,8 @@
 #----------------------------Imports-------------------------------------------
 
 # python system module
+from __future__ import absolute_import
+from __future__ import print_function
 import sys
 import numpy
 import argparse
@@ -27,6 +29,9 @@ import six
 
 # aims module
 from soma import aims
+from six.moves import range
+from six.moves import zip
+from functools import reduce
 
 
 #----------------------------Functions-----------------------------------------
@@ -167,7 +172,7 @@ def main():
     else:
         ypos = numpy.arange(len(dico))
         plt.title('Fiber tracts distribution', fontsize=18)
-        plt.barh(ypos, dico.values(), color="r", edgecolor="r", height=0.6)
+        plt.barh(ypos, list(dico.values()), color="r", edgecolor="r", height=0.6)
 
         #add the numbers to the side of each bar
         for p, c, ch in zip(ypos, dico.keys(), dico.values()):
@@ -175,7 +180,7 @@ def main():
                 str(int(ch)), xy=(ch + 200, p + 0.4), va='center', fontsize=4)
 
         #cutomize ticks
-        plt.yticks(ypos + 0.4, dico.keys(), fontsize=4)
+        plt.yticks(ypos + 0.4, list(dico.keys()), fontsize=4)
         xt = plt.xticks()[0]
         plt.xticks(xt, [' '] * len(xt))
         plt.xlabel(

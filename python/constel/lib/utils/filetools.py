@@ -67,7 +67,7 @@ def select_ROI_number(filename, ROIname):
     """
     s = read_file(filename)
 
-    ROIlabel = s.keys()[s.values().index(ROIname)]
+    ROIlabel = list(s.keys())[list(s.values()).index(ROIname)]
     # ROIlabel = list(s.keys())[list(s.values()).index(ROIname) # python3
     return ROIlabel
 
@@ -88,7 +88,7 @@ def select_ROI_name(filename, ROInb):
     """
     s = read_file(filename)
 
-    ROIname = s.values()[s.keys().index(ROInb)]
+    ROIname = list(s.values())[list(s.keys()).index(ROInb)]
     # ROIname = list(s.values())[list(s.keys()).index(ROInb) # python3
     return ROIname
 

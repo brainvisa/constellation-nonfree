@@ -15,6 +15,7 @@
 #----------------------------Imports-------------------------------------------
 
 # python system module
+from __future__ import absolute_import
 import sys
 import argparse
 import textwrap
@@ -23,6 +24,7 @@ import matplotlib.pyplot as plt
 
 # aims module
 from soma import aims
+from six.moves import range
 
 
 #----------------------------Functions-----------------------------------------

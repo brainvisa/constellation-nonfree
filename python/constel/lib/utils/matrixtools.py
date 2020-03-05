@@ -15,6 +15,7 @@ Matrix utilities.
 # ---------------------------Imports-------------------------------------------
 
 # System module
+from __future__ import absolute_import
 import csv
 import numpy
 import itertools
@@ -22,6 +23,8 @@ import six
 
 # Soma module
 from soma import aims
+from six.moves import range
+from six.moves import zip
 
 # ---------------------------Functions-----------------------------------------
 
@@ -343,8 +346,8 @@ def contingency_matrix(labels1, labels2):
     """
     classes = list(set(labels1))
     n = len(classes)
-    contingency_matrix = numpy.array([zip(
-        labels1, labels2).count(x) for x in itertools.product(
+    contingency_matrix = numpy.array([list(zip(
+        labels1, labels2)).count(x) for x in itertools.product(
         classes, repeat=2)]).reshape(n, n)
     # contingency_matrix = numpy.bincount(
     # n * (labels1 - 1) + (labels2 - 1), minlength = n * n).reshape(n, n)

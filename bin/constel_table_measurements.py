@@ -15,6 +15,7 @@
 #----------------------------Imports-------------------------------------------
 
 # python system module
+from __future__ import absolute_import
 import sys
 import csv
 import numpy
@@ -26,6 +27,7 @@ from soma import aims
 
 # constel module
 from constel.lib.utils.meshtools import mesh_surface_area
+from six.moves import range
 
 
 #----------------------------Functions-----------------------------------------

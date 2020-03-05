@@ -22,8 +22,10 @@ Author: Sandrine Lefranc, 2015
 
 
 # python modules
+from __future__ import absolute_import
 import numpy
 import six
+from six.moves import range
 
 
 # ---------------------------Functions-----------------------------------------

@@ -23,6 +23,7 @@ Author: Sandrine Lefranc, 2015
 
 # system module
 from __future__ import print_function
+from __future__ import absolute_import
 import argparse
 import textwrap
 import numpy
@@ -36,6 +37,7 @@ from soma import aims
 
 # constel
 from soma.aims.texturetools import meshDiceIndex
+from six.moves import range
 
 
 def parse_args(argv):
@@ -105,7 +107,7 @@ def main():
     # The stem plot
     f = pyplot.figure()
     markerLines, stemLines, baseLines = pyplot.stem(
-        range(1, nb_clusters + 1),
+        list(range(1, nb_clusters + 1)),
         dice[1:])
     pyplot.setp(markerLines,
                 color="cyan",

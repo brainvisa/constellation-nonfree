@@ -26,6 +26,7 @@ Author: S. Lefranc
 
 # System module
 from __future__ import print_function
+from __future__ import absolute_import
 import numpy
 from math import log
 import six
@@ -45,6 +46,7 @@ from scipy.misc import comb
 # contel module
 from constel.lib.clustering import clusterstools
 import constel.lib.utils.matrixtools as clccm
+from six.moves import range
 
 
 # ---------------------------Functions-----------------------------------------

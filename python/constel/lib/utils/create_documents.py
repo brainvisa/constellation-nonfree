@@ -23,6 +23,7 @@ Author: Sandrine Lefranc, 2015
 
 from __future__ import print_function
 #system import
+from __future__ import absolute_import
 import os
 import numpy
 from operator import itemgetter, add
@@ -36,6 +37,9 @@ from soma import aims
 
 # constel import
 from constel.lib.utils.texturetools import identify_patch_number
+from six.moves import range
+from six.moves import zip
+from functools import reduce
 
 
 #----------------------------Functions-----------------------------------------
@@ -175,7 +179,7 @@ if __name__ == "__main__":
     else:
         ypos = numpy.arange(len(dico))
         plt.title('Fiber tracts distribution', fontsize=18)
-        plt.barh(ypos, dico.values(), color="r", height=0.8)
+        plt.barh(ypos, list(dico.values()), color="r", height=0.8)
 
         #add the numbers to the side of each bar
         for p, c, ch in zip(ypos, dico.keys(), dico.values()):
@@ -183,7 +187,7 @@ if __name__ == "__main__":
                 str(int(ch)), xy=(ch + 10, p + 0.4), va='center', fontsize=6)
 
         #cutomize ticks
-        plt.yticks(ypos + 0.5, dico.keys(), fontsize=6)
+        plt.yticks(ypos + 0.5, list(dico.keys()), fontsize=6)
         xt = plt.xticks()[0]
         plt.xticks(xt, [' '] * len(xt))
         plt.xlabel(

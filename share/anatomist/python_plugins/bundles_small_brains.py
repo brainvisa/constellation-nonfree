@@ -3,6 +3,7 @@
 from __future__ import print_function
 
 # Anatomist module
+from __future__ import absolute_import
 import anatomist.direct.api as anatomist
 
 # BrainVisa module

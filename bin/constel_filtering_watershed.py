@@ -25,6 +25,7 @@ Author: Sandrine Lefranc
 
 # python system module
 from __future__ import print_function
+from __future__ import absolute_import
 import sys
 import numpy
 import argparse
@@ -32,6 +33,7 @@ import textwrap
 
 # aims module
 from soma import aims
+from six.moves import range
 
 
 #----------------------------Functions-----------------------------------------

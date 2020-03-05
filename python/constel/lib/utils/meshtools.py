@@ -16,7 +16,9 @@ Mesh utilities.
 
 # system module
 from __future__ import print_function
+from __future__ import absolute_import
 import numpy
+from six.moves import range
 
 # ---------------------------Function------------------------------------------
 

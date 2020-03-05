@@ -2,6 +2,7 @@
 
 from __future__ import print_function
 # Anatomist module
+from __future__ import absolute_import
 import anatomist.direct.api as anatomist
 
 # BrainVisa module
@@ -56,7 +57,7 @@ class BundlesSelectionAction( selection.SelectionAction ):
     gcent = (bb[0] + bb[1])/2
     a = anatomist.cpp.Anatomist()
     nref = anatomist.cpp.Referential()
-    if vertex.attributed().has_key( 'center' ):
+    if 'center' in vertex.attributed():
       print('using existing center')
       cent = aims.Point3df( vertex.attributed()[ 'center' ] )
       print('center:', cent)
@@ -164,7 +165,7 @@ class BundlesSelectionAction( selection.SelectionAction ):
       graph = list(vertex.parents())[0]
       nref, tr, rot_center = self.computeRefAndTransformation(graph, vertex)
       global_mesh = None
-      if graph.graph().has_key('global_mesh'):
+      if 'global_mesh' in graph.graph():
         global_mesh = graph.graph()['global_mesh']
       self._storedrefs.append( nref )
       diffuse_list = [ 1., 0., 0., 1. ]
@@ -176,7 +177,7 @@ class BundlesSelectionAction( selection.SelectionAction ):
         self.addReducedObjectToView(global_mesh, nref, rot_center, tr, a, window, diffuse_list)
       for edge in aimsvertex.edges():
       #for edge in edgeslist:
-        if edge.has_key( 'ana_object' ):
+        if 'ana_object' in edge:
           aedge = edge[ 'ana_object' ]
           diffuse_list = [ 0, 0, 1., 0.5 ]
           for obj in aedge:
@@ -219,7 +220,7 @@ class BundlesRotationSelectionAction( anatomist.cpp.TrackOblique ):
     except:
       return
     for obj, rot_center, tr in stored:
-      if not self.tr_dict.has_key(tr):
+      if tr not in self.tr_dict:
         self.tr_dict[tr] = aims.Motion(tr.motion()), rot_center
   
   def moveTrackball( self, x, y, globalX, globalY ):
