@@ -42,7 +42,7 @@ class MatplotlibFig(object):
         self._fig = fig
     def __del__(self):
         mainThreadActions().call(pylab.close, self._fig)
-
+ 
 
 def validate( self ):
   import constel.lib.evaluation.indices as cv
@@ -100,7 +100,7 @@ def main():
     s = [r.index(i) for i in range(reduced_matrix.shape[0])]
     # Compute the distance matrix
     distmat = pdist(reduced_matrix[r], metric='euclidean')
-
+    
     if options.study == 'avg':
         # this variant uses kmedoids from the pycluster module
         from Pycluster import kmedoids
@@ -129,17 +129,17 @@ def main():
                 clusterid[clusterid == item] = i + 1
             item_number.append(clusterid)
     else:
-        # this variant uses ward from the fastcluster module
+        # fastcluster module
         import fastcluster
 
         # compute linkage ward
         Z = fastcluster.linkage(distmat, method='ward', preserve_input=False)
         # labelization between 1 to nb
         clusterid = []
-        for nb in range(1, options.kmax + 1):
+        for nb in range(2, options.kmax + 1):
             print("Trying {nb} cluster(s)".format(nb=nb))
             clusters = fcluster(Z, criterion='maxclust', t=nb)
-            clusterid.append(clusters)
+            clusterid.append(clusters[s])
 
 
     #########################################################################
