@@ -91,11 +91,20 @@ def main():
         list_matrices = []
         for matrix in options.list_matrices:
             reduced_matrix = aims.read(matrix)
+            if hasattr(reduced_matrix, 'asDense'):
+                reduced_matrix = reduced_matrix.asDense()
             reduced_matrix = numpy.asarray(reduced_matrix)[:, :, 0, 0]
             list_matrices.append(reduced_matrix.astype('float32'))
         sum_matrix = [sum(i) for i in zip(*list_matrices)]
         averaged_matrix = numpy.array(sum_matrix) / len(list_matrices)
+#        sum_matrix = sum(list_matrices)
+#        print('shape:', sum_matrix.shape)
+#        averaged_matrix = sum_matrix / len(list_matrices)
         averaged_matrix = resize_matrix(aims.Volume(averaged_matrix))
+        if options.matrix.endswith('.imas'):
+            mat = aims.SparseOrDenseMatrix()
+            mat.setMatrix(averaged_matrix.astype('DOUBLE'))
+            averaged_matrix = mat
         aims.write(averaged_matrix, options.matrix)
 
 if __name__ == "__main__":
