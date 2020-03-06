@@ -12,7 +12,7 @@ from matplotlib import pyplot
 from soma import aims
 import numpy as np
 import weakref
-from soma.aims import pandas
+import pandas
 import six
 from constel.lib.utils import matrixtools
 
