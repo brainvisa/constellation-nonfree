@@ -28,7 +28,7 @@ from six.moves import range
 
 # ---------------------------Functions-----------------------------------------
 
-class Map:
+class Map(object):
     """
     """
     States = None
@@ -39,7 +39,7 @@ class Map:
         self.Value = value
 
 
-class Rule:
+class Rule(object):
     """Connects two states indicating that they are adjacent.
     """
     Item = None
