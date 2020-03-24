@@ -18,7 +18,7 @@ Files utilities.
 # ---------------------------Functions-----------------------------------------
 
 
-def read_file(filename, mode=0):
+def read_nomenclature_file(filename, mode=0):
     """Read the file to create a list with the content of the file.
 
     Parameter
@@ -65,7 +65,7 @@ def select_ROI_number(filename, ROIname):
     ------
     ROIlabel: int
     """
-    s = read_file(filename)
+    s = read_nomenclature_file(filename)
 
     ROIlabel = list(s.keys())[list(s.values()).index(ROIname)]
     # ROIlabel = list(s.keys())[list(s.values()).index(ROIname) # python3
@@ -86,7 +86,7 @@ def select_ROI_name(filename, ROInb):
     ------
     ROIname: str
     """
-    s = read_file(filename)
+    s = read_nomenclature_file(filename)
 
     ROIname = list(s.values())[list(s.keys()).index(ROInb)]
     # ROIname = list(s.values())[list(s.keys()).index(ROInb) # python3
