@@ -49,7 +49,7 @@ def nearest_neighbour_profiles(profile, atlas, atlas_classes, indices,
     atlas_classes: numpy.array (mandatory)
         Clustering of the cortical region.
     indices: numpy.array (mandatory)
-        Vertex indices belonging to the cortical region in altlas texture.
+        Vertex indices belonging to the cortical region in atlas texture.
     iindices: numpy.array (optional)
         Vertex indices belonging to the cortical region in individual texture.
         If not given, the atlas texture (indices) is taken, which will only

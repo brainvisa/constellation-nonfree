@@ -72,7 +72,7 @@ def rearrange_numbering(square_dmat, kmax, n_iter_k=1000):
         each time with a different random initial condition
     kmax: int (mandatory)
         the number of clusters k
-    
+
     Return
     ------
     clusterID: array
@@ -124,7 +124,7 @@ def compute_distance_matrix(matrix, metric="euclidean", transpose=True):
 # -------------------- main program -------------------------------------------
 
 
-if __name__ == "__main__" :
+if __name__ == "__main__":
     parser, args = parseArgs(sys.argv)
 
     # load the files
@@ -140,7 +140,7 @@ if __name__ == "__main__" :
 
     # extract the vertices of the patch
     vertices_patch = numpy.where(gyri_seg[0].arraydata() == args.patch)[0]
-    
+
     # extract the total number of vertices of the mesh
     nb_vertices = mesh.vertex().size()
 
