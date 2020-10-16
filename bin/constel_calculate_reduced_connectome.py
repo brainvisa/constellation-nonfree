@@ -24,6 +24,8 @@ import glob
 import numpy
 import argparse
 import textwrap
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 # aims module
