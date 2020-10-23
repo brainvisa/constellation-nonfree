@@ -17,6 +17,7 @@
 
 # python system module
 from __future__ import absolute_import
+from __future__ import print_function
 import os
 import sys
 import json
@@ -162,10 +163,10 @@ def main():
             else:
                 matrices.append(
                     glob.glob(args.gyri_dirname + "/" + region_name +
-                              "/matrix/*_complete_matrix_smooth3.0.imas")[0])
+                              "/matrix/*_complete_matrix_smooth3.0*.imas")[0])
     else:
         matrices = glob.glob(args.gyri_dirname +
-                             "/*/matrix/*_complete_matrix_smooth3.0.imas")
+                             "/*/matrix/*_complete_matrix_smooth3.0*.imas")
         if not matrices:
             matrices = glob.glob(os.path.join(args.gyri_dirname, '*.imas'))
 
@@ -173,7 +174,8 @@ def main():
     clusters_matrix = numpy.zeros((len(parcels), len(labels)))
 
     all_rows = []
-    for matrix in matrices:
+    for num, matrix in enumerate(matrices):
+        print('add matrix', num, ' /', len(matrices) ':', matrix)
         mat = aims.read(matrix)
         m = numpy.asarray(mat.denseMatrix())[:, :, 0, 0]
         if m.shape[0] < m.shape[1]:
