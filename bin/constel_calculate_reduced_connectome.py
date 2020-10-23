@@ -166,6 +166,8 @@ def main():
     else:
         matrices = glob.glob(args.gyri_dirname +
                              "/*/matrix/*_complete_matrix_smooth3.0.imas")
+        if not matrices:
+            matrices = glob.glob(os.path.join(args.gyri_dirname, '*.imas'))
 
     # initialyze a matrix M(vertices, labels)
     clusters_matrix = numpy.zeros((len(parcels), len(labels)))
