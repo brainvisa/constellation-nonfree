@@ -132,9 +132,8 @@ def main():
         for name in names:
             if int(name[0]) == label: 
                 list_names.append(name[1])
-    if args.freesurfer_regions or args.constellation_regions:
-        reorganize_names = list_names
-        reorganize_labels = labels
+    reorganize_names = list_names
+    reorganize_labels = labels
 
     # Only with the AAL nomenclature
     if args.aal_regions:
