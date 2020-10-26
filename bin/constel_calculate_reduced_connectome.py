@@ -175,7 +175,7 @@ def main():
 
     all_rows = []
     for num, matrix in enumerate(matrices):
-        print('add matrix', num, ' /', len(matrices) ':', matrix)
+        print('add matrix', num, ' /', len(matrices), ':', matrix)
         mat = aims.read(matrix)
         m = numpy.asarray(mat.denseMatrix())[:, :, 0, 0]
         if m.shape[0] < m.shape[1]:
