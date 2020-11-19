@@ -96,7 +96,10 @@ def main():
 
     for k in range(args.kmin, args.kmax+1):
         clusterid = cluster_list[k-2][numpy.where(cluster_list[k-2] != 0)]
-        dict_clusters[k] = silhouette_score(reduced_matrix.T, clusterid)
+        if reduced_matrix.shape[0] != len(clusterid):
+            reduced_matrix = reduced_matrix.T
+        dict_clusters[k] = str(silhouette_score(reduced_matrix, clusterid))
+    print(dict_clusters)
 
     with open(args.silhouette_file, "w") as outfile:
         json.dump(dict_clusters, outfile)

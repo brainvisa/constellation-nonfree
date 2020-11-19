@@ -312,6 +312,38 @@ def concatenate_texture(cortical_parcellations, time_step):
     return final_rseg
 
 
+def concatenate_texture_new(cortical_parcellations):
+    """Concatenate a list of cortical parcellations on the same mesh
+
+    Parameters
+    ----------
+    cortical_parcellations: list of str (mandatory)
+        List of the cortical parcellations to concatenate
+
+    Returns
+    -------
+    final_rseg: str
+        The complete cortical parcellation.
+    """
+    for idx, filename in enumerate(cortical_parcellations):
+        roiseg = aims.read(filename)
+        rseg = numpy.array(roiseg[0].arraydata())
+        if idx == 0:
+            tmp_rseg = rseg
+            max_time_step = max(rseg)
+        else:
+            x = numpy.unique(rseg)
+            labels = x[x != 0]
+            for label in labels[::-1]:
+                rseg[rseg == label] = label + max_time_step
+            temp = tmp_rseg[:]
+            tmp_rseg = [x + y for x, y in zip(temp, rseg)]
+            max_time_step = max(rseg)
+    final_rseg = aims.TimeTexture_S16()
+    final_rseg[0].assign(tmp_rseg)
+    return final_rseg
+
+
 def create_relationship_region2neighbors(meshname, segname):
     """
     """
