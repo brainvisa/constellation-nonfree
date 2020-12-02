@@ -524,7 +524,7 @@ class SmallBrainsControl(anatomist.cpp.Control3D):
     the regions contain only fibers).
     '''
     def __init__(self):
-        super(SmallBrainsControl, self).__init__(30, 'SmallBrainsControl')
+        super(SmallBrainsControl, self).__init__(5792, 'SmallBrainsControl')
 
     def description(self):
         return '''<html><div align="center"><b>Small brains</b></div>
@@ -601,6 +601,6 @@ ad.addAction('SmallBrainsRotationAction', SmallBrainsRotationAction)
 ad.addAction('SmallBrainsScaleAction', SmallBrainsScaleAction)
 ad.addAction('SmallBrainsTranslateAction', SmallBrainsTranslateAction)
 cd = anatomist.cpp.ControlDictionary.instance()
-cd.addControl('SmallBrainsControl', SmallBrainsControl, 30)
+cd.addControl('SmallBrainsControl', SmallBrainsControl, 3792)
 cm = anatomist.cpp.ControlManager.instance()
 cm.addControl('QAGLWidget3D', '', 'SmallBrainsControl')
