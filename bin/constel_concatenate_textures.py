@@ -54,7 +54,7 @@ def main():
     parser, args = parse_args(arguments)
 
     textures = eval(args.texture_list)
-    final_rseg = concatenate_texture_new(textures)
+    final_rseg = concatenate_texture_new(textures, 10)
 
     aims.write(final_rseg, args.concatenated_texture)
 
