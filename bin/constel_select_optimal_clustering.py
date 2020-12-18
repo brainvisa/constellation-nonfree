@@ -37,13 +37,13 @@ def parse_args(argv):
         type=str,
         help='List of clustering with different numbers of clusters')
     parser.add_argument(
-        'optimal_cluster_numbers',
-        type=str,
-        help='The optimal numbers of clusters to apply')
-    parser.add_argument(
         'region',
         type=str,
         help='Region of interest')
+    parser.add_argument(
+        'optimal_cluster_numbers',
+        type=str,
+        help='The optimal numbers of clusters to apply')
     parser.add_argument(
         'optimal_clustering',
         type=str,
@@ -66,12 +66,13 @@ def main():
     with open(args.optimal_cluster_numbers, 'r') as f:
         dict_optimal = json.load(f)
 
-    nb_clusters = int(dict_optimal[args.region])
+    opt_nb_clusters = int(dict_optimal[args.region])
 
     ind_clustering = aims.read(args.individual_clustering)
     individual_clustering = np.asarray(ind_clustering)
 
-    opt_clustering = individual_clustering[nb_clusters - 2]
+    # Select the optimal clustering
+    opt_clustering = individual_clustering[opt_nb_clusters - 2]
 
     optimal_clustering = aims.TimeTexture_S16()
     optimal_clustering[0].assign(opt_clustering)
