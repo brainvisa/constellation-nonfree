@@ -405,7 +405,7 @@ namespace constel {
         
         vector <float> polygonVerticesIntersection_distances(D);
         float polygonVerticesIntersection_minDistance = 1000;  //mm
-        unsigned closestVerticeNb_On_D;
+        //unsigned closestVerticeNb_On_D;
         size_t closestVerticeIndex_On_mesh;
         for (unsigned j = 0; j < D; ++j) {
           currentPolygonVerticeIndex = currentAims_polygon[j];
@@ -421,7 +421,7 @@ namespace constel {
               < polygonVerticesIntersection_minDistance) {
             polygonVerticesIntersection_minDistance
               = polygonVerticesIntersection_distances[j];
-            closestVerticeNb_On_D = j;
+            //closestVerticeNb_On_D = j;
             closestVerticeIndex_On_mesh = currentPolygonVerticeIndex;
           }
         }
@@ -482,7 +482,7 @@ namespace constel {
           = **polygonVerticesDistMap_2ptr;
         vector <float> polygonVerticesIntersection_distances(D);
         float polygonVerticesIntersection_minDistance = 1000;  //mm
-        unsigned closestVerticeNb_On_D;
+        unsigned closestVerticeNb_On_D = 0;
         for  (unsigned j = 0; j < D; ++j) {
           currentPolygonVerticeIndex = currentAims_polygon[j];
           currentPolygonVertice = meshVertices[currentPolygonVerticeIndex];

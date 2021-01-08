@@ -435,7 +435,7 @@ namespace constel {
   //--------------------
   Connectivity * connMatrixToRois(
     const Fibers & fibers, const AimsSurfaceTriangle & inAimsMesh,
-    float distthresh, float wthresh, Motion motion, bool verbose )
+    float distthresh, float /* wthresh */, Motion motion, bool verbose )
   {
     if (verbose) cout << "Computing connectivity Matrix to Rois" << endl;
     /*
@@ -492,7 +492,6 @@ namespace constel {
     int countRemoved = 0;
     size_t fiberCount = 0, nFibers = fibers.size();
     size_t five_count = nFibers / 20.0;
-    double total_conn = 0;
     Point3df p1, p2;
     for (Fibers::const_iterator iFiber = fibers.begin();
          iFiber != fibers.end(); ++iFiber, ++fiberCount) {
@@ -622,7 +621,7 @@ namespace constel {
     }
     for (size_t i = 0; i < rowsNb; ++i) {
       vector<double> line_i = matrix.getRow(i);
-      for( int j=0; j<colNb; ++j ) {
+      for( size_t j=0; j<colNb; ++j ) {
         matrixSumRows[j] += line_i[j];
       }
     }
@@ -701,7 +700,7 @@ namespace constel {
     if (verbose) cout << "Start connMatrixRegionExtract" << endl;
     const Texture<short> & seedTex0 = seedRegionsTex.begin()->second;
     size_t meshVertexNb = AllMeshconnMatrixToAllMesh.getSize2();//nb columns
-    size_t seedRegionsNb = AllMeshconnMatrixToAllMesh.getSize1();//nb of rows
+    //size_t seedRegionsNb = AllMeshconnMatrixToAllMesh.getSize1();//nb of rows
     size_t seedRegionsMeshVertexNb  = seedTex0.nItem();
     if (verbose)
       cout << "seedRegionsMeshVertexNb(rows):" << seedRegionsMeshVertexNb
@@ -711,7 +710,6 @@ namespace constel {
       << seedRegionLabelVertexNb << endl;
     Connectivities * extractConn_ptr = new Connectivities(
         seedRegionLabelVertexNb, til::SparseVector<double>(meshVertexNb));
-    Connectivities & extractConnMatrix  = *extractConn_ptr;
     * seedVertexIndex = new vector<size_t>;
     (** seedVertexIndex).resize(seedRegionLabelVertexNb);
     size_t vertexCount = 0;
@@ -753,7 +751,7 @@ namespace constel {
       = *AllMeshconnMatrixToAllMesh_ptr;
     const Texture<short> & seedTex0 = seedRegionsTex.begin()->second;
     size_t meshVertexNb = AllMeshconnMatrixToAllMesh[0].size();//nb of columns
-    size_t seedRegionsNb = AllMeshconnMatrixToAllMesh.size();//nb of rows
+    //size_t seedRegionsNb = AllMeshconnMatrixToAllMesh.size();//nb of rows
     size_t seedRegionsMeshVertexNb  = seedTex0.nItem();
     if (verbose)
       cout << "seedRegionsMeshVertexNb(rows):" << seedRegionsMeshVertexNb
@@ -775,7 +773,7 @@ namespace constel {
           cout << 5 * int(rows_count / five_count) << "%..." << flush;
       }
       if (seedTex0[rows_count]==seedRegionLabel) {
-        if (vertexCount >= seedRegionLabelVertexNb) {
+        if (int(vertexCount) >= seedRegionLabelVertexNb) {
           if (verbose)
             cout <<"vertexCount >= seedRegionLabelVertexNb : "
               << vertexCount << ">= " << seedRegionLabelVertexNb << endl;
@@ -887,7 +885,7 @@ namespace constel {
     Connectivities &connMatrixSeedMeshToTargetMeshTargets
       = *connMatrixSeedMeshToTargetMeshTargets_ptr;
     int targetLabel;
-    int five_count = int(seedMeshVertexNb / 20.0);
+    //int five_count = int(seedMeshVertexNb / 20.0);
     for( size_t i = 0; i < seedMeshVertexNb; ++i ) {
       for(size_t j = 0; j < targetMeshVertexNb; ++j) {
         targetLabel = targetTex0[j];
@@ -1085,7 +1083,7 @@ namespace constel {
     if (rowsNb != vertexIndex.size())
       throw runtime_error("Not the same dimensions as vertexIndex vector");
     int five_count = int(rowsNb / 20.0);
-    float currentSum;
+    float currentSum = 0.0f;
     int currentVertexIndex;
     TimeTexture<float> outputDensityTex; //(1, til::size(res));
     int countVertex = 0;
@@ -1098,9 +1096,9 @@ namespace constel {
       }
       outputDensityTex[0][currentVertexIndex]=0;
       vector<double> line_i = connMatrixToAllMesh.getRow(i);
-      for (int j=0; j<colNb; ++j) currentSum += line_i[j];
-      if (currentSum == -1 and verbose) cout <<"-1," << flush;
-      if (isnan(currentSum) and verbose)
+      for (size_t j=0; j<colNb; ++j) currentSum += line_i[j];
+      if ((currentSum == -1) && verbose) cout <<"-1," << flush;
+      if (isnan(currentSum) && verbose)
         cout << "currentSum is nan!!" << flush;
       if (currentSum > 0) {
         outputDensityTex[0][currentVertexIndex] = (float) currentSum;
@@ -1205,7 +1203,7 @@ namespace constel {
     
     for (size_t i = 0; i < meshVertexNb; i++) {
       int label = targetTex0[i];//equivalent to targetRegionsTex[0].item(i)
-      if (1 <= label && label <= targetRegionsNb) {
+      if (( 1 <= label ) && ( label <= int(targetRegionsNb) )) {
         outputDensityTex[0][i] = (float) lineMatrixToTargetRegions[label-1];
       } else {
         outputDensityTex[0][i] = -1;

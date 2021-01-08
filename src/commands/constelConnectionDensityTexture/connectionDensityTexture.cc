@@ -127,7 +127,7 @@ int main(int argc, const char** argv) {
     Reader<aims::SparseOrDenseMatrix> spmreader(inConnMatrixFileName);
     spmreader.read(AllMeshConnMatrix);
 
-    uint cortexMeshVertexNb = uint(inAimsMesh.vertex().size());
+    //uint cortexMeshVertexNb = uint(inAimsMesh.vertex().size());
     connMatrixToAllMesh_ptr = 0;
     
     // Sparse matrix formats
@@ -143,9 +143,9 @@ int main(int argc, const char** argv) {
     connMatrixToAllMesh_ptr
       = new constel::Connectivities(labels[seedRegionLabel],
         til::SparseVector<double>(AllMeshConnMatrix.getSize2()));
-    Connectivities & connMatrixToAllMesh = *connMatrixToAllMesh_ptr;
+    //Connectivities & connMatrixToAllMesh = *connMatrixToAllMesh_ptr;
 
-    if (AllMeshConnMatrix.getSize1() == labels[seedRegionLabel]) {
+    if (AllMeshConnMatrix.getSize1() == (int32_t)labels[seedRegionLabel]) {
       if (verbose)
         cout << "input connectivity matrix correspond to seed region"
           << endl;
@@ -184,7 +184,7 @@ int main(int argc, const char** argv) {
     
     if (connectivityTextureType == "oneSeedRegion_to_targets"
         or connectivityTextureType == "seedVertex_to_targets") {
-      vector<size_t> * seedVertexIndex_ptr = &seedVertexIndex;
+      //vector<size_t> * seedVertexIndex_ptr = &seedVertexIndex;
       Connectivities * extractAndRegroupConnMatrix_ptr
           = connMatrixSeedMesh_to_targetMeshTargets_regroup(AllMeshConnMatrix,
                                                             targetRegionsTex,
@@ -205,7 +205,7 @@ int main(int argc, const char** argv) {
         if (normalize) {
           vector<double> & line_i = *totalConnSeedRegionToTargets_ptr;
           unsigned n = line_i.size();
-          for (int i = 0; i<n ; ++i) {
+          for (unsigned i = 0; i<n ; ++i) {
             sum_i += line_i[i];
           }
           for (size_t j = 0; j<n; ++j) {
@@ -231,7 +231,7 @@ int main(int argc, const char** argv) {
         if (connLineTargetsDensityFileName != "") {
           TimeTexture<float> targetsDensity_tex;
           targetsDensity_tex[0].reserve(targetRegionsNb);
-          for (size_t t = 0; t < targetRegionsNb; ++t) {
+          for (int t = 0; t < targetRegionsNb; ++t) {
             targetsDensity_tex[0].push_back(totalConnSeedRegionToTargets[t]);
           }
           Writer<TimeTexture<float> > wt2(connLineTargetsDensityFileName);

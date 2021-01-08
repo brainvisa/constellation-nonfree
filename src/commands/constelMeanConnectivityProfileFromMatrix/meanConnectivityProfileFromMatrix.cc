@@ -158,7 +158,7 @@ int main(int argc, const char* argv[]) {
       connMatrixToAllMesh_ptr = new constel::Connectivities(
           (*labels_ptr)[seedLabel],
           til::SparseVector<double>(AllMeshConnMatrix.getSize2()));
-      if (AllMeshConnMatrix.getSize1() == (*labels_ptr)[seedLabel]) {
+      if (AllMeshConnMatrix.getSize1() == (int32_t)(*labels_ptr)[seedLabel]) {
         if (verbose)
           cout << "Connectivity matrix corresponds to seed region" << endl;
         for (size_t i = 0; i < (*labels_ptr)[seedLabel]; ++i) {
@@ -221,7 +221,6 @@ int main(int argc, const char* argv[]) {
               seedRegionVertexIndexTex[0].reserve(seedVertexIndex.size());
               for (size_t vertex = 0; vertex < seedVertexIndex.size();
                    vertex++) {
-                unsigned int val = seedVertexIndex[vertex];
                 seedRegionVertexIndexTex[0].push_back(seedVertexIndex[vertex]);
               }
               Writer<TimeTexture<unsigned int > > w(

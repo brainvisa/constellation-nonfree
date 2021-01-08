@@ -18,7 +18,7 @@ namespace constel {
   }
 
   void LengthBundleListener::bundleStarted(
-      const BundleProducer &, const BundleInfo &bundleInfo) {}
+      const BundleProducer &, const BundleInfo & /* bundleInfo */) {}
 
   void LengthBundleListener::fiberStarted(
       const BundleProducer &, const BundleInfo &, const FiberInfo &) {

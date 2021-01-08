@@ -146,9 +146,13 @@ void makeConnectivityTexture_seedConnectionDensity(
     bool verbose) {
   // Computing densityTexture:
   if (connMatrixToAllMesh_ptr)
+  {
     if (verbose) cout << "exist:" << endl;
+  }
   else
+  {
     if (verbose) cout << "not exist !" << endl;
+  }
 
   TimeTexture<float> outputTargetDensityTex = meshDensityTexture(
       connMatrixToAllMesh_ptr);
@@ -238,8 +242,8 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
         cout << "Computing ln(1+matrix) and storing resulting file in " <<
         connMatrixFileName << "..." << endl;
       
-      size_t colNb = extractConnMatrix[0].size();
-      size_t rowsNb = extractConnMatrix.size();
+      //size_t colNb = extractConnMatrix[0].size();
+      //size_t rowsNb = extractConnMatrix.size();
       
       Connectivities::iterator il, el = extractConnMatrix.end();
       Connectivity::sparse_iterator ic, ec;
@@ -290,7 +294,6 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
         seedRegionVertexIndexTex[0].reserve(seedVertexIndex_size);
         
         for (size_t vertex = 0; vertex < seedVertexIndex_size; vertex++) {
-          unsigned int val = (*seedVertexIndex)[vertex];
           seedRegionVertexIndexTex[0].push_back((*seedVertexIndex)[vertex]);
         }
 
@@ -391,7 +394,7 @@ int main(int argc, char* argv[]) {
     string connMatrixFormat = "binar_sparse";
     bool verbose = false;
     bool normalize = false;
-    double meshesDistanceThreshold = 1.0;
+    //double meshesDistanceThreshold = 1.0;
     float meshClosestPoint_maxDistance = 5.0;  //in mm
     string connectivityTextureType = "seed_connection_density";
     string seedRegionVertexIndexFileName;

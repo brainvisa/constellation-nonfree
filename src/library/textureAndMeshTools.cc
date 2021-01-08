@@ -153,7 +153,7 @@ namespace constel {
     //Computing the normal N of the plane:
     Point3df norm = Point3df(0.0);
     norm = crossed((polygon[1]-polygon[0]), (polygon[2] - polygon[0]));
-    int i0, i1, i2;
+    int /* i0 = 0, */i1 = 1, i2 = 2;
     vector<float > normal(3);
     normal[0] = norm[0];
     normal[1] = norm[1];
@@ -161,15 +161,15 @@ namespace constel {
     float norm_comp_max = *(max_element(normal.begin(), normal.end()));
     //
     if (norm[0] == norm_comp_max) {
-      i0 = 0;
+      //i0 = 0;
       i1 = 1;
       i2 = 2;
     } else if (norm[1] == norm_comp_max) {
-      i0 = 1;
+      //i0 = 1;
       i1 = 0;
       i2 = 2;
     } else if (norm[2] == norm_comp_max) {
-      i0 = 2;
+      //i0 = 2;
       i1 = 0;
       i2 = 1;
     }

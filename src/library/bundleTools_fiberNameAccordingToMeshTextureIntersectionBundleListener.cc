@@ -23,17 +23,17 @@ namespace constel {
   }
 
   void FiberNameAccordingToMeshTextureIntersectionBundleListener::fiberStarted(
-      const BundleProducer & bundleProducer,
-      const BundleInfo & bundleInfo,
-      const FiberInfo & fiberInfo) {
+      const BundleProducer & /* bundleProducer */,
+      const BundleInfo & /* bundleInfo */,
+      const FiberInfo & /* fiberInfo */) {
     _intersectionPointsMeshClosestPointsTexLabels_set.clear();
   }
 
   void FiberNameAccordingToMeshTextureIntersectionBundleListener
-      ::newFiberPoint(const BundleProducer &bundleProducer,
-                      const BundleInfo &bundleInfo,
-                      const FiberInfo &fiberInfo,
-                      const FiberPoint &point) {
+      ::newFiberPoint(const BundleProducer & /* bundleProducer */,
+                      const BundleInfo & /* bundleInfo */,
+                      const FiberInfo & /* fiberInfo */,
+                      const FiberPoint & /* point */ ) {
     if ((_bundleInteractionReader
          ->_listenedFiberInfo.getAntFiberPointExistingMeshIntersection())) {
       size_t antFiberPointMeshClosestPoint_index

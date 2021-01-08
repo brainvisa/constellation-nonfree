@@ -257,7 +257,7 @@ namespace {
 
   template <>
   inline
-  void MatrixProxy<Connectivities>::fromMatrix(boost_matrix &matrix) {
+  void MatrixProxy<Connectivities>::fromMatrix(boost_matrix & /* matrix */) {
     // FIXME
     cout << "MatrixProxy<Connectivities>::fromMatrix( boost_matrix &matrix )\n\
             - NOT IMPLEMENTED\n";
@@ -270,7 +270,7 @@ namespace {
     _matrix->clear();
   }
 
-  //
+  /*
   size_t countElements(const boost_sparse_matrix & matrix) {
     size_t count = 0;
     boost_sparse_matrix::const_iterator1 il, el = matrix.end1();
@@ -283,6 +283,7 @@ namespace {
       << matrix.size2() << ": " << count << endl;
     return count;
   }
+  */
 
   boost_sparse_matrix* subMatrixLaplacian(
       const LaplacianWeights & matrix, const vector<int32_t> & items,
@@ -327,6 +328,7 @@ namespace {
     return res;
   }
 
+/*
   boost_sparse_matrix* subMatrix(
       const LaplacianWeights & matrix, const vector<size_t> & items) {
     boost_sparse_matrix * res
@@ -357,6 +359,7 @@ namespace {
     cout << "subMatrix items: " << count << endl;
     return res;
   }
+*/
 
   boost_sparse_matrix* toTransposedBoostSparseMatrix(
       LaplacianWeights & matrix) {
@@ -393,18 +396,17 @@ namespace {
       weightLapl = AimsMeshWeightFiniteElementLaplacian(mesh.begin()->second,
                                                        wmax);
 
-    unsigned line, nl = matp.nlines(), col, nc = matp.ncols();
+    unsigned nl = matp.nlines(), nc = matp.ncols();
     // compute the diffusion duration equivalent to a gaussian sigma
     // (probably a standard formula, I just found it here)
     double dur = sigma * sigma / (8. * ::log(2));
     cout << "dur: " << dur << endl;
     float dt = 0.001; // FIXME
-    unsigned it, niter = unsigned(rint(dur/dt));
+    unsigned niter = unsigned(rint(dur/dt));
     vector<double> outrow;
     cout << "laplacian smoothing... niter: " << niter << ", dt: " << dt
       << endl;
     cout << "lines: " << nl << ", cols: " << nc << endl;
-    double tmp;
 
     LaplacianWeights* laplmat
       = makeLaplacianSmoothingCoefficients(weightLapl, niter, dt, wthresh);
@@ -524,7 +526,7 @@ namespace constel {
 
   void sparseMatrixGaussianSmoothing(
       SparseMatrix & matrix, const AimsSurfaceTriangle & inAimsMesh,
-      float distthresh, float wthresh) {
+      float distthresh, float /* wthresh */) {
     /*
     Smoothing of a connectivity matrix according to the aims mesh and to the
     neighbourhood distance (distthresh), threshold of the resulting matrix by
@@ -583,8 +585,8 @@ namespace constel {
     SparseMatrix & smoothed_matrix = *smoothed_matrix_ptr;
     SparseMatrix::iterator1 s1;
     SparseMatrix::iterator2 s2;
-    if (getVertices(mesh).size()==matrix.getSize1()
-        and getVertices(mesh).size()==matrix.getSize2()) {
+    if (((int32_t)getVertices(mesh).size()==matrix.getSize1())
+        && ((int32_t)getVertices(mesh).size()==matrix.getSize2())) {
       for (s1 = matrix.begin1(); s1 != matrix.end1(); s1++) {
         std::size_t A = s1.index1();
         for (s2 = s1.begin(); s2 != s1.end(); s2++) {
@@ -606,7 +608,7 @@ namespace constel {
           }
         }
       }
-    } else if (getVertices(mesh).size()==matrix.getSize2()) {
+    } else if ((int32_t)getVertices(mesh).size()==matrix.getSize2()) {
       for (s2 = matrix.begin2(); s2 != matrix.end2(); s2++) {
         std::size_t A = s2.index2();
         for (QuickMap::const_iterator A_neigh = res[A].begin();
@@ -633,7 +635,7 @@ namespace constel {
 
   void sparseMatrixGaussianSmoothingNormed(
       SparseMatrix & matrix, const AimsSurfaceTriangle & inAimsMesh,
-      float distthresh, float wthresh) {
+      float distthresh, float /* wthresh */) {
     /*
     Smoothing of a connectivity matrix according to the aims mesh and to the
     neighbourhood distance (distthresh), threshold of the resulting matrix by
@@ -692,8 +694,8 @@ namespace constel {
     SparseMatrix & smoothed_matrix = *smoothed_matrix_ptr;
     SparseMatrix::iterator1 s1;
     SparseMatrix::iterator2 s2;
-    if (getVertices(mesh).size()==matrix.getSize1()
-        and getVertices(mesh).size()==matrix.getSize2()) {
+    if (((int32_t)getVertices(mesh).size()==matrix.getSize1())
+        && ((int32_t)getVertices(mesh).size()==matrix.getSize2())) {
       for (s1 = matrix.begin1(); s1 != matrix.end1(); s1++) {
         std::size_t A = s1.index1();
         for (s2 = s1.begin(); s2 != s1.end(); s2++) {
@@ -715,7 +717,7 @@ namespace constel {
           }
         }
       }
-    } else if (getVertices(mesh).size()==matrix.getSize2()) {
+    } else if ((int32_t)getVertices(mesh).size()==matrix.getSize2()) {
       for (s2 = matrix.begin2(); s2 != matrix.end2(); s2++) {
         size_t A = s2.index2();
         size_t a = res[A].size();
@@ -724,7 +726,6 @@ namespace constel {
           weightsVector[i]=0;
         }
 //         std::cout << weightsVector[0] << std::endl;
-        std::size_t neighACount = 0;
         for (QuickMap::const_iterator A_neigh = res[A].begin();
              A_neigh != res[A].end(); ++A_neigh) {
           double e1 = til::square(A_neigh->second);

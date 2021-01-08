@@ -103,7 +103,7 @@ namespace constel {
       const Fibers &fibers, const AimsSurfaceTriangle &inAimsMesh,
       Motion motion, const TimeTexture<short> &seedRegionsTex,
       size_t seedRegionLabel, string connmatrix_filename,
-      string connTexture_filename) {
+      string /* connTexture_filename */ ) {
     /*  Computing connectivity matrix of a given seed Region
         defined by  seedRegionLabel vertices in seedRegionTex
         (labeled texture, 0 = background)
@@ -202,7 +202,7 @@ namespace constel {
       const Fibers &fibers, const AimsSurfaceTriangle &inAimsMesh,
       Motion motion, const TimeTexture<short> &seedRegionsTex,
       size_t seedRegionLabel, float distthresh, float wthresh,
-      string connmatrix_filename, string connTexture_filename,
+      string connmatrix_filename, string /* connTexture_filename */,
       bool logOption) {
     /*  Computing connectivity matrix of a given seed Region
         defined by  seedRegionLabel vertices in seedRegionTex
@@ -355,7 +355,7 @@ namespace constel {
   //-------------------------------------------
   void matrixSmoothingWithVertexAreaCorrection(
       SparseMatrix * matrix_ptr, const AimsSurfaceTriangle &inAimsMesh,
-      float distthresh, float wthresh) {
+      float distthresh, float /* wthresh */) {
     /*
     Smoothing of a connectivity matrix according to the aims mesh and to the
     neighbourhood distance (distthresh), threshold of the resulting matrix by
@@ -420,8 +420,8 @@ namespace constel {
     SparseMatrix & smoothed_matrix = *smoothed_matrix_ptr;
     SparseMatrix::iterator1 s1;
     SparseMatrix::iterator2 s2;
-    if (getVertices(mesh).size() == matrix.getSize1()
-        and getVertices(mesh).size()==matrix.getSize2()) {
+    if (( (int32_t)getVertices(mesh).size() == matrix.getSize1() )
+        && ((int32_t)getVertices(mesh).size()==matrix.getSize2())) {
       for (s1 = matrix.begin1(); s1 != matrix.end1(); s1++) {
         size_t A = s1.index1();
         for (s2 = s1.begin(); s2 != s1.end(); s2++) {
@@ -442,7 +442,7 @@ namespace constel {
           }
         }
       }
-    } else if (getVertices(mesh).size()==matrix.getSize2()) {
+    } else if ((int32_t)getVertices(mesh).size()==matrix.getSize2()) {
       for ( s2 = matrix.begin2(); s2 != matrix.end2(); s2++ ) {
         size_t A = s2.index2(); 
         for (QuickMap::const_iterator A_neigh = res[A].begin();
