@@ -17,6 +17,7 @@
 
 # python system module
 from __future__ import absolute_import
+from __future__ import print_function
 import os
 import sys
 import json
@@ -24,6 +25,8 @@ import glob
 import numpy
 import argparse
 import textwrap
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 # aims module
@@ -130,9 +133,8 @@ def main():
         for name in names:
             if int(name[0]) == label: 
                 list_names.append(name[1])
-    if args.freesurfer_regions or args.constellation_regions:
-        reorganize_names = list_names
-        reorganize_labels = labels
+    reorganize_names = list_names
+    reorganize_labels = labels
 
     # Only with the AAL nomenclature
     if args.aal_regions:
@@ -161,16 +163,19 @@ def main():
             else:
                 matrices.append(
                     glob.glob(args.gyri_dirname + "/" + region_name +
-                              "/matrix/*_complete_matrix_smooth3.0.imas")[0])
+                              "/matrix/*_complete_matrix_smooth3.0*.imas")[0])
     else:
         matrices = glob.glob(args.gyri_dirname +
-                             "/*/matrix/*_complete_matrix_smooth3.0.imas")
+                             "/*/matrix/*_complete_matrix_smooth3.0*.imas")
+        if not matrices:
+            matrices = glob.glob(os.path.join(args.gyri_dirname, '*.imas'))
 
     # initialyze a matrix M(vertices, labels)
     clusters_matrix = numpy.zeros((len(parcels), len(labels)))
 
     all_rows = []
-    for matrix in matrices:
+    for num, matrix in enumerate(matrices):
+        print('add matrix', num, ' /', len(matrices), ':', matrix)
         mat = aims.read(matrix)
         m = numpy.asarray(mat.denseMatrix())[:, :, 0, 0]
         if m.shape[0] < m.shape[1]:

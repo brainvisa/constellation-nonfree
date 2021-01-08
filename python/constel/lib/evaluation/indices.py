@@ -52,11 +52,11 @@ from six.moves import range
 # ---------------------------Functions-----------------------------------------
 
 
-def silhouette_index(matrix, cluster_number):
+def silhouette_index(matrix, clusterid):
     """Average silhouette method.
 
     The average silhouette approach measures the quality of a clustering. It
-    determines how welle each object lies within its cluster. A high average
+    determines how well each object lies within its cluster. A high average
     silhouette width indicates a good clustering.
     Average silhouette method computes the average silhouette of observations
     for different values of k. The optimal number of clusters k is the one that
@@ -78,17 +78,17 @@ def silhouette_index(matrix, cluster_number):
     sample_silhouette: list of float
         The silhouette scores for each sample.
     """
-    # Calculate the distance matrix.
-    dmat = squareform(pdist(matrix, metric="euclidean"))
-
-    nbiteration = 100  # arbitrary
-    clusterid, error, nfound = kmedoids(dmat, cluster_number, nbiteration)
-
-    # Rename the cluster id between 0 and the number of different values - 1.
-    labels = 0
-    for i in numpy.unique(clusterid):
-        clusterid[clusterid == i] = labels
-        labels += 1
+    # # Calculate the distance matrix.
+    # dmat = squareform(pdist(matrix, metric="euclidean"))
+    #
+    # nbiteration = 100  # arbitrary
+    # clusterid, error, nfound = kmedoids(dmat, cluster_number, nbiteration)
+    #
+    # # Rename the cluster id between 0 and the number of different values - 1.
+    # labels = 0
+    # for i in numpy.unique(clusterid):
+    #     clusterid[clusterid == i] = labels
+    #     labels += 1
 
     # Compute the average silhouette width (asw) score, average value for all
     # samples.
@@ -97,7 +97,7 @@ def silhouette_index(matrix, cluster_number):
     # Compute the silhouette scores for each sample.
     sample_silhouette = silhouette_samples(matrix, clusterid)
 
-    return asw_score, sample_silhouette, clusterid
+    return asw_score, sample_silhouette
 
 
 def dunn_score(matrix, cluster_number):
@@ -457,7 +457,7 @@ def gap_index(matrix, b):
     ymin = y.min()
     ymax = y.max()
     for i in six.moves.xrange(b):
-        Xb = numpy.vstack([numpy.random.uniform(xmin, xmax, Nsample), 
+        Xb = numpy.vstack([numpy.random.uniform(xmin, xmax, Nsample),
                           numpy.random.uniform(ymin, ymax, Nsample)]).T
         clusterid, error, nfound = kmedoids(matrix, K, 100)
 

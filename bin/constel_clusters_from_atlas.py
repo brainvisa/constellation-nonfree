@@ -139,5 +139,6 @@ def main():
         indiv_clusters[i].assign(res_classes)
     aims.write(indiv_clusters, args.individual_classes)
 
+
 if __name__ == "__main__":
     main()
