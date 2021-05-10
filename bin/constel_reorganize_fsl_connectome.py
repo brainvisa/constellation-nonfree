@@ -99,8 +99,8 @@ with open(fdt_matrix, 'r') as f:
             connectome[inv_idx[v2_idx], v1_idx] += nb_connections
 
 # Write the matrix as Volume on the disk
-if connectome.shape[0] < connectome.shape[1]: # SparseOrDenseMatrix convention
-    connectome = np.transpose(connectome)
+if connectome.shape[0] < connectome.shape[1]:  # SparseOrDenseMatrix convention
+    connectome = numpy.transpose(connectome)
 vol = aims.Volume(connectome.astype(float))
 smat = aims.SparseOrDenseMatrix()
 smat.setMatrix(vol)
