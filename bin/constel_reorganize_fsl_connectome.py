@@ -79,7 +79,7 @@ inv_idx[idx] = list(range(len(idx)))
 connectome = numpy.zeros((len(idx), len(np_vlabels)))
 
 coords_list = []
-nv_hemi = len(np_vlabels) / 2
+nv_hemi = len(np_vlabels) // 2
 with open(coords, 'r') as f:
     for line in f:
         elements = line.strip().split()
@@ -99,6 +99,8 @@ with open(fdt_matrix, 'r') as f:
             connectome[inv_idx[v2_idx], v1_idx] += nb_connections
 
 # Write the matrix as Volume on the disk
+if connectome.shape[0] < connectome.shape[1]: # SparseOrDenseMatrix convention
+    connectome = np.transpose(connectome)
 vol = aims.Volume(connectome.astype(float))
 smat = aims.SparseOrDenseMatrix()
 smat.setMatrix(vol)
