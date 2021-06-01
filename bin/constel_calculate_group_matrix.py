@@ -99,6 +99,7 @@ def main():
             list_matrices.append(reduced_matrix.astype('float32'))
         sum_matrix = [sum(i) for i in zip(*list_matrices)]
         averaged_matrix = numpy.array(sum_matrix) / len(list_matrices)
+        averaged_matrix = numpy.transpose(averaged_matrix)
 #        sum_matrix = sum(list_matrices)
 #        print('shape:', sum_matrix.shape)
 #        averaged_matrix = sum_matrix / len(list_matrices)
