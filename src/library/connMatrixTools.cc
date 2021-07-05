@@ -1,14 +1,20 @@
 #include <constellation/connMatrixTools.h>
 #include <constellation/textureAndMeshTools.h>
 #include <aims/mesh/curv.h>
-#include <til/numeric_array.h>
-#include <til/numeric_array_tools.h>
 #include <float.h>
 
 using namespace aims;
 using namespace carto;
 using namespace std;
 using namespace constel;
+
+namespace
+{
+  float dist2( const Point3df & p1, const Point3df & p2 )
+  {
+    return (p2 - p1).norm2();
+  }
+}
 
 namespace constel {
 
@@ -341,14 +347,15 @@ namespace constel {
         unsigned currentPolygonVerticeIndex;
         Point3df currentPolygonVertice;
         * polygonVerticesDistMap = new QuickMap(D);
-        til::numeric_array<float, 3> intersection_point_na(
+          Point3df intersection_point_na(
             (*intersection_point)[0],
             (*intersection_point)[1],
             (*intersection_point)[2]);
+
         for  ( unsigned j = 0; j < D; ++j) {
           currentPolygonVerticeIndex = currentAims_polygon[j];
           currentPolygonVertice = meshVertices[currentPolygonVerticeIndex];
-          til::numeric_array<float, 3> currentPolygonVertice_na(
+          Point3df currentPolygonVertice_na(
               currentPolygonVertice[0],
               currentPolygonVertice[1],
               currentPolygonVertice[2]);
@@ -398,11 +405,11 @@ namespace constel {
         unsigned currentPolygonVerticeIndex;
         Point3df currentPolygonVertice;
         * closestPointsTointersectionWeightMap = new QuickMap(1);
-        til::numeric_array<float, 3> intersection_point_na(
+        Point3df intersection_point_na(
             (*intersection_point)[0],
             (*intersection_point)[1],
             (*intersection_point)[2]);
-        
+
         vector <float> polygonVerticesIntersection_distances(D);
         float polygonVerticesIntersection_minDistance = 1000;  //mm
         //unsigned closestVerticeNb_On_D;
@@ -410,7 +417,7 @@ namespace constel {
         for (unsigned j = 0; j < D; ++j) {
           currentPolygonVerticeIndex = currentAims_polygon[j];
           currentPolygonVertice = meshVertices[currentPolygonVerticeIndex];
-          til::numeric_array<float, 3> currentPolygonVertice_na(
+          Point3df currentPolygonVertice_na(
               currentPolygonVertice[0],
               currentPolygonVertice[1],
               currentPolygonVertice[2]);
@@ -473,11 +480,11 @@ namespace constel {
         unsigned currentPolygonVerticeIndex;
         Point3df currentPolygonVertice;
         * polygonVerticesDistMap_2ptr = new QuickMap(D);
-        til::numeric_array<float, 3> intersection_point_na(
+        Point3df intersection_point_na(
             (*intersection_point)[0],
             (*intersection_point)[1],
             (*intersection_point)[2]);
-        
+
         constel::QuickMap & polygonVerticesDistMap
           = **polygonVerticesDistMap_2ptr;
         vector <float> polygonVerticesIntersection_distances(D);
@@ -486,7 +493,7 @@ namespace constel {
         for  (unsigned j = 0; j < D; ++j) {
           currentPolygonVerticeIndex = currentAims_polygon[j];
           currentPolygonVertice = meshVertices[currentPolygonVerticeIndex];
-          til::numeric_array<float, 3> currentPolygonVertice_na(
+          Point3df currentPolygonVertice_na(
               currentPolygonVertice[0],
               currentPolygonVertice[1],
               currentPolygonVertice[2]);
