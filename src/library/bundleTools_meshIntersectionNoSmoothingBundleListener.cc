@@ -20,9 +20,6 @@ namespace constel {
   {
     _bundleInteractionReader = &bundleInteractionReader;
     _meshPolygonsByVertex_Index  = constel::surfacePolygonsIndex(_aimsMesh);
-    til::Mesh1 mesh0;
-    til::convert(mesh0, _aimsMesh);
-    _mesh = addNeighborsToMesh(mesh0);
     //KDTREE creation:
     KDTreeVertices vert = kdt_vertices( _aimsMesh );
     _mesh_kdt_ptr = new KDTree( vert.begin(), vert.end() );

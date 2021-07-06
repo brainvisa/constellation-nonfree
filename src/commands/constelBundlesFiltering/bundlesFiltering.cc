@@ -20,7 +20,6 @@ int main(int argc, const char* argv[]) {
     string mode = "Name1_Name2orNotInMesh";
     string mname;
     string gyrus;
-    rc_ptr<Mesh> mesh;
     rc_ptr<TimeTexture<short> > tex;
     Reader<AimsSurfaceTriangle> r;
     Reader<TimeTexture<short> > texR;
@@ -89,12 +88,7 @@ int main(int argc, const char* argv[]) {
 
     app.initialize();
 
-    rc_ptr<AimsSurfaceTriangle> s;
-    s.reset(r.read());
-    til::Mesh1 mesh0;
-    til::convert(mesh0, *s);
-    mesh.reset(new Mesh);
-    *mesh = addNeighborsToMesh(mesh0);
+    rc_ptr<AimsSurfaceTriangle> mesh( r.read() );
 
     if (nimMinlength < 0) nimMinlength = cortMinlength;
     if (nimMaxlength == -2) nimMaxlength = cortMaxlength;
@@ -111,8 +105,8 @@ int main(int argc, const char* argv[]) {
 
     if (verbose) {
       cout << "done" << endl;
-      cout << "# vertices : " << getVertices(*mesh).size() << endl;
-      cout << "# faces : " << getFaceIndices(*mesh).size() << endl;
+      cout << "# vertices : " << mesh->vertex().size() << endl;
+      cout << "# faces : " << mesh->polygon().size() << endl;
       cout << "Texture dim : " << (*tex)[0].nItem() << endl;
     }
 

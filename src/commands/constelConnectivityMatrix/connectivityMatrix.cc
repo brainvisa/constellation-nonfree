@@ -175,7 +175,8 @@ void makeConnectivityTexture_seedConnectionDensity(
     }
   }
 
-  til::aimswrite(outputTargetDensityTex_def, connTextureFileName);
+  Writer<TimeTexture<float> > w( connTextureFileName );
+  w.write( outputTargetDensityTex_def );
 }
 
 //-----------------Texture: Seed Mean Connectivity Profile---------------------
@@ -329,7 +330,8 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
     cout << "Writing mean connectivity profile texture:" <<
     connTextureFileName << endl;
 
-  til::aimswrite(outputTargetDensityTex, connTextureFileName);
+  Writer<TimeTexture<float> > w( connTextureFileName );
+  w.write( outputTargetDensityTex );
   extractConnMatrix_ptr.reset(); // delete
 
   delete seedVertexIndex;
@@ -360,8 +362,8 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
           cout << "Writing mean connectivity profile texture:" <<
           connTextureToTargetMeshesFileNames[meshLabel] << endl;
 
-        til::aimswrite(outputTargetDensityTex,
-                       connTextureToTargetMeshesFileNames[meshLabel]);
+        write( outputTargetDensityTex,
+               connTextureToTargetMeshesFileNames[meshLabel] );
 
         delete extractConnMatrix_ptr;
         delete seedVertexIndex;
@@ -372,7 +374,7 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
 }
 
 
-int main(int argc, char* argv[]) {
+int main(int argc, const char* argv[]) {
   try {
     string bundleFilename;
     Reader<AimsSurfaceTriangle> inMeshAimsR;
@@ -407,7 +409,7 @@ int main(int argc, char* argv[]) {
     AimsData<short> roisMask;
 
     AimsApplication app(
-        argc, aims_const_hack(argv),
+        argc, argv,
         "computes and writes connection density texture(s).\n\
         Modes supported: (1) mesh_to_mesh (2) oneSeedRegion_to_mesh");
 

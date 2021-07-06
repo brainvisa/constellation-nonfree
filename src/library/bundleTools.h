@@ -5,6 +5,7 @@
 #include <aims/sparsematrix/sparseMatrix.h>
 #include <constellation/tildefs.h>
 #include <constellation/connectivities.h>
+#include <aims/mesh/texture.h>
 
 
 //---------------------
@@ -182,7 +183,6 @@ namespace constel {
     const AimsSurfaceTriangle &_aimsMesh;
 
     PolygonsByVertexIndex _meshPolygonsByVertex_Index;
-    constel::Mesh _mesh;
     //For computing closest point to meshes in a fast computation time:
     constel::KDTree * _mesh_kdt_ptr;
     std::vector<constel::QuickMap> _meshDistanceThresholdNeighborhoodByVertex;
@@ -229,7 +229,6 @@ namespace constel {
     const AimsSurfaceTriangle &_aimsMesh;
 
     PolygonsByVertexIndex _meshPolygonsByVertex_Index;
-    constel::Mesh _mesh;
     //For computing closest point to meshes in a fast computation time:
     constel::KDTree * _mesh_kdt_ptr;
 
@@ -280,7 +279,8 @@ namespace constel {
   //---------------------------------------
   //  SavingMeshIntersectionBundleListener 
   //---------------------------------------
-  class SavingMeshIntersectionBundleListener : public aims::BundleListener {
+  class SavingMeshIntersectionBundleListener : public aims::BundleListener
+  {
    public:
     SavingMeshIntersectionBundleListener(
         BundleInteractionReader &bundleInteractionReader,
@@ -444,7 +444,8 @@ namespace constel {
   //  FiberNameAccordingToMeshIntersectionBundleListener 
   //------------------------------------------------------
   class FiberNameAccordingToMeshIntersectionBundleListener
-      : public aims::BundleListener {
+      : public aims::BundleListener
+  {
    public:
     FiberNameAccordingToMeshIntersectionBundleListener(
         BundleInteractionReader &bundleInteractionReader,
@@ -499,7 +500,8 @@ namespace constel {
   //  SubSamplerFromMeshIntersectionBundleListener 
   //-----------------------------------------------
   class SubSamplerFromMeshIntersectionBundleListener
-      : public aims::BundleProducer, public aims::BundleListener {
+      : public aims::BundleProducer, public aims::BundleListener
+  {
    public:
     SubSamplerFromMeshIntersectionBundleListener(
         BundleInteractionReader &bundleInteractionReader, int step);

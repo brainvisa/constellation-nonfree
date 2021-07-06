@@ -1,7 +1,7 @@
 #ifndef CONSTELLATION_TILDEFS_H
 #define CONSTELLATION_TILDEFS_H
 
-#include <cathier/aims_wrap.h>
+#include <cathier/Mesh.h>
 #include <kdtree++/kdtree.hpp>
 
 namespace constel {
@@ -24,20 +24,6 @@ namespace constel {
   typedef std::vector< std::pair< uint, Point3df > > KDTreeVertices;
 
   /// get vertices vector with index for each vertex
-  inline
-  KDTreeVertices kdt_vertices( const til::Mesh_N & mesh )
-  {
-    std::vector<std::pair< uint, Point3df > > vert;
-    vert.reserve( getVertices(mesh).size() );
-    til::MeshTraits<til::Mesh_N>::VertexCollection::const_iterator
-      iv, ev = getVertices(mesh).end();
-    uint index = 0;
-    for( iv=getVertices(mesh).begin(); iv!=ev; ++iv, ++index )
-      vert.push_back( std::make_pair(
-        index, Point3df( (*iv)[0], (*iv)[1], (*iv)[2] ) ) );
-    return vert;
-  }
-
   inline
   KDTreeVertices kdt_vertices( const AimsSurfaceTriangle & mesh )
   {

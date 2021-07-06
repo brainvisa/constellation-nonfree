@@ -2,6 +2,8 @@
 #include <constellation/tildefs.h>
 #include <constellation/connectivities.h>
 #include <cathier/triangle_mesh_geodesic_map.h>
+#include <aims/io/writer.h>
+#include <cathier/aims_wrap.h> // used for Cast<Point3df, numeric_array<> >
 
 
 using namespace aims;

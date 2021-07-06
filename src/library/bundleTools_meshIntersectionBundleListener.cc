@@ -3,6 +3,7 @@
 #include <constellation/textureAndMeshTools.h>
 // includes from CATHIER
 #include <cathier/triangle_mesh_geodesic_map.h>
+#include <cathier/aims_wrap.h> // used for Cast<Point3df, numeric_array<> >
 
 using namespace constel;
 using namespace aims;
@@ -28,7 +29,7 @@ namespace constel {
     _meshPolygonsByVertex_Index  = constel::surfacePolygonsIndex(_aimsMesh);
     til::Mesh1 mesh0;
     til::convert(mesh0, _aimsMesh);
-    _mesh = addNeighborsToMesh(mesh0);
+    Mesh mesh = addNeighborsToMesh(mesh0);
     // Comuting geomap : neighborhood map
     if (_verbose)
         cout << "meshClosestPoint_minDistance:" << _meshClosestPointMaxDistance
@@ -36,24 +37,27 @@ namespace constel {
     if (_verbose) cout << "Computing geomap..." << flush;
     if (_verbose) cout << "step 1..." << flush;
     _meshDistanceThresholdNeighborhoodByVertex.reserve(
-        getVertices(_mesh).size());
-    for(uint v = 0; v < getVertices(_mesh).size(); ++v) {
+        aimsMesh.vertex().size() );
+    for(uint v = 0; v < aimsMesh.vertex().size(); ++v)
+    {
       _meshDistanceThresholdNeighborhoodByVertex.push_back(QuickMap());
     }
-    if (_meshDistanceThreshold > 0) {
+    if (_meshDistanceThreshold > 0)
+    {
       til::ghost::GMapStop_AboveThreshold<double> stopGhost(
           _meshDistanceThreshold);
       boost::shared_ptr<CNeighborhoods> pneighc = til::circular_neighborhoods(
-          getVertices(_mesh), getFaceIndices(_mesh));
+          getVertices(mesh), getFaceIndices(mesh));
       til::Triangle_mesh_geodesic_map<
           Mesh::VertexCollection, CNeighborhoods, double,
           til::ghost::GMapStop_AboveThreshold<double>,
           til::policy::GMap_DefaultStorage_sparse_vect_dbl>
-            geomap(getVertices(_mesh), *pneighc, stopGhost);
+            geomap(getVertices(mesh), *pneighc, stopGhost);
       vector<size_t> startPoints(1);
       vector<double> dist(1, 0.0);
-      vector<size_t> nneigh(til::size(getVertices(_mesh)));
-      for (size_t i = 0; i < til::size(getVertices(_mesh)); ++i) {
+      vector<size_t> nneigh( aimsMesh.vertex().size() );
+      for (size_t i = 0; i < aimsMesh.vertex().size(); ++i)
+      {
         startPoints[0] = i;
         geomap.init(startPoints, dist);
         geomap.process();

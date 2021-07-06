@@ -15,7 +15,7 @@ int main(int argc, const char* argv[]) {
     string fileNameOut;
     string fileBundlesNameOut = "";
     string mode = "Name1_Name2";
-    rc_ptr<Mesh> mesh;
+    rc_ptr<AimsSurfaceTriangle> mesh;
     rc_ptr<TimeTexture<short> > tex;
     Reader<AimsSurfaceTriangle> r;
     int addInt = 0;
@@ -58,14 +58,10 @@ int main(int argc, const char* argv[]) {
         "show as much information as possible", true);
     app.initialize();
 
-    rc_ptr<AimsSurfaceTriangle> s;
-    s.reset(r.read());
-    til::Mesh1 mesh0;
-    til::convert(mesh0, *s);
-    mesh.reset(new Mesh);
-    *mesh = addNeighborsToMesh(mesh0);
+    mesh.reset( r.read() );
 
-    if (!mname.empty()) {
+    if (!mname.empty())
+    {
       Reader<AffineTransformation3d> mreader(mname);
       mreader.read(motion);
     }
@@ -75,8 +71,8 @@ int main(int argc, const char* argv[]) {
       //tex.reset(texR.read());
     if (verbose) {
       cout << "done" << endl;
-      cout << "# vertices : " << getVertices(*mesh).size() << endl;
-      cout << "# faces : " << getFaceIndices(*mesh).size() << endl;
+      cout << "# vertices : " << mesh->vertex().size() << endl;
+      cout << "# faces : " << mesh->polygon().size() << endl;
       cout << "Texture dim : " << (*tex)[0].nItem() << endl;
     }
 

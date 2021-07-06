@@ -1,6 +1,8 @@
 #include <constellation/connMatrix.h>
 #include <cathier/triangle_mesh_geodesic_map.h>
 #include <aims/sparsematrix/sparseordensematrix.h>
+#include <aims/io/writer.h>
+#include <cathier/aims_wrap.h> // used for Cast<Point3df, numeric_array<> >
 
 
 using namespace aims;

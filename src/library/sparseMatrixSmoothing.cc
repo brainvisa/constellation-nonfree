@@ -12,6 +12,8 @@
 #include <boost/numeric/ublas/matrix.hpp> // zero_matrix is needed in operation
 #include <boost/numeric/ublas/operation.hpp>
 #include <boost/numeric/ublas/operation_sparse.hpp>
+#include <aims/utility/converter_texture.h>
+#include <cathier/aims_wrap.h> // used for Cast<Point3df, numeric_array<> >
 #include <float.h>
 
 using namespace aims;
@@ -538,16 +540,13 @@ namespace constel {
     til::convert(mesh0, inAimsMesh);
     mesh = addNeighborsToMesh(mesh0);
 
-    std::cout << "getVertices(mesh):" << getVertices(mesh)[0] << ", "
-      << getVertices(mesh)[1]  << std::endl;
-
     // Comuting geomap : neighborhood map
     //if distthresh!= 0
     double two_pi = 2*3.1415926535897931;
     const double G_THRESH = 0.001; //threshold for connectivity
     double square_sigma = distthresh*distthresh;
     std::cout << "Computing geomap..." << std::flush;
-    std::vector<QuickMap> res(getVertices(mesh).size());
+    std::vector<QuickMap> res( inAimsMesh.vertex().size() );
     til::ghost::GMapStop_AboveThreshold<double> stopGhost(distthresh);
     boost::shared_ptr<CNeighborhoods> pneighc
       = til::circular_neighborhoods(getVertices(mesh), getFaceIndices(mesh));
