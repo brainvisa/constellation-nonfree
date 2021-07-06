@@ -3,17 +3,17 @@
 #define BOOST_UBLAS_SHALLOW_ARRAY_ADAPTOR
 
 #include <constellation/sparseMatrixSmoothing.h>
-#include <constellation/tildefs.h>
 #include <constellation/connConversion.h>
 #include <aims/mesh/curv.h>
 #include <aims/sparsematrix/sparseordensematrix.h>
-#include <cathier/triangle_mesh_geodesic_map.h>
 #include <cartobase/smart/rcptrtrick.h>
 #include <boost/numeric/ublas/matrix.hpp> // zero_matrix is needed in operation
 #include <boost/numeric/ublas/operation.hpp>
 #include <boost/numeric/ublas/operation_sparse.hpp>
+#include <aims/utility/stl_conversion.h>
+#include <aims/distancemap/meshdistance.h>
+#include <aims/distancemap/meshvoronoi.h>
 #include <aims/utility/converter_texture.h>
-#include <cathier/aims_wrap.h> // used for Cast<Point3df, numeric_array<> >
 #include <float.h>
 
 using namespace aims;
@@ -534,11 +534,6 @@ namespace constel {
     neighbourhood distance (distthresh), threshold of the resulting matrix by
     wthresh
     */
-    //Convert inAimsMesh to Mesh mesh (Pascal Cathier Format)
-    Mesh mesh;
-    til::Mesh1 mesh0;
-    til::convert(mesh0, inAimsMesh);
-    mesh = addNeighborsToMesh(mesh0);
 
     // Comuting geomap : neighborhood map
     //if distthresh!= 0
@@ -546,31 +541,18 @@ namespace constel {
     const double G_THRESH = 0.001; //threshold for connectivity
     double square_sigma = distthresh*distthresh;
     std::cout << "Computing geomap..." << std::flush;
-    std::vector<QuickMap> res( inAimsMesh.vertex().size() );
-    til::ghost::GMapStop_AboveThreshold<double> stopGhost(distthresh);
-    boost::shared_ptr<CNeighborhoods> pneighc
-      = til::circular_neighborhoods(getVertices(mesh), getFaceIndices(mesh));
-    til::Triangle_mesh_geodesic_map<
-        Mesh::VertexCollection, CNeighborhoods, double,
-        til::ghost::GMapStop_AboveThreshold<double>,
-        til::policy::GMap_DefaultStorage_sparse_vect_dbl>
-            geomap(getVertices(mesh), *pneighc, stopGhost);
-    std::vector<std::size_t> startPoints(1);
-    std::vector<double> dist(1, 0.0);
-    std::vector<std::size_t> nneigh(til::size(getVertices(mesh))); {
-      for (std::size_t i = 0; i < til::size(getVertices(mesh)); ++i) {
-        startPoints[0] = i;
-        geomap.init(startPoints, dist);
-        geomap.process();
-        boost::shared_ptr<til::sparse_vector<double> > tmp
-          = geomap.distanceMap();
-        res[i].resize(tmp->getMap().size()); {
-            using namespace til::expr;
-            til::detail::loop_xx(castTo(*_1, *_2), res[i], tmp->getMap());
-        }
+    size_t nv = inAimsMesh.vertex().size();
 
-        nneigh[i] = res[i].size();
-      }
+    Texture<int16_t> start( nv, 0 );
+    std::vector< std::map<size_t, float> > res(nv);
+
+    for (std::size_t i = 0; i < nv; ++i)
+    {
+      start[i] = 1;
+      toMap( meshdistance::MeshDistance( inAimsMesh.begin()->second, start,
+                                         false, distthresh ).data(),
+             res[i], meshdistance::MESHDISTANCE_UNREACHED );
+      start[i] = 0;
     }
     std::cout << "OK" << std::endl;
     
@@ -580,41 +562,53 @@ namespace constel {
     SparseMatrix & smoothed_matrix = *smoothed_matrix_ptr;
     SparseMatrix::iterator1 s1;
     SparseMatrix::iterator2 s2;
-    if (((int32_t)getVertices(mesh).size()==matrix.getSize1())
-        && ((int32_t)getVertices(mesh).size()==matrix.getSize2())) {
-      for (s1 = matrix.begin1(); s1 != matrix.end1(); s1++) {
+    if( ( (int32_t) nv == matrix.getSize1() )
+        && ( (int32_t) nv == matrix.getSize2() ) )
+    {
+      for (s1 = matrix.begin1(); s1 != matrix.end1(); s1++)
+      {
         std::size_t A = s1.index1();
-        for (s2 = s1.begin(); s2 != s1.end(); s2++) {
+        for (s2 = s1.begin(); s2 != s1.end(); s2++)
+        {
           std::size_t B = s2.index2();
           double w = 0;
-          for (QuickMap::const_iterator B_neigh = res[B].begin();
-               B_neigh != res[B].end(); ++B_neigh) {
-            for (QuickMap::const_iterator A_neigh = res[A].begin();
-                 A_neigh != res[A].end(); ++A_neigh) {
-              double e1 = til::square(A_neigh->second);
-              double e2 = til::square(B_neigh->second);
+          for (map<size_t, float>::const_iterator B_neigh = res[B].begin();
+               B_neigh != res[B].end(); ++B_neigh)
+          {
+            for (map<size_t, float>::const_iterator A_neigh = res[A].begin();
+                 A_neigh != res[A].end(); ++A_neigh)
+            {
+              double e1 = square(A_neigh->second);
+              double e2 = square(B_neigh->second);
               //"smoothing coefficient"
               w = (*s2)*std::exp(-(e1 + e2) / (2*distthresh*distthresh))
                   /(square_sigma * two_pi);
-              if (w > G_THRESH) {
+              if (w > G_THRESH)
+              {
                 smoothed_matrix(A_neigh->first,B_neigh->first)+=w;
               }
             }
           }
         }
       }
-    } else if ((int32_t)getVertices(mesh).size()==matrix.getSize2()) {
-      for (s2 = matrix.begin2(); s2 != matrix.end2(); s2++) {
+    }
+    else if ((int32_t) nv == matrix.getSize2())
+    {
+      for (s2 = matrix.begin2(); s2 != matrix.end2(); s2++)
+      {
         std::size_t A = s2.index2();
-        for (QuickMap::const_iterator A_neigh = res[A].begin();
-             A_neigh != res[A].end(); ++A_neigh) {
-          double e1 = til::square(A_neigh->second);
+        for (map<size_t, float>::const_iterator A_neigh = res[A].begin();
+             A_neigh != res[A].end(); ++A_neigh)
+        {
+          double e1 = square(A_neigh->second);
           
           double smooth_coef = std::exp(-e1  / ( 2*distthresh*distthresh));
-          for (s1 = s2.begin(); s1 != s2.end(); s1++) {
+          for (s1 = s2.begin(); s1 != s2.end(); s1++)
+          {
             std::size_t B = s1.index1();
             float w = (*s1)*smooth_coef;
-            if (w > G_THRESH) {
+            if (w > G_THRESH)
+            {
               smoothed_matrix(B,A_neigh->first) += w;
             }
           }
@@ -636,14 +630,6 @@ namespace constel {
     neighbourhood distance (distthresh), threshold of the resulting matrix by
     wthresh. Each connection contribution is normalized to 1
     */
-    //Convert inAimsMesh to Mesh mesh (Pascal Cathier Format)
-    Mesh mesh;
-    til::Mesh1 mesh0;
-    til::convert(mesh0, inAimsMesh);
-    mesh = addNeighborsToMesh(mesh0);
-
-    std::cout << "getVertices(mesh):" << getVertices(mesh)[0] << ", "
-      << getVertices(mesh)[1]  << std::endl;
 
     // Comuting geomap : neighborhood map
     //if distthresh!= 0
@@ -651,31 +637,18 @@ namespace constel {
     const double G_THRESH = 0.001; //threshold for connectivity
     double square_sigma = distthresh*distthresh;
     std::cout << "Computing geomap..." << std::flush;
-    std::vector<QuickMap> res(getVertices(mesh).size());
-    til::ghost::GMapStop_AboveThreshold<double> stopGhost(distthresh);
-    boost::shared_ptr<CNeighborhoods> pneighc = til::circular_neighborhoods(
-        getVertices(mesh), getFaceIndices(mesh));
-    til::Triangle_mesh_geodesic_map<
-        Mesh::VertexCollection, CNeighborhoods, double,
-        til::ghost::GMapStop_AboveThreshold<double>,
-        til::policy::GMap_DefaultStorage_sparse_vect_dbl >
-            geomap(getVertices(mesh), *pneighc, stopGhost);
-    std::vector<std::size_t> startPoints(1);
-    std::vector<double> dist(1, 0.0);
-    std::vector<std::size_t> nneigh(til::size(getVertices(mesh))); {
-      for (std::size_t i = 0; i < til::size(getVertices(mesh)); ++i) {
-        startPoints[0] = i;
-        geomap.init(startPoints, dist);
-        geomap.process();
-        boost::shared_ptr<til::sparse_vector<double> > tmp
-            = geomap.distanceMap();
-        res[i].resize(tmp->getMap().size()); {
-          using namespace til::expr;
-          til::detail::loop_xx(castTo(*_1, *_2), res[i], tmp->getMap());
-        }
+    size_t nv = inAimsMesh.vertex().size();
 
-        nneigh[i] = res[i].size();
-      }
+    Texture<int16_t> start( nv, 0 );
+    std::vector< std::map<size_t, float> > res(nv);
+
+    for (std::size_t i = 0; i < nv; ++i)
+    {
+      start[i] = 1;
+      toMap( meshdistance::MeshDistance( inAimsMesh.begin()->second, start,
+                                         false, distthresh ).data(),
+             res[i], meshdistance::MESHDISTANCE_UNREACHED );
+      start[i] = 0;
     }
     std::cout << "OK" << std::endl;
     
@@ -685,62 +658,78 @@ namespace constel {
     SparseMatrix & smoothed_matrix = *smoothed_matrix_ptr;
     SparseMatrix::iterator1 s1;
     SparseMatrix::iterator2 s2;
-    if (((int32_t)getVertices(mesh).size()==matrix.getSize1())
-        && ((int32_t)getVertices(mesh).size()==matrix.getSize2())) {
-      for (s1 = matrix.begin1(); s1 != matrix.end1(); s1++) {
+    if (((int32_t) nv == matrix.getSize1())
+        && ((int32_t) nv == matrix.getSize2()))
+    {
+      for (s1 = matrix.begin1(); s1 != matrix.end1(); s1++)
+      {
         std::size_t A = s1.index1();
-        for (s2 = s1.begin(); s2 != s1.end(); s2++) {
+        for (s2 = s1.begin(); s2 != s1.end(); s2++)
+        {
           std::size_t B = s2.index2();
           double w = 0;
-          for (QuickMap::const_iterator B_neigh = res[B].begin();
-               B_neigh != res[B].end(); ++B_neigh) {
-            for (QuickMap::const_iterator A_neigh = res[A].begin();
-                 A_neigh != res[A].end(); ++A_neigh) {
-              double e1 = til::square(A_neigh->second);
-              double e2 = til::square(B_neigh->second);
+          for (map<size_t, float>::const_iterator B_neigh = res[B].begin();
+               B_neigh != res[B].end(); ++B_neigh)
+          {
+            for (map<size_t, float>::const_iterator A_neigh = res[A].begin();
+                 A_neigh != res[A].end(); ++A_neigh)
+            {
+              double e1 = square(A_neigh->second);
+              double e2 = square(B_neigh->second);
               //"smoothing coefficient"
               w = (*s2)*std::exp(-(e1 + e2)  / (2*distthresh*distthresh ))
                   /(square_sigma * two_pi);
-              if (w > G_THRESH) {
+              if (w > G_THRESH)
+              {
                 smoothed_matrix(A_neigh->first,B_neigh->first)+=w;
               }
             }
           }
         }
       }
-    } else if ((int32_t)getVertices(mesh).size()==matrix.getSize2()) {
-      for (s2 = matrix.begin2(); s2 != matrix.end2(); s2++) {
+    }
+    else if ((int32_t) nv == matrix.getSize2())
+    {
+      for (s2 = matrix.begin2(); s2 != matrix.end2(); s2++)
+      {
         size_t A = s2.index2();
         size_t a = res[A].size();
         std::vector<float> weightsVector(a);
-        for (size_t i = 0; i <a; i++) {
+        for (size_t i = 0; i <a; i++)
+        {
           weightsVector[i]=0;
         }
 //         std::cout << weightsVector[0] << std::endl;
-        for (QuickMap::const_iterator A_neigh = res[A].begin();
-             A_neigh != res[A].end(); ++A_neigh) {
-          double e1 = til::square(A_neigh->second);
+        for (map<size_t, float>::const_iterator A_neigh = res[A].begin();
+             A_neigh != res[A].end(); ++A_neigh)
+        {
+          double e1 = square(A_neigh->second);
           
           double smooth_coef = std::exp(-e1 / (2*distthresh*distthresh));
 //           /(square_sigma * two_pi);//"smoothing coefficient"
-          for (s1 = s2.begin(); s1 != s2.end(); s1++) {
+          for (s1 = s2.begin(); s1 != s2.end(); s1++)
+          {
             std::size_t B = s1.index1();
             float w = (*s1)*smooth_coef;
-            if (w > G_THRESH) {
+            if (w > G_THRESH)
+            {
               smoothed_matrix(B,A_neigh->first)+=w;
             }
           }
         }
-        for (QuickMap::const_iterator A_neigh = res[A].begin();
-             A_neigh != res[A].end(); ++A_neigh) {
-          double e1 = til::square(A_neigh->second);
+        for (map<size_t, float>::const_iterator A_neigh = res[A].begin();
+             A_neigh != res[A].end(); ++A_neigh)
+        {
+          double e1 = square(A_neigh->second);
           
           double smooth_coef = std::exp(-e1 / (2*distthresh*distthresh));
 //           /(square_sigma * two_pi);//"smoothing coefficient"
-          for (s1 = s2.begin(); s1 != s2.end(); s1++) {
+          for (s1 = s2.begin(); s1 != s2.end(); s1++)
+          {
             std::size_t B = s1.index1();
             float w = (*s1)*smooth_coef;
-            if (w > G_THRESH) {
+            if (w > G_THRESH)
+            {
               smoothed_matrix(B,A_neigh->first)+=w;
             }
           }
