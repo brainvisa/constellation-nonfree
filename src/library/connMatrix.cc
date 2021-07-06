@@ -60,8 +60,8 @@ namespace constel {
     if (verbose) cout << "Number of fibers: " << fibers.size() << endl;
 
     // Generating kdtree
-    KDTree kdt(getVertices(mesh));
-    makeKDTree(getVertices(mesh), kdt);
+    KDTreeVertices m = kdt_vertices( mesh );
+    KDTree kdt( m.begin(), m.end() );
 
     // Computing connectivity matrix
     if (verbose) cout << "Computing connectivity matrix" << endl;
@@ -85,7 +85,7 @@ namespace constel {
       }
 
       //Looking for closest points
-      til::Find_closest<double, KDTree> fc(kdt);
+//       til::Find_closest<double, KDTree> fc(kdt);
 
       // Transform iFiber->front() and iFiber->back() from t2 to anat space
       // (with motion)
@@ -97,8 +97,10 @@ namespace constel {
                             iFiber->back()[1],
                             iFiber->back()[2]);
       til::numeric_array<float, 3> p2na(p2[0], p2[1], p2[2]);
-      size_t A = fc(p1na);
-      size_t B = fc(p2na);
+//       size_t A = fc(p1na);
+//       size_t B = fc(p2na);
+      size_t A = kdt.find_nearest( make_pair( 0U, p1na ) ).first->first;
+      size_t B = kdt.find_nearest( make_pair( 0U, p2na ) ).first->first;
 
       if (til::dist2(p1na, getVertices(mesh)[A], til::prec<float>()) > 25.0 ||
           til::dist2(p2na, getVertices(mesh)[B], til::prec<float>()) > 25.0) {
@@ -277,12 +279,16 @@ namespace constel {
     // Generating kdtree
     // For seedMesh
     if (verbose) cout << "Generating kdtrees" << endl;
-    KDTree kdt_seedMesh(getVertices(seedMesh));
-    makeKDTree(getVertices(seedMesh), kdt_seedMesh);
+//     KDTree kdt_seedMesh(getVertices(seedMesh));
+//     makeKDTree(getVertices(seedMesh), kdt_seedMesh);
+    KDTreeVertices m = kdt_vertices( seedMesh );
+    KDTree kdt_seedMesh( m.begin(), m.end() );
     // For targetMesh
-    KDTree kdt_targetMesh(getVertices(targetMesh));
-    makeKDTree(getVertices(targetMesh), kdt_targetMesh);
-    
+//     KDTree kdt_targetMesh(getVertices(targetMesh));
+//     makeKDTree(getVertices(targetMesh), kdt_targetMesh);
+    KDTreeVertices m2 = kdt_vertices( targetMesh );
+    KDTree kdt_targetMesh( m2.begin(), m2.end() );
+
     // Computing connectivity matrix
     if (verbose) cout << "Computing connectivity matrix" << endl;
     Connectivities * conn_ptr = new Connectivities(
@@ -304,8 +310,6 @@ namespace constel {
         }
       }
       //Looking for closest points
-      til::Find_closest< double, KDTree > fc_seedMesh(kdt_seedMesh);
-      til::Find_closest< double, KDTree > fc_targetMesh(kdt_targetMesh);
       // Transform iFiber->front() and iFiber->back()
       // from t2 to anat space (with motion)
       p1 = motion.transform(iFiber->front()[0],
@@ -316,10 +320,14 @@ namespace constel {
                             iFiber->back()[1],
                             iFiber->back()[2]);
       til::numeric_array<float, 3> p2na(p2[0], p2[1], p2[2]);
-      size_t A_seedMesh = fc_seedMesh(p1na);
-      size_t B_seedMesh = fc_seedMesh(p2na);
-      size_t A_targetMesh = fc_targetMesh(p1na);
-      size_t B_targetMesh = fc_targetMesh(p2na);
+      size_t A_seedMesh = kdt_seedMesh.find_nearest(
+        make_pair( 0U, p1na ) ).first->first;
+      size_t B_seedMesh = kdt_seedMesh.find_nearest(
+        make_pair( 0U, p2na ) ).first->first;
+      size_t A_targetMesh = kdt_targetMesh.find_nearest(
+        make_pair( 0U, p1na ) ).first->first;
+      size_t B_targetMesh = kdt_targetMesh.find_nearest(
+        make_pair( 0U, p2na ) ).first->first;
       
       // Filling the connectivity matrix
       /*
@@ -482,9 +490,11 @@ namespace constel {
     if (verbose) cout << "Number of fibers: " << fibers.size() << endl;
 
     // Generating kdtree
-    KDTree kdt(getVertices(mesh));
-    makeKDTree(getVertices(mesh), kdt);
-    
+//     KDTree kdt(getVertices(mesh));
+//     makeKDTree(getVertices(mesh), kdt);
+    KDTreeVertices m = kdt_vertices( mesh );
+    KDTree kdt( m.begin(), m.end() );
+
     // Computing connectivity matrix
     if (verbose) cout << "Computing connectivity matrix" << endl;
     Connectivity * conn_ptr = new Connectivity(getVertices(mesh).size());
@@ -499,7 +509,7 @@ namespace constel {
         cout << 5 * int(fiberCount / five_count) << "%..." << flush;
       }
       //Looking for closest points
-      til::Find_closest< double, KDTree > fc(kdt);
+//       til::Find_closest< double, KDTree > fc(kdt);
       // Transform iFiber->front() and iFiber->back() from t2 to anat space
       // (with motion)
       p1 = motion.transform(iFiber->front()[0],
@@ -510,8 +520,8 @@ namespace constel {
                             iFiber->back()[1],
                             iFiber->back()[2]);
       til::numeric_array<float, 3> p2na(p2[0], p2[1], p2[2]);
-      size_t A = fc(p1na);
-      size_t B = fc(p2na);
+      size_t A = kdt.find_nearest( make_pair( 0U, p1na ) ).first->first;
+      size_t B = kdt.find_nearest( make_pair( 0U, p2na ) ).first->first;
 
       if (til::dist2(p1na, getVertices(mesh)[A], til::prec<float>()) > 25.0 and
           til::dist2(p2na, getVertices(mesh)[B], til::prec<float>()) > 25.0) {

@@ -5,27 +5,19 @@ using namespace carto;
 using namespace aims;
 using namespace constel;
 
-namespace {
-  /* this function is a trick to be usable in the constructor of the private
-     data while assigning Private.fc constructor: it should return a KDTree. 
-  */
-  KDTree & _makeKDTree(
-      const std::vector<til::numeric_array<float, 3> > & v,
-      KDTree & res) {
-    makeKDTree(v, res);
-    return res;
-  }
-}
-
 namespace constel {
 
-  struct SelectFiberListenerFromMesh::Private {
+  struct SelectFiberListenerFromMesh::Private
+  {
     Private(const Mesh &mesh, int texture_time_step)
-    : kdt(getVertices(mesh)), fc(_makeKDTree( getVertices(mesh), kdt)),
-      tex_time_step(texture_time_step) {}
+    : kdt(),
+      tex_time_step(texture_time_step)
+      {
+        KDTreeVertices m = kdt_vertices( mesh );
+        kdt = KDTree( m.begin(), m.end() );
+      }
 
     KDTree kdt;
-    til::Find_closest< double, KDTree > fc;
     int tex_time_step;
   };
 
@@ -121,11 +113,11 @@ namespace constel {
     Point3df p1, p2;
     p1 = _motion.transform(p1T2[0], p1T2[1], p1T2[2]);
     til::numeric_array<float, 3> p1na(p1[0], p1[1], p1[2]);
-    std::size_t A = d->fc(p1na);
+    std::size_t A = d->kdt.find_nearest( make_pair( 0U, p1na ) ).first->first;
     std::size_t B;
     p2 = _motion.transform(p2T2[0], p2T2[1], p2T2[2]);
     til::numeric_array<float, 3> p2na(p2[0], p2[1], p2[2]);
-    B = d->fc(p2na);
+    B = d->kdt.find_nearest( make_pair( 0U, p2na ) ).first->first;
     stringstream fibername;
     if (_namesMode=="NameFront_NameEnd") {
       if (til::dist2(p1na, getVertices(*_mesh)[A], til::prec<float>())

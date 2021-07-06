@@ -31,9 +31,12 @@ namespace constel {
     mesh = addNeighborsToMesh(mesh0);
     
     // Generating kdtree
-    KDTree kdt(getVertices(mesh));
-    makeKDTree(getVertices(mesh), kdt);
-    
+//     KDTree kdt(getVertices(mesh));
+//     makeKDTree(getVertices(mesh), kdt);
+
+    KDTreeVertices m = kdt_vertices( mesh );
+    KDTree kdt( m.begin(), m.end() );
+
     vector<float> voxel_size(3);
     
     if (ROI_graph.getProperty("voxel_size", voxel_size)) {
@@ -72,13 +75,15 @@ namespace constel {
           BucketMap<Void>::Bucket bck = roi_vertex_buckmap->begin()->second;
           BucketMap<Void>::Bucket::iterator itbck, itbck_end = bck.end();
 //       Looking for closest points
-          til::Find_closest< double, KDTree > fc(kdt);
+//           til::Find_closest< double, KDTree > fc(kdt);
           for (itbck = bck.begin(); itbck != itbck_end; itbck++) {
             p = itbck->first;
             til::numeric_array<float, 3> pFloat(p[0]*voxel_size[0],
                                                 p[1]*voxel_size[1],
                                                 p[2]*voxel_size[2]);
-            size_t pIndex_Mesh = fc(pFloat);
+//             size_t pIndex_Mesh = fc(pFloat);
+            size_t pIndex_Mesh = kdt.find_nearest(
+              make_pair( 0U, pFloat ) ).first->first;
             float distROIToMeshVertex = til::dist2(
                 pFloat, getVertices(mesh)[pIndex_Mesh], til::prec<float>());
             if (distROIToMeshVertex <= distROIToMeshTex[0][pIndex_Mesh]) {
@@ -118,9 +123,9 @@ namespace constel {
     mesh = addNeighborsToMesh(mesh0);
     
     // Generating kdtree
-    KDTree kdt(getVertices(mesh));
-    makeKDTree(getVertices(mesh), kdt);
-    
+    KDTreeVertices m = kdt_vertices( mesh );
+    KDTree kdt( m.begin(), m.end() );
+
     vector<float> voxel_size(3);
 
     if (ROI_graph.getProperty("voxel_size", voxel_size)) {
@@ -160,13 +165,15 @@ namespace constel {
           BucketMap<Void>::Bucket bck = roi_vertex_buckmap->begin()->second;
           BucketMap<Void>::Bucket::iterator itbck, itbck_end = bck.end();
 //       Looking for closest points
-          til::Find_closest< double, KDTree > fc(kdt);
+//           til::Find_closest< double, KDTree > fc(kdt);
           for (itbck = bck.begin(); itbck != itbck_end; itbck++) {
             p = itbck->first;
             til::numeric_array<float, 3> pFloat(p[0]*voxel_size[0],
                                                 p[1]*voxel_size[1],
                                                 p[2]*voxel_size[2]);
-            size_t pIndex_Mesh = fc(pFloat);
+//             size_t pIndex_Mesh = fc(pFloat);
+            size_t pIndex_Mesh = kdt.find_nearest(
+              make_pair( 0U, pFloat ) ).first->first;
             float distROIToMeshVertex = til::dist2(
                 pFloat, getVertices(mesh)[pIndex_Mesh], til::prec<float>());
             if (distROIToMeshVertex <= distROIToMeshTex[0][pIndex_Mesh]) {

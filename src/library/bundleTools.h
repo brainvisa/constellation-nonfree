@@ -185,7 +185,7 @@ namespace constel {
     constel::Mesh _mesh;
     //For computing closest point to meshes in a fast computation time:
     constel::KDTree * _mesh_kdt_ptr;
-    til::Find_closest< double, constel::KDTree > * _mesh_fc_ptr;
+//     til::Find_closest< double, constel::KDTree > * _mesh_fc_ptr;
     std::vector<constel::QuickMap> _meshDistanceThresholdNeighborhoodByVertex;
 
     //For intersection computing:
@@ -233,7 +233,7 @@ namespace constel {
     constel::Mesh _mesh;
     //For computing closest point to meshes in a fast computation time:
     constel::KDTree * _mesh_kdt_ptr;
-    til::Find_closest< double, constel::KDTree > * _mesh_fc_ptr;
+//     til::Find_closest< double, constel::KDTree > * _mesh_fc_ptr;
 
     //For intersection computing:
     bool _antFiberPoint_ExistingMeshIntersection;

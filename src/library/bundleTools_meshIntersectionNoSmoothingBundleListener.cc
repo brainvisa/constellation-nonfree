@@ -24,9 +24,9 @@ namespace constel {
     til::convert(mesh0, _aimsMesh);
     _mesh = addNeighborsToMesh(mesh0);
     //KDTREE creation:
-    _mesh_kdt_ptr = new KDTree(getVertices(_mesh));
-    makeKDTree(getVertices(_mesh), *_mesh_kdt_ptr);
-    _mesh_fc_ptr = new til::Find_closest< double, KDTree >(*_mesh_kdt_ptr);
+    KDTreeVertices vert = kdt_vertices( _mesh );
+    _mesh_kdt_ptr = new KDTree( vert.begin(), vert.end() );
+
     _fiberCount = 0;
   }
 
@@ -64,7 +64,8 @@ namespace constel {
                                                fiberPoint[1],
                                                fiberPoint[2]);
     //Mesh closest point computing:
-    meshClosestPoint_index = (*_mesh_fc_ptr)(fiberPoint_na);
+    meshClosestPoint_index = _mesh_kdt_ptr->find_nearest(
+      make_pair( 0U, fiberPoint_na ) ).first->first;
     meshClosestPoint_dist = til::dist2(
         fiberPoint_na,
         getVertices(_mesh)[meshClosestPoint_index],
@@ -162,7 +163,6 @@ namespace constel {
   void MeshIntersectionNoSmoothingBundleListener::noMoreBundle(
       const BundleProducer &) {
     delete _mesh_kdt_ptr;
-    delete _mesh_fc_ptr;
     if (_verbose) cout << "fiberCount: " << _fiberCount << endl;
   }
 

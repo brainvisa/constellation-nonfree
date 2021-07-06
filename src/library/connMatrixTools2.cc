@@ -43,8 +43,9 @@ namespace constel {
     mesh = addNeighborsToMesh(mesh0);
 
     // Generating kdtree
-    KDTree kdt(getVertices(mesh));
-    makeKDTree(getVertices(mesh), kdt);
+    KDTreeVertices m = kdt_vertices( mesh );
+    KDTree kdt( m.begin(), m.end() );
+
     cout << "getVertices(mesh):" << getVertices(mesh)[0] << ", "
       << getVertices(mesh)[1]  << endl;
 
@@ -63,7 +64,6 @@ namespace constel {
         cout << "...100%..." << flush;
       }
       //Looking for closest points
-      til::Find_closest< double, KDTree > fc(kdt);
       // Transform iFiber->front() and iFiber->back() from t2 to anat space
       // (with motion)
       p1 = motion.transform(iFiber->front()[0],
@@ -74,8 +74,8 @@ namespace constel {
                             iFiber->back()[1],
                             iFiber->back()[2]);
       til::numeric_array<float, 3> p2na(p2[0], p2[1], p2[2]);
-      size_t A = fc(p1na);
-      size_t B = fc(p2na);
+      size_t A = kdt.find_nearest( make_pair( 0L, p1na ) ).first->first;
+      size_t B = kdt.find_nearest( make_pair( 0L, p2na ) ).first->first;
 
       if (til::dist2(p1na, getVertices(mesh)[A], til::prec<float>()) > 25.0 ||
           til::dist2(p2na, getVertices(mesh)[B], til::prec<float>()) > 25.0) {
@@ -138,8 +138,8 @@ namespace constel {
 
     // Generating kdtree
     cout << "Generating kdtree" << endl;
-    KDTree kdt(getVertices(mesh));
-    makeKDTree(getVertices(mesh), kdt);
+    KDTreeVertices m = kdt_vertices( mesh );
+    KDTree kdt( m.begin(), m.end() );
     cout << "getVertices(mesh):" << getVertices(mesh)[0] << ", "
       << getVertices(mesh)[1]  << endl;
 
@@ -159,7 +159,6 @@ namespace constel {
         cout << "...100%..." << flush;
       }
       //Looking for closest points
-      til::Find_closest< double, KDTree > fc(kdt);
       // Transform iFiber->front() and iFiber->back() from t2 to anat space
       // (with motion)
       p1 = motion.transform(iFiber->front()[0],
@@ -170,8 +169,8 @@ namespace constel {
                             iFiber->back()[1],
                             iFiber->back()[2]);
       til::numeric_array<float, 3> p2na(p2[0], p2[1], p2[2]);
-      size_t A = fc(p1na);
-      size_t B = fc(p2na);
+      size_t A = kdt.find_nearest( make_pair( 0U, p1na ) ).first->first;
+      size_t B = kdt.find_nearest( make_pair( 0U, p2na ) ).first->first;
 
       if (til::dist2(p1na, getVertices(mesh)[A], til::prec<float>()) > 25.0 ||
           til::dist2(p2na, getVertices(mesh)[B], til::prec<float>()) > 25.0) {
@@ -236,8 +235,8 @@ namespace constel {
 
     // Generating kdtree
     cout << "Generating kdtree" << endl;
-    KDTree kdt(getVertices(mesh));
-    makeKDTree(getVertices(mesh), kdt);
+    KDTreeVertices m = kdt_vertices( mesh );
+    KDTree kdt( m.begin(), m.end() );
     cout << "getVertices(mesh):" << getVertices(mesh)[0] << ", "
       << getVertices(mesh)[1]  << endl;
 
@@ -287,7 +286,6 @@ namespace constel {
         cout << "...100%..." << flush;
       }
       //Looking for closest points
-      til::Find_closest< double, KDTree > fc(kdt);
       // Transform iFiber->front() and iFiber->back() from t2 to anat space
       // (with motion)
       p1 = motion.transform(iFiber->front()[0],
@@ -298,8 +296,8 @@ namespace constel {
                             iFiber->back()[1],
                             iFiber->back()[2]);
       til::numeric_array<float, 3> p2na(p2[0], p2[1], p2[2]);
-      size_t A = fc(p1na);
-      size_t B = fc(p2na);
+      size_t A = kdt.find_nearest( make_pair( 0U, p1na ) ).first->first;
+      size_t B = kdt.find_nearest( make_pair( 0U, p2na ) ).first->first;
 
       if (til::dist2(p1na, getVertices(mesh)[A], til::prec<float>()) > 25.0 ||
           til::dist2(p2na, getVertices(mesh)[B], til::prec<float>()) > 25.0) {
@@ -376,10 +374,6 @@ namespace constel {
     til::convert(mesh0, inAimsMesh);
     mesh = addNeighborsToMesh(mesh0);
 
-    // Generating kdtree
-    cout << "Generating kdtree" << endl;
-    KDTree kdt(getVertices(mesh));
-    makeKDTree(getVertices(mesh), kdt);
     cout << "getVertices(mesh):" << getVertices(mesh)[0] << ", "
       << getVertices(mesh)[1]  << endl;
 

@@ -538,10 +538,6 @@ namespace constel {
     til::convert(mesh0, inAimsMesh);
     mesh = addNeighborsToMesh(mesh0);
 
-    // Generating kdtree
-    std::cout << "Generating kdtree" << std::endl;
-    KDTree kdt(getVertices(mesh));
-    makeKDTree(getVertices(mesh), kdt);
     std::cout << "getVertices(mesh):" << getVertices(mesh)[0] << ", "
       << getVertices(mesh)[1]  << std::endl;
 
@@ -647,10 +643,6 @@ namespace constel {
     til::convert(mesh0, inAimsMesh);
     mesh = addNeighborsToMesh(mesh0);
 
-    // Generating kdtree
-    std::cout << "Generating kdtree" << std::endl;
-    KDTree kdt(getVertices(mesh));
-    makeKDTree(getVertices(mesh), kdt);
     std::cout << "getVertices(mesh):" << getVertices(mesh)[0] << ", "
       << getVertices(mesh)[1]  << std::endl;
 

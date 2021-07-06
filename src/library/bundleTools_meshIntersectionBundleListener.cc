@@ -8,6 +8,12 @@ using namespace constel;
 using namespace aims;
 using namespace std;
 
+namespace
+{
+
+}
+
+
 namespace constel {
   
   MeshIntersectionBundleListener::MeshIntersectionBundleListener(
@@ -63,9 +69,8 @@ namespace constel {
       }
     }
     //KDTREE creation:
-    _mesh_kdt_ptr = new KDTree(getVertices(_mesh));
-    makeKDTree(getVertices(_mesh), *_mesh_kdt_ptr);
-    _mesh_fc_ptr = new til::Find_closest< double, KDTree >(*_mesh_kdt_ptr);
+    KDTreeVertices vert = kdt_vertices( _mesh );
+    _mesh_kdt_ptr = new KDTree( vert.begin(), vert.end() );
   }
   
   MeshIntersectionBundleListener::~MeshIntersectionBundleListener() {}
@@ -93,7 +98,7 @@ namespace constel {
                                                fiberPoint[1],
                                                fiberPoint[2]);
     //Mesh closest point computing:
-    meshClosestPoint_index = (*_mesh_fc_ptr)(fiberPoint_na);
+    meshClosestPoint_index = _mesh_kdt_ptr->find_nearest( make_pair( 0U, fiberPoint_na ) ).first->first;
     meshClosestPoint_dist = til::dist2(
         fiberPoint_na, getVertices(_mesh)[meshClosestPoint_index],
         til::prec<float>());
@@ -196,7 +201,6 @@ namespace constel {
 
   void MeshIntersectionBundleListener::noMoreBundle(const BundleProducer &) {
     delete _mesh_kdt_ptr;
-    delete _mesh_fc_ptr;
   }
 
   void MeshIntersectionBundleListener::setMeshIdentity(int meshIdentity) {

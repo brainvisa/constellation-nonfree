@@ -72,7 +72,8 @@ namespace constel {
                                                  fiberPoint[1],
                                                  fiberPoint[2]);
       //Mesh closest point computing:
-      meshClosestPoint_index = (*_mesh_fc_ptr)(fiberPoint_na);
+//       meshClosestPoint_index = (*_mesh_fc_ptr)(fiberPoint_na);
+      meshClosestPoint_index = _mesh_kdt_ptr->find_nearest( make_pair( 0U, fiberPoint_na ) ).first->first;
       meshClosestPoint_dist = til::dist2(
           fiberPoint_na, getVertices(_mesh)[meshClosestPoint_index],
           til::prec<float>());
@@ -84,8 +85,10 @@ namespace constel {
           til::numeric_array<float, 3> antFiberPoint_na(antFiberPoint[0],
                                                         antFiberPoint[1],
                                                         antFiberPoint[2]);
+//           _antFiberPointMeshClosestPoint_index
+//             = (*_mesh_fc_ptr)(antFiberPoint_na);
           _antFiberPointMeshClosestPoint_index
-            = (*_mesh_fc_ptr)(antFiberPoint_na);
+            = _mesh_kdt_ptr->find_nearest( make_pair( 0U, antFiberPoint_na ) ).first->first;
           _antFiberPointMeshClosestPoint_dist = til::dist2(
               antFiberPoint_na,
               getVertices(_mesh)[_antFiberPointMeshClosestPoint_index],
@@ -167,8 +170,10 @@ namespace constel {
         til::numeric_array<float, 3> antFiberPoint_na(antFiberPoint[0],
                                                       antFiberPoint[1],
                                                       antFiberPoint[2]);
+//         _antFiberPointMeshClosestPoint_index
+//           = (*_mesh_fc_ptr)(antFiberPoint_na);
         _antFiberPointMeshClosestPoint_index
-          = (*_mesh_fc_ptr)(antFiberPoint_na);
+          = _mesh_kdt_ptr->find_nearest( make_pair( 0U, antFiberPoint_na ) ).first->first;
         _antFiberPointMeshClosestPoint_dist
           = til::dist2(antFiberPoint_na,
                        getVertices(_mesh)[_antFiberPointMeshClosestPoint_index],
@@ -202,7 +207,7 @@ namespace constel {
   void MeshIntersectionNoSmoothingFasterBundleListener::noMoreBundle(
       const BundleProducer &) {
     delete _mesh_kdt_ptr;
-    delete _mesh_fc_ptr;
+//     delete _mesh_fc_ptr;
     if (_verbose) std::cout << "fiberCount: " << _fiberCount << std::endl;
   }
 
