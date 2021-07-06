@@ -67,32 +67,25 @@ namespace constel {
     }
     //end of the test
     
-    if (fiberPointInRoisMask) {
-      til::numeric_array<float, 3> fiberPoint_na(fiberPoint[0],
-                                                 fiberPoint[1],
-                                                 fiberPoint[2]);
+    if (fiberPointInRoisMask)
+    {
       //Mesh closest point computing:
-//       meshClosestPoint_index = (*_mesh_fc_ptr)(fiberPoint_na);
-      meshClosestPoint_index = _mesh_kdt_ptr->find_nearest( make_pair( 0U, fiberPoint_na ) ).first->first;
-      meshClosestPoint_dist = til::dist2(
-          fiberPoint_na, getVertices(_mesh)[meshClosestPoint_index],
-          til::prec<float>());
+      meshClosestPoint_index = _mesh_kdt_ptr->find_nearest(
+        make_pair( 0U, fiberPoint ) ).first->first;
+      meshClosestPoint_dist = dist2(
+        fiberPoint, _aimsMesh.vertex()[meshClosestPoint_index] );
       
       if (fiberCurvilinearAbscissa > 1) {
         //Compute meshClosestPoint_index and meshClosestPoint_dist of the
         // antFiberPoints if computation has not been done in the previous step
-        if (_antFiberPoint_inRoisMask == false) {
-          til::numeric_array<float, 3> antFiberPoint_na(antFiberPoint[0],
-                                                        antFiberPoint[1],
-                                                        antFiberPoint[2]);
-//           _antFiberPointMeshClosestPoint_index
-//             = (*_mesh_fc_ptr)(antFiberPoint_na);
+        if (_antFiberPoint_inRoisMask == false)
+        {
           _antFiberPointMeshClosestPoint_index
-            = _mesh_kdt_ptr->find_nearest( make_pair( 0U, antFiberPoint_na ) ).first->first;
-          _antFiberPointMeshClosestPoint_dist = til::dist2(
-              antFiberPoint_na,
-              getVertices(_mesh)[_antFiberPointMeshClosestPoint_index],
-              til::prec<float>());
+            = _mesh_kdt_ptr->find_nearest(
+              make_pair( 0U, antFiberPoint ) ).first->first;
+          _antFiberPointMeshClosestPoint_dist = dist2(
+            antFiberPoint,
+            _aimsMesh.vertex()[_antFiberPointMeshClosestPoint_index] );
         }
         constel::QuickMap * meshPolygonVerticesWeightMap_ptr;
         bool intersectMesh;
@@ -167,17 +160,12 @@ namespace constel {
       if (_antFiberPoint_inRoisMask == false) {
         FiberPoint antFiberPoint
           = _bundleInteractionReader->_listenedFiberInfo.getAntFiberPoint();
-        til::numeric_array<float, 3> antFiberPoint_na(antFiberPoint[0],
-                                                      antFiberPoint[1],
-                                                      antFiberPoint[2]);
-//         _antFiberPointMeshClosestPoint_index
-//           = (*_mesh_fc_ptr)(antFiberPoint_na);
         _antFiberPointMeshClosestPoint_index
-          = _mesh_kdt_ptr->find_nearest( make_pair( 0U, antFiberPoint_na ) ).first->first;
+          = _mesh_kdt_ptr->find_nearest(
+            make_pair( 0U, antFiberPoint ) ).first->first;
         _antFiberPointMeshClosestPoint_dist
-          = til::dist2(antFiberPoint_na,
-                       getVertices(_mesh)[_antFiberPointMeshClosestPoint_index],
-                       til::prec<float>());
+          = dist2( antFiberPoint,
+                   _aimsMesh.vertex()[_antFiberPointMeshClosestPoint_index] );
 
       }
       if (_antFiberPointMeshClosestPoint_dist <= _meshClosestPointMaxDistance) {
@@ -207,7 +195,6 @@ namespace constel {
   void MeshIntersectionNoSmoothingFasterBundleListener::noMoreBundle(
       const BundleProducer &) {
     delete _mesh_kdt_ptr;
-//     delete _mesh_fc_ptr;
     if (_verbose) std::cout << "fiberCount: " << _fiberCount << std::endl;
   }
 

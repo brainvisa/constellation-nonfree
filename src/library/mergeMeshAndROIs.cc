@@ -24,16 +24,9 @@ namespace constel {
     */
     
     cout << "Computing Fusion Texture" << endl;
-    //Converting AimsMesh to Cathier format
-    Mesh mesh;
-    til::Mesh1 mesh0;
-    til::convert(mesh0, inAimsMesh);
-    mesh = addNeighborsToMesh(mesh0);
     
+    const AimsSurfaceTriangle & mesh = inAimsMesh;
     // Generating kdtree
-//     KDTree kdt(getVertices(mesh));
-//     makeKDTree(getVertices(mesh), kdt);
-
     KDTreeVertices m = kdt_vertices( mesh );
     KDTree kdt( m.begin(), m.end() );
 
@@ -43,7 +36,7 @@ namespace constel {
       //Computing texture
       TimeTexture<short> *tex_ptr = new TimeTexture<short>;
       TimeTexture<short> &tex = *tex_ptr;
-      size_t meshVertexNb = getVertices(mesh).size();
+      size_t meshVertexNb = mesh.vertex().size();
       tex[0].reserve(meshVertexNb);
       TimeTexture<float> distROIToMeshTex;
       distROIToMeshTex[0].reserve(meshVertexNb);
@@ -60,7 +53,7 @@ namespace constel {
       rc_ptr<BucketMap<Void> > roi_vertex_buckmap;
       int tex_roiLabel;
       AimsVector<short int, 3> p;
-      til::numeric_array<float, 3> pFloat;
+      Point3df pFloat;
       string roi_name;
       int roi_count = 1;
       cout << "Iteration on: " << flush;
@@ -75,17 +68,15 @@ namespace constel {
           BucketMap<Void>::Bucket bck = roi_vertex_buckmap->begin()->second;
           BucketMap<Void>::Bucket::iterator itbck, itbck_end = bck.end();
 //       Looking for closest points
-//           til::Find_closest< double, KDTree > fc(kdt);
           for (itbck = bck.begin(); itbck != itbck_end; itbck++) {
             p = itbck->first;
-            til::numeric_array<float, 3> pFloat(p[0]*voxel_size[0],
-                                                p[1]*voxel_size[1],
-                                                p[2]*voxel_size[2]);
-//             size_t pIndex_Mesh = fc(pFloat);
+            pFloat = Point3df( p[0]*voxel_size[0],
+                               p[1]*voxel_size[1],
+                               p[2]*voxel_size[2] );
             size_t pIndex_Mesh = kdt.find_nearest(
               make_pair( 0U, pFloat ) ).first->first;
-            float distROIToMeshVertex = til::dist2(
-                pFloat, getVertices(mesh)[pIndex_Mesh], til::prec<float>());
+            float distROIToMeshVertex = dist2(
+              pFloat, mesh.vertex()[pIndex_Mesh] );
             if (distROIToMeshVertex <= distROIToMeshTex[0][pIndex_Mesh]) {
               tex[0][pIndex_Mesh] = tex_roiLabel;
               distROIToMeshTex[0][pIndex_Mesh] = distROIToMeshVertex;
@@ -116,14 +107,9 @@ namespace constel {
     */
     
     cout << "Computing Fusion Texture" << endl;
-    //Converting AimsMesh to Cathier format
-    Mesh mesh;
-    til::Mesh1 mesh0;
-    til::convert(mesh0, inAimsMesh);
-    mesh = addNeighborsToMesh(mesh0);
     
     // Generating kdtree
-    KDTreeVertices m = kdt_vertices( mesh );
+    KDTreeVertices m = kdt_vertices( inAimsMesh );
     KDTree kdt( m.begin(), m.end() );
 
     vector<float> voxel_size(3);
@@ -132,7 +118,7 @@ namespace constel {
       //Computing texture
       TimeTexture<short> * tex_ptr = new TimeTexture<short>;
       TimeTexture<short> & tex = *tex_ptr;
-      size_t meshVertexNb = getVertices(mesh).size();
+      size_t meshVertexNb = inAimsMesh.vertex().size();
       tex[0].reserve(meshVertexNb);
       TimeTexture<float> distROIToMeshTex;
       distROIToMeshTex[0].reserve(meshVertexNb);
@@ -149,7 +135,7 @@ namespace constel {
       rc_ptr<BucketMap<Void> > roi_vertex_buckmap;
       int tex_roiLabel;
       AimsVector<short int, 3> p;
-      til::numeric_array<float, 3> pFloat;
+      Point3df pFloat;
       string roi_name;
       int roi_count = 1;
       cout << "Iteration on: " << flush;
@@ -165,17 +151,16 @@ namespace constel {
           BucketMap<Void>::Bucket bck = roi_vertex_buckmap->begin()->second;
           BucketMap<Void>::Bucket::iterator itbck, itbck_end = bck.end();
 //       Looking for closest points
-//           til::Find_closest< double, KDTree > fc(kdt);
           for (itbck = bck.begin(); itbck != itbck_end; itbck++) {
             p = itbck->first;
-            til::numeric_array<float, 3> pFloat(p[0]*voxel_size[0],
-                                                p[1]*voxel_size[1],
-                                                p[2]*voxel_size[2]);
+            pFloat = Point3df( p[0]*voxel_size[0],
+                               p[1]*voxel_size[1],
+                               p[2]*voxel_size[2]);
 //             size_t pIndex_Mesh = fc(pFloat);
             size_t pIndex_Mesh = kdt.find_nearest(
               make_pair( 0U, pFloat ) ).first->first;
-            float distROIToMeshVertex = til::dist2(
-                pFloat, getVertices(mesh)[pIndex_Mesh], til::prec<float>());
+            float distROIToMeshVertex = dist2(
+                pFloat, inAimsMesh.vertex()[pIndex_Mesh] );
             if (distROIToMeshVertex <= distROIToMeshTex[0][pIndex_Mesh]) {
               tex[0][pIndex_Mesh] = tex_roiLabel;
               distROIToMeshTex[0][pIndex_Mesh] = distROIToMeshVertex;
@@ -202,10 +187,7 @@ namespace constel {
       Motion motion, const string &BundlesNamesfile_name,
       float filter_proportion, int texture_time_step ) {
     //Converting AimsMesh to Cathier format (neighbouring points)
-    rc_ptr<Mesh> mesh( new Mesh );
-    til::Mesh1 mesh0;
-    til::convert(mesh0, inAimsMesh);
-    *mesh = addNeighborsToMesh(mesh0);
+    rc_ptr<AimsSurfaceTriangle> mesh( new AimsSurfaceTriangle( inAimsMesh ) );
     stringstream osBundlesNamesfile_name;
     SelectFiberListenerFromMesh fiberBundle( mesh, tex, namesMode, 0, motion,
       BundlesNamesfile_name, texture_time_step );

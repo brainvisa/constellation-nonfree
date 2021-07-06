@@ -69,7 +69,7 @@ namespace constel {
       }
     }
     //KDTREE creation:
-    KDTreeVertices vert = kdt_vertices( _mesh );
+    KDTreeVertices vert = kdt_vertices( _aimsMesh );
     _mesh_kdt_ptr = new KDTree( vert.begin(), vert.end() );
   }
   
@@ -94,14 +94,11 @@ namespace constel {
     bool fiberPoint_ExistingMeshIntersection = false;
     float fiberCurvilinearAbscissa
       = _bundleInteractionReader->_listenedFiberInfo.getCurvilinearAbscissa();
-    til::numeric_array<float, 3> fiberPoint_na(fiberPoint[0],
-                                               fiberPoint[1],
-                                               fiberPoint[2]);
     //Mesh closest point computing:
-    meshClosestPoint_index = _mesh_kdt_ptr->find_nearest( make_pair( 0U, fiberPoint_na ) ).first->first;
-    meshClosestPoint_dist = til::dist2(
-        fiberPoint_na, getVertices(_mesh)[meshClosestPoint_index],
-        til::prec<float>());
+    meshClosestPoint_index = _mesh_kdt_ptr->find_nearest(
+      make_pair( 0U, fiberPoint ) ).first->first;
+    meshClosestPoint_dist = dist2(
+      fiberPoint, _aimsMesh.vertex()[meshClosestPoint_index] );
     if (fiberCurvilinearAbscissa > 1) {
       constel::QuickMap * meshPolygonVerticesDistMap_ptr;
       bool intersectMesh;

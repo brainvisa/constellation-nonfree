@@ -3,7 +3,6 @@
 
 
 #include <constellation/bundleSet.h>
-#include <constellation/tildefs.h>
 #include <aims/mesh/texture.h>
 
 //-------------------------------
@@ -18,13 +17,14 @@ namespace constel {
     with a label texture.
 */
   class SelectFiberListenerFromMesh
-    : public aims::BundleProducer, public aims::BundleListener {
+    : public aims::BundleProducer, public aims::BundleListener
+  {
 
    public:
     /** namesMode sould be in "NameFront_NameEnd", "Name1_Name2",
         "Name1_Name2orNotInMesh", "NameFront", "NameEnd"
     */
-    SelectFiberListenerFromMesh(carto::rc_ptr<constel::Mesh> mesh,
+    SelectFiberListenerFromMesh(carto::rc_ptr<AimsSurfaceTriangle> mesh,
                                 carto::rc_ptr<TimeTexture<short> > tex,
                                 const std::string &namesMode, int addInt,
                                 const Motion &motion,
@@ -60,7 +60,7 @@ namespace constel {
     std::ofstream _file_internal;
     std::ostream *_file;
 
-    carto::rc_ptr<constel::Mesh> _mesh;
+    carto::rc_ptr<AimsSurfaceTriangle> _mesh;
     carto::rc_ptr<TimeTexture<short> > _tex;
     std::string _namesMode;
     int _addInt;

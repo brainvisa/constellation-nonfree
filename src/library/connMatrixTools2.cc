@@ -36,18 +36,9 @@ namespace constel {
     Matrix matrix(rowsNb, colNb, 1);
     matrix.setSizeXYZT(100.0/rowsNb , 80.0/colNb);
 
-    //Convert inAimsMesh to Mesh mesh (Pascal Cathier Format)
-    Mesh mesh;
-    til::Mesh1 mesh0;
-    til::convert(mesh0, inAimsMesh);
-    mesh = addNeighborsToMesh(mesh0);
-
     // Generating kdtree
-    KDTreeVertices m = kdt_vertices( mesh );
+    KDTreeVertices m = kdt_vertices( inAimsMesh );
     KDTree kdt( m.begin(), m.end() );
-
-    cout << "getVertices(mesh):" << getVertices(mesh)[0] << ", "
-      << getVertices(mesh)[1]  << endl;
 
     int countRemoved = 0;
     size_t fiberCount = 0, nFibers = fibers.size();
@@ -69,16 +60,15 @@ namespace constel {
       p1 = motion.transform(iFiber->front()[0],
                             iFiber->front()[1],
                             iFiber->front()[2]);
-      til::numeric_array<float, 3> p1na(p1[0], p1[1], p1[2]);
       p2 = motion.transform(iFiber->back()[0],
                             iFiber->back()[1],
                             iFiber->back()[2]);
-      til::numeric_array<float, 3> p2na(p2[0], p2[1], p2[2]);
-      size_t A = kdt.find_nearest( make_pair( 0L, p1na ) ).first->first;
-      size_t B = kdt.find_nearest( make_pair( 0L, p2na ) ).first->first;
+      size_t A = kdt.find_nearest( make_pair( 0L, p1 ) ).first->first;
+      size_t B = kdt.find_nearest( make_pair( 0L, p2 ) ).first->first;
 
-      if (til::dist2(p1na, getVertices(mesh)[A], til::prec<float>()) > 25.0 ||
-          til::dist2(p2na, getVertices(mesh)[B], til::prec<float>()) > 25.0) {
+      if( dist2( p1, inAimsMesh.vertex()[A] ) > 25.0 ||
+          dist2( p2, inAimsMesh.vertex()[B] ) > 25.0)
+      {
         ++countRemoved;
         continue;
       }
@@ -130,18 +120,10 @@ namespace constel {
     Matrix matrix(rowsNb, colNb, 1);
     matrix.setSizeXYZT(100.0/rowsNb , 80.0/colNb);
 
-    //Convert inAimsMesh to Mesh mesh (Pascal Cathier Format)
-    Mesh mesh;
-    til::Mesh1 mesh0;
-    til::convert(mesh0, inAimsMesh);
-    mesh = addNeighborsToMesh(mesh0);
-
     // Generating kdtree
     cout << "Generating kdtree" << endl;
-    KDTreeVertices m = kdt_vertices( mesh );
+    KDTreeVertices m = kdt_vertices( inAimsMesh );
     KDTree kdt( m.begin(), m.end() );
-    cout << "getVertices(mesh):" << getVertices(mesh)[0] << ", "
-      << getVertices(mesh)[1]  << endl;
 
     //Connectivity matrix filling:
     int countRemoved = 0;
@@ -164,16 +146,15 @@ namespace constel {
       p1 = motion.transform(iFiber->front()[0],
                             iFiber->front()[1],
                             iFiber->front()[2]);
-      til::numeric_array<float, 3> p1na(p1[0], p1[1], p1[2]);
       p2 = motion.transform(iFiber->back()[0],
                             iFiber->back()[1],
                             iFiber->back()[2]);
-      til::numeric_array<float, 3> p2na(p2[0], p2[1], p2[2]);
-      size_t A = kdt.find_nearest( make_pair( 0U, p1na ) ).first->first;
-      size_t B = kdt.find_nearest( make_pair( 0U, p2na ) ).first->first;
+      size_t A = kdt.find_nearest( make_pair( 0U, p1 ) ).first->first;
+      size_t B = kdt.find_nearest( make_pair( 0U, p2 ) ).first->first;
 
-      if (til::dist2(p1na, getVertices(mesh)[A], til::prec<float>()) > 25.0 ||
-          til::dist2(p2na, getVertices(mesh)[B], til::prec<float>()) > 25.0) {
+      if( dist2( p1, inAimsMesh.vertex()[A] ) > 25.0 ||
+          dist2( p2, inAimsMesh.vertex()[B] ) > 25.0)
+      {
         ++countRemoved;
         continue;
       }
@@ -235,10 +216,8 @@ namespace constel {
 
     // Generating kdtree
     cout << "Generating kdtree" << endl;
-    KDTreeVertices m = kdt_vertices( mesh );
+    KDTreeVertices m = kdt_vertices( inAimsMesh );
     KDTree kdt( m.begin(), m.end() );
-    cout << "getVertices(mesh):" << getVertices(mesh)[0] << ", "
-      << getVertices(mesh)[1]  << endl;
 
     // Comuting geomap : neighborhood map
     //if distthresh!= 0
@@ -257,8 +236,9 @@ namespace constel {
         geomap(getVertices(mesh), *pneighc, stopGhost);
     vector<size_t> startPoints(1);
     vector<double> dist(1, 0.0);
-    vector<size_t> nneigh(til::size(getVertices(mesh)));
-    for (size_t i = 0; i < til::size(getVertices(mesh)); ++i) {
+    vector<size_t> nneigh( inAimsMesh.vertex().size() );
+    for ( size_t i = 0; i < inAimsMesh.vertex().size(); ++i)
+    {
       startPoints[0] = i;
       geomap.init(startPoints, dist);
       geomap.process();
@@ -291,16 +271,15 @@ namespace constel {
       p1 = motion.transform(iFiber->front()[0],
                             iFiber->front()[1],
                             iFiber->front()[2]);
-      til::numeric_array<float, 3> p1na(p1[0], p1[1], p1[2]);
       p2 = motion.transform(iFiber->back()[0],
                             iFiber->back()[1],
                             iFiber->back()[2]);
-      til::numeric_array<float, 3> p2na(p2[0], p2[1], p2[2]);
-      size_t A = kdt.find_nearest( make_pair( 0U, p1na ) ).first->first;
-      size_t B = kdt.find_nearest( make_pair( 0U, p2na ) ).first->first;
+      size_t A = kdt.find_nearest( make_pair( 0U, p1 ) ).first->first;
+      size_t B = kdt.find_nearest( make_pair( 0U, p2 ) ).first->first;
 
-      if (til::dist2(p1na, getVertices(mesh)[A], til::prec<float>()) > 25.0 ||
-          til::dist2(p2na, getVertices(mesh)[B], til::prec<float>()) > 25.0) {
+      if( dist2( p1, inAimsMesh.vertex()[A] ) > 25.0 ||
+          dist2( p2, inAimsMesh.vertex()[B] ) > 25.0)
+      {
         ++countRemoved;
         continue;
       }

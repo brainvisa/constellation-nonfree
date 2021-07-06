@@ -24,7 +24,7 @@ namespace constel {
     til::convert(mesh0, _aimsMesh);
     _mesh = addNeighborsToMesh(mesh0);
     //KDTREE creation:
-    KDTreeVertices vert = kdt_vertices( _mesh );
+    KDTreeVertices vert = kdt_vertices( _aimsMesh );
     _mesh_kdt_ptr = new KDTree( vert.begin(), vert.end() );
 
     _fiberCount = 0;
@@ -60,16 +60,11 @@ namespace constel {
       if (_verbose)
         cout << "fiberCurvilinearAbscissa:" << fiberCurvilinearAbscissa << endl;
     }
-    til::numeric_array<float, 3> fiberPoint_na(fiberPoint[0],
-                                               fiberPoint[1],
-                                               fiberPoint[2]);
     //Mesh closest point computing:
     meshClosestPoint_index = _mesh_kdt_ptr->find_nearest(
-      make_pair( 0U, fiberPoint_na ) ).first->first;
-    meshClosestPoint_dist = til::dist2(
-        fiberPoint_na,
-        getVertices(_mesh)[meshClosestPoint_index],
-        til::prec<float>());
+      make_pair( 0U, fiberPoint ) ).first->first;
+    meshClosestPoint_dist = dist2(
+      fiberPoint, _aimsMesh.vertex()[meshClosestPoint_index] );
     
     if (fiberCurvilinearAbscissa > 1) {
       constel::QuickMap * meshPolygonVerticesWeightMap_ptr;

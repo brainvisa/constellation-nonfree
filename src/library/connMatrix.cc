@@ -30,7 +30,7 @@ namespace constel {
     // Comuting geomap : neighborhood map
     if (verbose) cout << "Computing geomap..." << flush;
     if (verbose) cout << "step 1..." << flush;
-    vector<QuickMap> res(getVertices(mesh).size());
+    vector<QuickMap> res(inAimsMesh.vertex().size());
     if (distthresh != 0) {
       til::ghost::GMapStop_AboveThreshold<double> stopGhost(distthresh);
       boost::shared_ptr<CNeighborhoods> pneighc = til::circular_neighborhoods(
@@ -60,7 +60,7 @@ namespace constel {
     if (verbose) cout << "Number of fibers: " << fibers.size() << endl;
 
     // Generating kdtree
-    KDTreeVertices m = kdt_vertices( mesh );
+    KDTreeVertices m = kdt_vertices( inAimsMesh );
     KDTree kdt( m.begin(), m.end() );
 
     // Computing connectivity matrix
@@ -85,31 +85,28 @@ namespace constel {
       }
 
       //Looking for closest points
-//       til::Find_closest<double, KDTree> fc(kdt);
 
       // Transform iFiber->front() and iFiber->back() from t2 to anat space
       // (with motion)
       p1 = motion.transform(iFiber->front()[0],
                             iFiber->front()[1],
                             iFiber->front()[2]);
-      til::numeric_array<float, 3> p1na(p1[0], p1[1], p1[2]);
       p2 = motion.transform(iFiber->back()[0],
                             iFiber->back()[1],
                             iFiber->back()[2]);
-      til::numeric_array<float, 3> p2na(p2[0], p2[1], p2[2]);
-//       size_t A = fc(p1na);
-//       size_t B = fc(p2na);
-      size_t A = kdt.find_nearest( make_pair( 0U, p1na ) ).first->first;
-      size_t B = kdt.find_nearest( make_pair( 0U, p2na ) ).first->first;
+      size_t A = kdt.find_nearest( make_pair( 0U, p1 ) ).first->first;
+      size_t B = kdt.find_nearest( make_pair( 0U, p2 ) ).first->first;
 
-      if (til::dist2(p1na, getVertices(mesh)[A], til::prec<float>()) > 25.0 ||
-          til::dist2(p2na, getVertices(mesh)[B], til::prec<float>()) > 25.0) {
+      if( dist2( p1, inAimsMesh.vertex()[A] ) > 25.0 ||
+          dist2( p2, inAimsMesh.vertex()[B] ) > 25.0)
+      {
         ++countRemoved;
         continue;
       }
 
       // Filling the connectivity matrix
-      if (distthresh == 0) {
+      if (distthresh == 0)
+      {
         conn[A][B] += 1.;
         conn[B][A] += 1.;
       } else {
@@ -279,21 +276,17 @@ namespace constel {
     // Generating kdtree
     // For seedMesh
     if (verbose) cout << "Generating kdtrees" << endl;
-//     KDTree kdt_seedMesh(getVertices(seedMesh));
-//     makeKDTree(getVertices(seedMesh), kdt_seedMesh);
-    KDTreeVertices m = kdt_vertices( seedMesh );
+    KDTreeVertices m = kdt_vertices( aimsSeedMesh );
     KDTree kdt_seedMesh( m.begin(), m.end() );
     // For targetMesh
-//     KDTree kdt_targetMesh(getVertices(targetMesh));
-//     makeKDTree(getVertices(targetMesh), kdt_targetMesh);
-    KDTreeVertices m2 = kdt_vertices( targetMesh );
+    KDTreeVertices m2 = kdt_vertices( aimsTargetMesh );
     KDTree kdt_targetMesh( m2.begin(), m2.end() );
 
     // Computing connectivity matrix
     if (verbose) cout << "Computing connectivity matrix" << endl;
     Connectivities * conn_ptr = new Connectivities(
-        getVertices(seedMesh).size(),
-        til::SparseVector<double>(getVertices(targetMesh).size()));
+        aimsSeedMesh.vertex().size(),
+        til::SparseVector<double>(aimsTargetMesh.vertex().size()));
     Connectivities & conn  = *conn_ptr;
     int countRemoved = 0;
     size_t fiberCount = 0;
@@ -315,35 +308,36 @@ namespace constel {
       p1 = motion.transform(iFiber->front()[0],
                             iFiber->front()[1],
                             iFiber->front()[2]);
-      til::numeric_array<float, 3> p1na(p1[0], p1[1], p1[2]);
       p2 = motion.transform(iFiber->back()[0],
                             iFiber->back()[1],
                             iFiber->back()[2]);
-      til::numeric_array<float, 3> p2na(p2[0], p2[1], p2[2]);
       size_t A_seedMesh = kdt_seedMesh.find_nearest(
-        make_pair( 0U, p1na ) ).first->first;
+        make_pair( 0U, p1 ) ).first->first;
       size_t B_seedMesh = kdt_seedMesh.find_nearest(
-        make_pair( 0U, p2na ) ).first->first;
+        make_pair( 0U, p2 ) ).first->first;
       size_t A_targetMesh = kdt_targetMesh.find_nearest(
-        make_pair( 0U, p1na ) ).first->first;
+        make_pair( 0U, p1 ) ).first->first;
       size_t B_targetMesh = kdt_targetMesh.find_nearest(
-        make_pair( 0U, p2na ) ).first->first;
+        make_pair( 0U, p2 ) ).first->first;
       
       // Filling the connectivity matrix
       /*
       Two retained cases:
-        first case: p1na "touches" seedMesh and p2na "touches" targetMesh
-        second case: the opposite (p1na "touches" targetMesh and p2na "touches"
+        first case: p1 "touches" seedMesh and p2 "touches" targetMesh
+        second case: the opposite (p1 "touches" targetMesh and p2 "touches"
                      seedMesh)
       */
-      if (til::dist2(p1na, getVertices(seedMesh)[A_seedMesh],
-          til::prec<float>()) <= 25.0) { //p1na "touches" seedMesh
-        if (til::dist2(p2na, getVertices(targetMesh)[B_targetMesh],
-            til::prec<float>()) <= 25.0) {
-          //first case (p2na "touches" targetMesh)
-          if (distthresh == 0) {
+      if( dist2( p1, aimsSeedMesh.vertex()[A_seedMesh] ) <= 25.0)
+      { //p1 "touches" seedMesh
+        if( dist2( p2, aimsTargetMesh.vertex()[B_targetMesh] ) <= 25.0)
+        {
+          //first case (p2 "touches" targetMesh)
+          if (distthresh == 0)
+          {
             conn[A_seedMesh][B_targetMesh] += 1.;
-          } else {
+          }
+          else
+          {
             for (QuickMap::const_iterator A_seedMesh_neigh
                  = res_seedMesh[A_seedMesh].begin();
                  A_seedMesh_neigh != res_seedMesh[A_seedMesh].end();
@@ -364,19 +358,26 @@ namespace constel {
               }
             }
           }
-        } else { // p2na doesn t touch targetMesh
+        }
+        else
+        { // p2na doesn t touch targetMesh
           ++countRemoved;
           continue;
         }
-      } else {
-        if (til::dist2(p1na, getVertices(targetMesh)[A_targetMesh],
-            til::prec<float>()) <= 25.0) {//p1na "touches" targetMesh
-          if (til::dist2(p2na, getVertices(seedMesh)[B_seedMesh],
-              til::prec<float>()) <= 25.0) {
-            //second case (p2na "touches" seedMesh)
-            if (distthresh == 0) {
+      }
+      else
+      {
+        if( dist2( p1, aimsTargetMesh.vertex()[A_targetMesh] ) <= 25.0)
+        {//p1 "touches" targetMesh
+          if( dist2( p2, aimsSeedMesh.vertex()[B_seedMesh] ) <= 25.0)
+          {
+            //second case (p2 "touches" seedMesh)
+            if (distthresh == 0)
+            {
               conn[B_seedMesh][A_targetMesh] += 1.;
-            } else {
+            }
+            else
+            {
               for (QuickMap::const_iterator A_targetMesh_neigh
                    = res_targetMesh[A_targetMesh].begin();
                    A_targetMesh_neigh != res_targetMesh[A_targetMesh].end();
@@ -401,7 +402,7 @@ namespace constel {
             ++countRemoved;
             continue;
           }
-        } else {// p1na touches nor seedMesh neither targetMesh
+        } else {// p1 touches nor seedMesh neither targetMesh
           ++countRemoved;
           continue;
         }
@@ -472,10 +473,11 @@ namespace constel {
         geomap(getVertices(mesh), *pneighc, stopGhost);
     vector<size_t> startPoints(1);
     vector<double> dist(1, 0.0);
-    vector<QuickMap> res(getVertices(mesh).size());
-    vector<size_t> nneigh(til::size(getVertices(mesh)));
+    vector<QuickMap> res( inAimsMesh.vertex().size() );
+    vector<size_t> nneigh( inAimsMesh.vertex().size() );
 
-    for (size_t i = 0; i < til::size(getVertices(mesh)); ++i) {
+    for (size_t i = 0; i < inAimsMesh.vertex().size(); ++i)
+    {
       startPoints[0] = i;
       geomap.init(startPoints, dist);
       geomap.process();
@@ -490,14 +492,12 @@ namespace constel {
     if (verbose) cout << "Number of fibers: " << fibers.size() << endl;
 
     // Generating kdtree
-//     KDTree kdt(getVertices(mesh));
-//     makeKDTree(getVertices(mesh), kdt);
-    KDTreeVertices m = kdt_vertices( mesh );
+    KDTreeVertices m = kdt_vertices( inAimsMesh );
     KDTree kdt( m.begin(), m.end() );
 
     // Computing connectivity matrix
     if (verbose) cout << "Computing connectivity matrix" << endl;
-    Connectivity * conn_ptr = new Connectivity(getVertices(mesh).size());
+    Connectivity * conn_ptr = new Connectivity( inAimsMesh.vertex().size() );
     Connectivity & conn  = *conn_ptr;
     int countRemoved = 0;
     size_t fiberCount = 0, nFibers = fibers.size();
@@ -515,24 +515,27 @@ namespace constel {
       p1 = motion.transform(iFiber->front()[0],
                             iFiber->front()[1],
                             iFiber->front()[2]);
-      til::numeric_array<float, 3> p1na(p1[0], p1[1], p1[2]);
       p2 = motion.transform(iFiber->back()[0],
                             iFiber->back()[1],
                             iFiber->back()[2]);
-      til::numeric_array<float, 3> p2na(p2[0], p2[1], p2[2]);
-      size_t A = kdt.find_nearest( make_pair( 0U, p1na ) ).first->first;
-      size_t B = kdt.find_nearest( make_pair( 0U, p2na ) ).first->first;
+      size_t A = kdt.find_nearest( make_pair( 0U, p1 ) ).first->first;
+      size_t B = kdt.find_nearest( make_pair( 0U, p2 ) ).first->first;
 
-      if (til::dist2(p1na, getVertices(mesh)[A], til::prec<float>()) > 25.0 and
-          til::dist2(p2na, getVertices(mesh)[B], til::prec<float>()) > 25.0) {
+      if( dist2( p1, inAimsMesh.vertex()[A] ) > 25.0 &&
+          dist2( p2, inAimsMesh.vertex()[B] ) > 25.0)
+      {
         ++countRemoved;
         continue;
       }
       // Filling the connectivity matrix
-      if (til::dist2(p1na, getVertices(mesh)[A], til::prec<float>()) <= 25.0) {
-        if (distthresh == 0) {
+      if( dist2( p1, inAimsMesh.vertex()[A] ) <= 25.0)
+      {
+        if (distthresh == 0)
+        {
           conn[A] += 1.;
-        } else {
+        }
+        else
+        {
           for (QuickMap::const_iterator A_neigh = res[A].begin();
                A_neigh != res[A].end(); ++A_neigh) {
             double e = til::square(A_neigh->second);
@@ -544,10 +547,14 @@ namespace constel {
           }
         }
       }
-      if (til::dist2(p2na, getVertices(mesh)[B], til::prec<float>()) <= 25.0) {
-        if(distthresh == 0) {
+      if( dist2( p2, inAimsMesh.vertex()[B] ) <= 25.0)
+      {
+        if(distthresh == 0)
+        {
           conn[A] += 1.;
-        } else {
+        }
+        else
+        {
           for (QuickMap::const_iterator B_neigh = res[B].begin();
                B_neigh != res[B].end(); ++B_neigh) {
             double e = til::square(B_neigh->second);
