@@ -315,8 +315,8 @@ namespace constel {
                   B_targetMesh_neigh != res_targetMesh[B_targetMesh].end();
                   ++B_targetMesh_neigh)
               {
-                double e1 = til::square(A_seedMesh_neigh->second);
-                double e2 = til::square(B_targetMesh_neigh->second);
+                double e1 = square(A_seedMesh_neigh->second);
+                double e2 = square(B_targetMesh_neigh->second);
                 // "smoothing coefficient"
                 double w = exp( -(e1 + e2)  / ( 2*distthresh*distthresh ));
                 if (w > G_THRESH)
@@ -358,8 +358,8 @@ namespace constel {
                      B_seedMesh_neigh != res_seedMesh[B_seedMesh].end();
                      ++B_seedMesh_neigh)
                 {
-                  double e1 = til::square(A_targetMesh_neigh->second);
-                  double e2 = til::square(B_seedMesh_neigh->second);
+                  double e1 = square(A_targetMesh_neigh->second);
+                  double e2 = square(B_seedMesh_neigh->second);
                   // "smoothing coefficient"
                   double w = exp( -(e1 + e2)  / ( 2*distthresh*distthresh ));
                   if (w > G_THRESH)
@@ -473,7 +473,6 @@ namespace constel {
         cout << 5 * int(fiberCount / five_count) << "%..." << flush;
       }
       //Looking for closest points
-//       til::Find_closest< double, KDTree > fc(kdt);
       // Transform iFiber->front() and iFiber->back() from t2 to anat space
       // (with motion)
       p1 = motion.transform(iFiber->front()[0],
@@ -503,7 +502,7 @@ namespace constel {
           for (map<size_t, float>::const_iterator A_neigh = res[A].begin();
                A_neigh != res[A].end(); ++A_neigh)
           {
-            double e = til::square(A_neigh->second);
+            double e = square(A_neigh->second);
             // "smoothing coefficient"
             double w = exp(-e  / (2*distthresh*distthresh));
             if (w > G_THRESH)
@@ -524,7 +523,7 @@ namespace constel {
           for (map<size_t, float>::const_iterator B_neigh = res[B].begin();
                B_neigh != res[B].end(); ++B_neigh)
           {
-            double e = til::square(B_neigh->second);
+            double e = square(B_neigh->second);
             // smoothing coefficient
             double w = exp(-e  / (2*distthresh*distthresh));
             if (w > G_THRESH)
@@ -1030,7 +1029,7 @@ namespace constel {
     int five_count = int(rowsNb / 20.0);
     float currentSum;
     int currentVertexIndex;
-    TimeTexture<float> outputDensityTex; //(1, til::size(res));
+    TimeTexture<float> outputDensityTex;
     int countVertex = 0;
     outputDensityTex[0].reserve(colNb);
     for (size_t v = 0; v < colNb; ++v) outputDensityTex[0].push_back(-1);
@@ -1083,7 +1082,7 @@ namespace constel {
     int five_count = int(rowsNb / 20.0);
     float currentSum = 0.0f;
     int currentVertexIndex;
-    TimeTexture<float> outputDensityTex; //(1, til::size(res));
+    TimeTexture<float> outputDensityTex;
     int countVertex = 0;
     outputDensityTex[0].reserve(colNb);
     for (size_t v = 0; v < colNb; ++v) outputDensityTex[0].push_back(-1);
@@ -1124,7 +1123,7 @@ namespace constel {
     size_t colNb = connMatrixToAllMesh[0].size();
     size_t rowsNb = connMatrixToAllMesh.size();
     if (verbose) cout << "("<<rowsNb << "," << colNb << ") : " << flush;
-    TimeTexture<float> outputDensityTex; //(1, til::size(res));
+    TimeTexture<float> outputDensityTex;
     outputDensityTex[0].reserve(colNb);
     Connectivity *totalConnectionDensity_ptr = connMatrixSumRows(
        connMatrixToAllMesh_ptr);
@@ -1149,13 +1148,14 @@ namespace constel {
           the mesh: sum of its connections to all seed region vertex
   */
   TimeTexture<float> meshDensityTexture(
-      const SparseOrDenseMatrix &connMatrixToAllMesh, bool verbose) {
+      const SparseOrDenseMatrix &connMatrixToAllMesh, bool verbose)
+  {
     if (verbose) cout << "Computing Mesh density texture" << flush;
 
     size_t colNb = connMatrixToAllMesh.getSize2();
     size_t rowsNb = connMatrixToAllMesh.getSize1();
     if (verbose) cout << "("<<rowsNb << "," << colNb << ") : " << flush;
-    TimeTexture<float> outputDensityTex; //(1, til::size(res));
+    TimeTexture<float> outputDensityTex;
     outputDensityTex[0].reserve(colNb);
     vector<double> *totalConnectionDensity_ptr = connMatrixSumRows(
         connMatrixToAllMesh);

@@ -21,7 +21,8 @@ namespace constel
   void connMatrixTargetsToTargets(
       const Fibers &fibers, const AimsSurfaceTriangle &inAimsMesh,
       Motion motion, const TimeTexture<short> &targetRegionsTex,
-      string file_name) {
+      string file_name)
+  {
     /*  Computing connectivity matrix regrouped according to targetRegions
         given in targetRegionsTexture (labeled texture, between 0 and
         targetRegionsNb, 0 = background, 1 to targetRegionsNb = target regions
@@ -49,12 +50,16 @@ namespace constel
     Point3df p1, p2;
 
     for (Fibers::const_iterator iFiber = fibers.begin();
-         iFiber != fibers.end(); ++iFiber, ++fiberCount) {
+         iFiber != fibers.end(); ++iFiber, ++fiberCount)
+    {
       if (five_count != 0) {
-        if (fiberCount % five_count == 0) {
+        if (fiberCount % five_count == 0)
+        {
           cout << 5 * int(fiberCount / five_count) << "%..." << flush;
         }
-      } else  {
+      }
+      else
+      {
         cout << "...100%..." << flush;
       }
       //Looking for closest points
@@ -80,7 +85,8 @@ namespace constel
       int labelB = targetTex0[B];
       bool validLabelA = (1 <= labelA && labelA <= targetRegionsNb);
       bool validLabelB = (1 <= labelB && labelB <= targetRegionsNb);
-      if (validLabelA && validLabelB) {
+      if (validLabelA && validLabelB)
+      {
         matrix(labelA-1,labelB-1,0) += 1;
         matrix(labelB-1,labelA-1,0) += 1;
       }
@@ -96,7 +102,8 @@ namespace constel
       const Fibers &fibers, const AimsSurfaceTriangle &inAimsMesh,
       Motion motion, const TimeTexture<short> &seedRegionsTex,
       size_t seedRegionLabel, string connmatrix_filename,
-      string /* connTexture_filename */ ) {
+      string /* connTexture_filename */ )
+  {
     /*  Computing connectivity matrix of a given seed Region
         defined by  seedRegionLabel vertices in seedRegionTex
         (labeled texture, 0 = background)
@@ -137,12 +144,17 @@ namespace constel
     Point3df p1, p2;
 
     for (Fibers::const_iterator iFiber = fibers.begin();
-         iFiber != fibers.end(); ++iFiber, ++fiberCount) {
-      if (five_count != 0) {
-        if (fiberCount % five_count == 0) {
+         iFiber != fibers.end(); ++iFiber, ++fiberCount)
+    {
+      if (five_count != 0)
+      {
+        if (fiberCount % five_count == 0)
+        {
           cout << 5 * int(fiberCount / five_count) << "%..." << flush;
         }
-      } else {
+      }
+      else
+      {
         cout << "...100%..." << flush;
       }
       //Looking for closest points
@@ -168,10 +180,12 @@ namespace constel
       size_t labelB = seedTex0[B];
       bool validLabelA = labelA == seedRegionLabel;
       bool validLabelB = labelB == seedRegionLabel;
-      if (validLabelA) {
+      if (validLabelA)
+      {
         matrix(seedVertexIndexInMatrix[A],B,0) += 1;
       }
-      if (validLabelB) {
+      if (validLabelB)
+      {
         matrix(seedVertexIndexInMatrix[B],A,0) += 1;
       }
 
@@ -188,7 +202,8 @@ namespace constel
       Motion motion, const TimeTexture<short> &seedRegionsTex,
       size_t seedRegionLabel, float distthresh, float wthresh,
       string connmatrix_filename, string /* connTexture_filename */,
-      bool logOption) {
+      bool logOption)
+  {
     /*  Computing connectivity matrix of a given seed Region
         defined by  seedRegionLabel vertices in seedRegionTex
         (labeled texture, 0=background) with smoothing according to distthresh
@@ -200,9 +215,11 @@ namespace constel
     size_t seedRegionVertexNb = 0;
     vector<size_t > seedVertexIndexInMatrix(meshVertexNb);
     size_t label = 0;
-    for (size_t i = 0; i < meshVertexNb; ++i) {
+    for (size_t i = 0; i < meshVertexNb; ++i)
+    {
       label = seedTex0.item(i);
-      if (label == seedRegionLabel) {
+      if (label == seedRegionLabel)
+      {
         seedVertexIndexInMatrix[i]=seedRegionVertexNb;
         seedRegionVertexNb++;
       }
@@ -262,12 +279,17 @@ namespace constel
     Point3df p1, p2;
 
     for (Fibers::const_iterator iFiber = fibers.begin();
-         iFiber != fibers.end(); ++iFiber, ++fiberCount) {
-      if (five_count != 0) {
-        if (fiberCount % five_count == 0) {
+         iFiber != fibers.end(); ++iFiber, ++fiberCount)
+    {
+      if (five_count != 0)
+      {
+        if (fiberCount % five_count == 0)
+        {
           cout << 5 * int(fiberCount / five_count) << "%..." << flush;
         }
-      } else {
+      }
+      else
+      {
         cout << "...100%..." << flush;
       }
       //Looking for closest points
@@ -290,25 +312,31 @@ namespace constel
       }
       // Filling the connectivity matrix
       for (QuickMap::const_iterator B_neigh = res[B].begin();
-           B_neigh != res[B].end(); ++B_neigh) {
+           B_neigh != res[B].end(); ++B_neigh)
+      {
         for (QuickMap::const_iterator A_neigh = res[A].begin();
-             A_neigh != res[A].end(); ++A_neigh) {
+             A_neigh != res[A].end(); ++A_neigh)
+        {
           size_t labelA = seedTex0[A_neigh->first];
           size_t labelB = seedTex0[B_neigh->first];
           bool validLabelA = labelA == seedRegionLabel;
           bool validLabelB = labelB == seedRegionLabel;
           double w = 0;
-          if (validLabelA || validLabelB) {
-            double e1 = til::square(A_neigh->second);
-            double e2 = til::square(B_neigh->second);
+          if (validLabelA || validLabelB)
+          {
+            double e1 = square(A_neigh->second);
+            double e2 = square(B_neigh->second);
             w = exp( -(e1 + e2)  / ( 2*distthresh*distthresh ))
                 /(square_sigma * two_pi);//"smoothing coefficient"
-            if (w > G_THRESH) {
-              if (validLabelA) {
+            if (w > G_THRESH)
+            {
+              if (validLabelA)
+              {
                 matrix(seedVertexIndexInMatrix[A_neigh->first],B_neigh->first)
                   += w;
               }
-              if (validLabelB) {
+              if (validLabelB)
+              {
                 matrix(seedVertexIndexInMatrix[B_neigh->first],A_neigh->first)
                   += w;
               }
@@ -317,13 +345,17 @@ namespace constel
         }
       }
     }
-    if (logOption) {
+    if (logOption)
+    {
       SparseMatrix::iterator1 s1;
       SparseMatrix::iterator2 s2;
-      for (s1 = matrix.begin1(); s1 != matrix.end1(); s1++) {
-        for (s2 = s1.begin(); s2 != s1.end(); s2++) {
+      for (s1 = matrix.begin1(); s1 != matrix.end1(); s1++)
+      {
+        for (s2 = s1.begin(); s2 != s1.end(); s2++)
+        {
           *s2 = log(1+*s2);
-          if (*s2 <= wthresh) {
+          if (*s2 <= wthresh)
+          {
             matrix.erase_element(s1.index1(), s2.index2());
           }
         }
@@ -337,7 +369,8 @@ namespace constel
   //-------------------------------------------
   void matrixSmoothingWithVertexAreaCorrection(
       SparseMatrix * matrix_ptr, const AimsSurfaceTriangle &inAimsMesh,
-      float distthresh, float /* wthresh */) {
+      float distthresh, float /* wthresh */)
+  {
     /*
     Smoothing of a connectivity matrix according to the aims mesh and to the
     neighbourhood distance (distthresh), threshold of the resulting matrix by
@@ -379,7 +412,8 @@ namespace constel
     vector<size_t> startPoints(1);
     vector<double> dist(1, 0.0);
     vector<size_t> nneigh(til::size(getVertices(mesh)));
-    for (size_t i = 0; i < til::size(getVertices(mesh)); ++i) {
+    for (size_t i = 0; i < til::size(getVertices(mesh)); ++i)
+    {
       startPoints[0] = i;
       geomap.init(startPoints, dist);
       geomap.process();
@@ -399,38 +433,50 @@ namespace constel
     SparseMatrix::iterator1 s1;
     SparseMatrix::iterator2 s2;
     if (( (int32_t)getVertices(mesh).size() == matrix.getSize1() )
-        && ((int32_t)getVertices(mesh).size()==matrix.getSize2())) {
-      for (s1 = matrix.begin1(); s1 != matrix.end1(); s1++) {
+        && ((int32_t)getVertices(mesh).size()==matrix.getSize2()))
+    {
+      for (s1 = matrix.begin1(); s1 != matrix.end1(); s1++)
+      {
         size_t A = s1.index1();
-        for (s2 = s1.begin(); s2 != s1.end(); s2++) {
+        for (s2 = s1.begin(); s2 != s1.end(); s2++)
+        {
           size_t B = s2.index2();
           double w = 0;
           for (QuickMap::const_iterator B_neigh = res[B].begin();
-               B_neigh != res[B].end(); ++B_neigh) {
+               B_neigh != res[B].end(); ++B_neigh)
+          {
             for (QuickMap::const_iterator A_neigh = res[A].begin();
-                 A_neigh != res[A].end(); ++A_neigh) {
-              double e1 = til::square(A_neigh->second);
-              double e2 = til::square(B_neigh->second);
+                 A_neigh != res[A].end(); ++A_neigh)
+            {
+              double e1 = square(A_neigh->second);
+              double e2 = square(B_neigh->second);
               w = (*s2)*exp( -(e1 + e2)  / ( 2*distthresh*distthresh )) 
                   /(square_sigma * two_pi);//"smoothing coefficient"
-              if (w > G_THRESH) {
+              if (w > G_THRESH)
+              {
                 smoothed_matrix(A_neigh->first,B_neigh->first)+=w;
               }
             }
           }
         }
       }
-    } else if ((int32_t)getVertices(mesh).size()==matrix.getSize2()) {
-      for ( s2 = matrix.begin2(); s2 != matrix.end2(); s2++ ) {
+    }
+    else if ((int32_t)getVertices(mesh).size()==matrix.getSize2())
+    {
+      for ( s2 = matrix.begin2(); s2 != matrix.end2(); s2++ )
+      {
         size_t A = s2.index2(); 
         for (QuickMap::const_iterator A_neigh = res[A].begin();
-             A_neigh != res[A].end(); ++A_neigh) {
-          double e1 = til::square(A_neigh->second);
+             A_neigh != res[A].end(); ++A_neigh)
+        {
+          double e1 = square(A_neigh->second);
           double smooth_coef = exp( -e1  / ( 2*distthresh*distthresh ));
-          for (s1 = s2.begin(); s1 != s2.end(); s1++) {
+          for (s1 = s2.begin(); s1 != s2.end(); s1++)
+          {
             size_t B = s1.index1();
             float w = (*s1)*smooth_coef;
-            if (w > G_THRESH) {
+            if (w > G_THRESH)
+            {
               smoothed_matrix(B,A_neigh->first)+=w;
             }
           }
