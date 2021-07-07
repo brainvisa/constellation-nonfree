@@ -24,7 +24,7 @@ Connectivities* makeConnMatrix_intersection(
   if (verbose) cout << "Mesh vertices number: " << cortexMeshVertexNb << endl;
 
   Connectivities* connMatrixToAllMesh_ptr = new Connectivities(
-      cortexMeshVertexNb, til::SparseVector<double>(cortexMeshVertexNb));
+      cortexMeshVertexNb, Connectivity(cortexMeshVertexNb));
   
   if (verbose) cout << "Loading fibers." << endl;
   BundleInteractionReader bundleInteractionReader(bundleFilename);
@@ -198,7 +198,8 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
     const vector<string> & connTextureToTargetMeshesFileNames,
     int meshes_nb,
     vector<Connectivities*> & connMatrixCortexToMesh_ptr_vector,
-    bool verbose) {
+    bool verbose)
+{
 
   /*
   Computing mat [region vertex][meshVertexNb]
@@ -235,10 +236,12 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
   if (normalize)
     connMatrixNormalize(*mat);
   
-  if (connMatrixFileName != "") {
+  if (connMatrixFileName != "")
+  {
     Writer<SparseOrDenseMatrix> w(connMatrixFileName);
     w.write(*mat);
-    if (logOption and logFile != "") {
+    if (logOption and logFile != "")
+    {
       if (verbose)
         cout << "Computing ln(1+matrix) and storing resulting file in " <<
         connMatrixFileName << "..." << endl;
@@ -247,46 +250,57 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
       //size_t rowsNb = extractConnMatrix.size();
       
       Connectivities::iterator il, el = extractConnMatrix.end();
-      Connectivity::sparse_iterator ic, ec;
+      Connectivity::iterator ic, ec;
       
-      for (il=extractConnMatrix.begin(); il!=el; ++il) {
-        for (ic=il->sparse_begin(), ec=il->sparse_end(); ic!=ec; ++ic) {
+      for (il=extractConnMatrix.begin(); il!=el; ++il)
+      {
+        for (ic=il->begin(), ec=il->end(); ic!=ec; ++ic)
+        {
           float connval = ic->second;
           
-          if (connval > 0) {
+          if (connval > 0)
+          {
             float new_connval = log(1 + connval);
             ic->second = new_connval;
           }
         }
       }
 
-      if (connMatrixFormat == "binar_sparse" or connMatrixFormat == "ascii") {
+      if (connMatrixFormat == "binar_sparse" || connMatrixFormat == "ascii")
+      {
         if (verbose)
           cout << "Writing log seed region connMatrix ima:" <<
           connMatrixFileName << endl;
         
         writeConnectivities(*extractConnMatrix_ptr, logFile,
                             connMatrixFormat=="ascii");
-      } else {  // saving connectivity matrix in .ima (aims fmt)
+      }
+      else
+      {  // saving connectivity matrix in .ima (aims fmt)
         writeAimsFmtConnMatrix(extractConnMatrix_ptr.get(),logFile);
       }
     }
     
     //  Write region vertex indexes (ascii format only)
     size_t seedVertexIndex_size = (*seedVertexIndex).size();
-    if ((*seedVertexIndex).size() != 0) {
+    if ((*seedVertexIndex).size() != 0)
+    {
       if (seedRegionVertexIndexType == "text"
-          or seedRegionVertexIndexType == "both") {
+          || seedRegionVertexIndexType == "both")
+      {
         fstream findex;
         ostringstream s;
         s << seedRegionVertexIndexFileName << ".txt";
         findex.open(s.str().c_str(), fstream::out);
         
-        for (size_t i = 0; i < labels[seedRegionLabel]; ++i) {
+        for (size_t i = 0; i < labels[seedRegionLabel]; ++i)
+        {
           findex << (*seedVertexIndex)[i] << endl;
         }
-      } else if (seedRegionVertexIndexType == "texture"
-                  or seedRegionVertexIndexType == "both") {
+      }
+      else if( seedRegionVertexIndexType == "texture"
+               || seedRegionVertexIndexType == "both" )
+      {
         TimeTexture< unsigned int > seedRegionVertexIndexTex;
         
         if (verbose)
@@ -294,7 +308,8 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
         
         seedRegionVertexIndexTex[0].reserve(seedVertexIndex_size);
         
-        for (size_t vertex = 0; vertex < seedVertexIndex_size; vertex++) {
+        for (size_t vertex = 0; vertex < seedVertexIndex_size; vertex++)
+        {
           seedRegionVertexIndexTex[0].push_back((*seedVertexIndex)[vertex]);
         }
 
@@ -311,7 +326,9 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
       if (verbose)
         cout << "End Writing seedVertexIndex in " <<
         seedRegionVertexIndexType << " format." << endl;
-    } else {
+    }
+    else
+    {
       if (verbose) cout << "seedVertexIndex size = 0" << endl;
     }
   }
@@ -339,9 +356,12 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
   int connTextureToTargetMeshesFileNames_size
     = connTextureToTargetMeshesFileNames.size();
 
-  if (connTextureToTargetMeshesFileNames_size == meshes_nb) {
-    for (int meshLabel = 0; meshLabel < meshes_nb; ++meshLabel) {
-      if (connTextureToTargetMeshesFileNames[meshLabel] != "") {
+  if (connTextureToTargetMeshesFileNames_size == meshes_nb)
+  {
+    for (int meshLabel = 0; meshLabel < meshes_nb; ++meshLabel)
+    {
+      if (connTextureToTargetMeshesFileNames[meshLabel] != "")
+      {
         vector<size_t> * seedVertexIndex;
 
         SparseOrDenseMatrix *mat = connectivitiesToSparseOrDenseMatrix(
@@ -374,8 +394,10 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
 }
 
 
-int main(int argc, const char* argv[]) {
-  try {
+int main(int argc, const char* argv[])
+{
+  try
+  {
     string bundleFilename;
     Reader<AimsSurfaceTriangle> inMeshAimsR;
     string connMatrixComputingType = "meshclosestpoint";
@@ -504,7 +526,8 @@ int main(int argc, const char* argv[]) {
         connMatrixComputingType = meshintersectionpointfast", true);
     app.initialize();
 
-    if (verbose) {
+    if (verbose)
+    {
       cout << "Cortical region: " << seedRegionLabel << endl;
     }
 
@@ -515,20 +538,26 @@ int main(int argc, const char* argv[]) {
     int meshes_nb = inTargetMeshesAimsR_files.size();
 
     // Target meshes (useful?)
-    if (inTargetMeshesAimsR_files.empty()) {
+    if (inTargetMeshesAimsR_files.empty())
+    {
       if (verbose) cout << "No target meshes." << endl;
-    } else {
+    }
+    else
+    {
       vector<AimsSurfaceTriangle> inAimsTargetMeshes(meshes_nb);
-      if (verbose) {
+      if (verbose)
+      {
         cout << "Meshes number: " << meshes_nb << endl;
       }
-      for (int meshLabel = 0; meshLabel < meshes_nb; ++meshLabel) {
+      for (int meshLabel = 0; meshLabel < meshes_nb; ++meshLabel)
+      {
         // Read the target mesh
         Reader<AimsSurfaceTriangle> inAimsTargetMeshR(
             inTargetMeshesAimsR_files[meshLabel]);
         inAimsTargetMeshR.read(inAimsTargetMeshes[meshLabel]);
 
-        if (verbose) {
+        if (verbose)
+        {
           cout << "Mesh: " << inTargetMeshesAimsR_files[meshLabel] << flush;
           cout << ", size of mesh: " <<
           inAimsTargetMeshes[meshLabel].vertex().size() << flush;
@@ -539,16 +568,20 @@ int main(int argc, const char* argv[]) {
 
     // Read of the starting cortical parcellation (if it exists) and give the
     // number of different regions in this parcellation
-    if (seedRegionsTexR.fileName() != "") { 
+    if (seedRegionsTexR.fileName() != "")
+    {
       seedRegionsTexR.read(seedRegionsTex);
       maxLabel = textureMax(seedRegionsTex);
       
-      if (verbose) {
+      if (verbose)
+      {
         cout << "Initial cortical parcellation: " << flush;
         cout << seedRegionsTex[0].nItem() << " values, " << flush;
         cout << maxLabel << " regions." << endl;
       }
-    } else {
+    }
+    else
+    {
       throw runtime_error("ERROR: No or wrong seedRegionsTex input.");
     }
 
@@ -585,18 +618,21 @@ int main(int argc, const char* argv[]) {
 
     delete connMatrixToAllMesh_ptr;
 
-    for (int meshLabel = 0; meshLabel < meshes_nb; ++meshLabel) {
+    for (int meshLabel = 0; meshLabel < meshes_nb; ++meshLabel)
+    {
       // delete connMatrixCortexToMesh_ptr_vector[meshLabel];
     }
 
     return EXIT_SUCCESS;
   }
 
-  catch (carto::user_interruption &) {
+  catch (carto::user_interruption &)
+  {
     // Exceptions thrown by command line parser (already handled, simply exit)
   }
 
-  catch (exception & e) {
+  catch (exception & e)
+  {
     cerr << e.what() << endl;
   }
 }

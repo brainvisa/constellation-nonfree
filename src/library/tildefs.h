@@ -1,12 +1,10 @@
 #ifndef CONSTELLATION_TILDEFS_H
 #define CONSTELLATION_TILDEFS_H
 
-#include <cathier/Mesh.h>
 #include <kdtree++/kdtree.hpp>
 
-namespace constel {
-  typedef til::Mesh_N Mesh;
-//   typedef AimsSurfaceTriangle Mesh;
+namespace constel
+{
 
   template <typename PointType>
   struct Bracket_accessor_PointIndex

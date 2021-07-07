@@ -47,7 +47,7 @@ namespace {
   class MatrixTraits<Connectivities> {
    public:
     typedef Connectivities::iterator iterator;
-    typedef til::SparseVector<double>::sparse_iterator columniterator;
+    typedef constel::Connectivity::iterator columniterator;
   };
 
   template <typename Matrix>

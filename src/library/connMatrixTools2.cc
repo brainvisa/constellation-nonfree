@@ -1,18 +1,19 @@
 #include <constellation/connMatrixTools.h>
 #include <constellation/tildefs.h>
 #include <constellation/connectivities.h>
+#include <cathier/aims_wrap.h> // used for Cast<Point3df, numeric_array<> >
 #include <cathier/triangle_mesh_geodesic_map.h>
 #include <aims/io/writer.h>
-#include <cathier/aims_wrap.h> // used for Cast<Point3df, numeric_array<> >
-
 
 using namespace aims;
 using namespace carto;
 using namespace std;
 
-namespace constel {
+namespace constel
+{
 
   typedef AimsData<float> Matrix;
+  typedef til::Mesh_N Mesh;
 
   //------------------------------
   //  connMatrixTargetsToTargets
@@ -108,9 +109,11 @@ namespace constel {
     size_t seedRegionVertexNb = 0;
     vector<size_t > seedVertexIndexInMatrix(meshVertexNb);
     size_t label= 0;
-    for (size_t i = 0; i < meshVertexNb; ++i) {
+    for (size_t i = 0; i < meshVertexNb; ++i)
+    {
       label = seedTex0.item(i);
-      if (label == seedRegionLabel) {
+      if (label == seedRegionLabel)
+      {
         seedVertexIndexInMatrix[i]=seedRegionVertexNb;
         seedRegionVertexNb++;
       }
@@ -211,7 +214,7 @@ namespace constel {
     SparseMatrix matrix(size1,size2);
 
     //Convert inAimsMesh to Mesh mesh (Pascal Cathier Format)
-    Mesh mesh;
+    til::Mesh_N mesh;
     til::Mesh1 mesh0;
     til::convert(mesh0, inAimsMesh);
     mesh = addNeighborsToMesh(mesh0);
@@ -232,7 +235,7 @@ namespace constel {
     boost::shared_ptr<CNeighborhoods> pneighc
       = til::circular_neighborhoods(getVertices(mesh), getFaceIndices(mesh));
     til::Triangle_mesh_geodesic_map<
-        Mesh::VertexCollection, CNeighborhoods, double,
+        til::Mesh_N::VertexCollection, CNeighborhoods, double,
         til::ghost::GMapStop_AboveThreshold<double>,
         til::policy::GMap_DefaultStorage_sparse_vect_dbl>
         geomap(getVertices(mesh), *pneighc, stopGhost);

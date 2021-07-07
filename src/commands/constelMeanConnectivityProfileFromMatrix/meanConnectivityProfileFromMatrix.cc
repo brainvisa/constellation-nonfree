@@ -154,25 +154,29 @@ int main(int argc, const char* argv[]) {
     spmreader.read(AllMeshConnMatrix);
 
     // If second initial cortical parcellation is specified
-    if (secondCorticalParcellationReader.fileName() != "") {
+    if (secondCorticalParcellationReader.fileName() != "")
+    {
       connMatrixToAllMesh_ptr = new constel::Connectivities(
           (*labels_ptr)[seedLabel],
-          til::SparseVector<double>(AllMeshConnMatrix.getSize2()));
-      if (AllMeshConnMatrix.getSize1() == (int32_t)(*labels_ptr)[seedLabel]) {
+          Connectivity(AllMeshConnMatrix.getSize2()));
+      if (AllMeshConnMatrix.getSize1() == (int32_t)(*labels_ptr)[seedLabel])
+      {
         if (verbose)
           cout << "Connectivity matrix corresponds to seed region" << endl;
-        for (size_t i = 0; i < (*labels_ptr)[seedLabel]; ++i) {
+        for (size_t i = 0; i < (*labels_ptr)[seedLabel]; ++i)
+        {
           (*connMatrixToAllMesh_ptr)[seedVertexIndex[i]]
             = AllMeshConnMatrix.getSparseRow
-              <til::SparseVector<double> >((int32_t)i);
+              <Connectivity >((int32_t)i);
         }
       } else {
         if (verbose)
           cout << "Connectivity matrix corresponds to all the mesh" << endl;
-        for (size_t i = 0; i < seedVertexIndex.size(); ++i) {
+        for (size_t i = 0; i < seedVertexIndex.size(); ++i)
+        {
           (*connMatrixToAllMesh_ptr)[seedVertexIndex[i]]
             = AllMeshConnMatrix.getSparseRow
-              <til::SparseVector<double> >((int32_t)seedVertexIndex[i]);
+              <Connectivity >((int32_t)seedVertexIndex[i]);
         }
       }
       AllMeshConnMatrix = SparseOrDenseMatrix();

@@ -120,23 +120,17 @@ namespace constel {
 
   void CurvilinearAbscissaBundleListener::newFiberPoint(
       const BundleProducer &, const BundleInfo &, const FiberInfo &,
-      const FiberPoint & fiberPoint) {
+      const FiberPoint & fiberPoint)
+  {
     ++_fiberPointCount;
     _bundleInteractionReader->
         _listenedFiberInfo.setAntFiberPointExistingMeshIntersection(false);
     
-    if (_fiberPointCount > 1) {
-      til::numeric_array<float, 3> fiberPoint_na(fiberPoint[0],
-                                                 fiberPoint[1],
-                                                 fiberPoint[2]);
+    if (_fiberPointCount > 1)
+    {
       FiberPoint antFiberPoint =
           _bundleInteractionReader->_listenedFiberInfo.getAntFiberPoint();
-      til::numeric_array<float, 3> antFiberPoint_na(antFiberPoint[0],
-                                                    antFiberPoint[1],
-                                                    antFiberPoint[2]);
-      _fiberLength += sqrt(til::dist2(fiberPoint_na,
-                           antFiberPoint_na,
-                           til::prec<float>()));
+      _fiberLength += sqrt(dist2( fiberPoint, antFiberPoint ));
       _bundleInteractionReader->_listenedFiberInfo.setCurvilinearAbscissa(
           _fiberLength);
     }

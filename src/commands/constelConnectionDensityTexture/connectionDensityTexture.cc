@@ -10,8 +10,10 @@ using namespace std;
 using namespace constel;
 
 
-int main(int argc, const char** argv) {
-  try {
+int main(int argc, const char** argv)
+{
+  try
+  {
     typedef AimsData<float> Matrix;
     Reader<AimsSurfaceTriangle > inMeshAimsR;
     Reader<TimeTexture<short> > seedRegionsTexR;
@@ -142,7 +144,7 @@ int main(int argc, const char** argv) {
     }
     connMatrixToAllMesh_ptr
       = new constel::Connectivities(labels[seedRegionLabel],
-        til::SparseVector<double>(AllMeshConnMatrix.getSize2()));
+        Connectivity(AllMeshConnMatrix.getSize2()));
     //Connectivities & connMatrixToAllMesh = *connMatrixToAllMesh_ptr;
 
     if (AllMeshConnMatrix.getSize1() == (int32_t)labels[seedRegionLabel]) {

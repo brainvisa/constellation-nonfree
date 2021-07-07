@@ -9,13 +9,9 @@ using namespace constel;
 using namespace aims;
 using namespace std;
 
-namespace
+
+namespace constel
 {
-
-}
-
-
-namespace constel {
   
   MeshIntersectionBundleListener::MeshIntersectionBundleListener(
       const AimsSurfaceTriangle &aimsMesh,
@@ -29,7 +25,7 @@ namespace constel {
     _meshPolygonsByVertex_Index  = constel::surfacePolygonsIndex(_aimsMesh);
     til::Mesh1 mesh0;
     til::convert(mesh0, _aimsMesh);
-    Mesh mesh = addNeighborsToMesh(mesh0);
+    til::Mesh_N mesh = addNeighborsToMesh(mesh0);
     // Comuting geomap : neighborhood map
     if (_verbose)
         cout << "meshClosestPoint_minDistance:" << _meshClosestPointMaxDistance
@@ -49,13 +45,12 @@ namespace constel {
       boost::shared_ptr<CNeighborhoods> pneighc = til::circular_neighborhoods(
           getVertices(mesh), getFaceIndices(mesh));
       til::Triangle_mesh_geodesic_map<
-          Mesh::VertexCollection, CNeighborhoods, double,
+          til::Mesh_N::VertexCollection, CNeighborhoods, double,
           til::ghost::GMapStop_AboveThreshold<double>,
           til::policy::GMap_DefaultStorage_sparse_vect_dbl>
             geomap(getVertices(mesh), *pneighc, stopGhost);
       vector<size_t> startPoints(1);
       vector<double> dist(1, 0.0);
-      vector<size_t> nneigh( aimsMesh.vertex().size() );
       for (size_t i = 0; i < aimsMesh.vertex().size(); ++i)
       {
         startPoints[0] = i;
@@ -69,7 +64,6 @@ namespace constel {
         til::detail::loop_xx(
             castTo(*_1, *_2),
             _meshDistanceThresholdNeighborhoodByVertex[i], tmp->getMap());
-        nneigh[i] = _meshDistanceThresholdNeighborhoodByVertex[i].size();
       }
     }
     //KDTREE creation:

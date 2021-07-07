@@ -1,8 +1,11 @@
 #include <constellation/connMatrix.h>
+#include <cathier/aims_wrap.h>
 #include <cathier/triangle_mesh_geodesic_map.h>
 #include <aims/sparsematrix/sparseordensematrix.h>
 #include <aims/io/writer.h>
-#include <cathier/aims_wrap.h> // used for Cast<Point3df, numeric_array<> >
+#include <aims/distancemap/meshdistance.h>
+#include <aims/distancemap/meshvoronoi.h>
+#include <aims/utility/stl_conversion.h>
 
 
 using namespace aims;
@@ -18,47 +21,33 @@ namespace constel {
   //--------------
   Connectivities * connMatrix(
       const Fibers &fibers, const AimsSurfaceTriangle &inAimsMesh,
-      float distthresh, float wthresh, Motion motion, bool verbose) {
+      float distthresh, float wthresh, Motion motion, bool verbose)
+  {
 
     double two_pi = 2*3.1415926535897931;
     const double G_THRESH = 0.001; //threshold for connectivity contributions
     
-    //Convert inAimsMesh to Mesh mesh (Pascal Cathier Format)
-    Mesh mesh;
-    til::Mesh1 mesh0;
-    til::convert(mesh0, inAimsMesh);
-    mesh = addNeighborsToMesh(mesh0);
-    
     // Comuting geomap : neighborhood map
     if (verbose) cout << "Computing geomap..." << flush;
     if (verbose) cout << "step 1..." << flush;
-    vector<QuickMap> res(inAimsMesh.vertex().size());
-    if (distthresh != 0) {
-      til::ghost::GMapStop_AboveThreshold<double> stopGhost(distthresh);
-      boost::shared_ptr<CNeighborhoods> pneighc = til::circular_neighborhoods(
-          getVertices(mesh), getFaceIndices(mesh));
-      til::Triangle_mesh_geodesic_map<
-          Mesh::VertexCollection,CNeighborhoods,
-          double, til::ghost::GMapStop_AboveThreshold<double>,
-          til::policy::GMap_DefaultStorage_sparse_vect_dbl>
-          geomap(getVertices(mesh), *pneighc, stopGhost);
-      vector<size_t> startPoints(1);
-      vector<double> dist(1, 0.0);
-      vector<size_t> nneigh(til::size(getVertices(mesh)));
-      
-      for (size_t i = 0; i < til::size(getVertices(mesh)); ++i) {
-        startPoints[0] = i;
-        geomap.init(startPoints, dist);
-        geomap.process();
-        boost::shared_ptr<til::sparse_vector<double> > tmp
-          = geomap.distanceMap();
-        res[i].resize(tmp->getMap().size());
-        using namespace til::expr;
-        til::detail::loop_xx(castTo(*_1, *_2), res[i], tmp->getMap());
-        nneigh[i] = res[i].size();
+    size_t nv = inAimsMesh.vertex().size();
+
+    Texture<int16_t> start( nv, 0 );
+    std::vector< std::map<size_t, float> > res(nv);
+
+    if (distthresh != 0)
+    {
+      for (std::size_t i = 0; i < nv; ++i)
+      {
+        start[i] = 1;
+        toMap( meshdistance::MeshDistance( inAimsMesh.begin()->second, start,
+                                           false, distthresh ).data(),
+              res[i], meshdistance::MESHDISTANCE_UNREACHED );
+        start[i] = 0;
       }
+      std::cout << "OK" << std::endl;
     }
-  
+
     if (verbose) cout << "Number of fibers: " << fibers.size() << endl;
 
     // Generating kdtree
@@ -67,9 +56,7 @@ namespace constel {
 
     // Computing connectivity matrix
     if (verbose) cout << "Computing connectivity matrix" << endl;
-    Connectivities *conn_ptr = new Connectivities(
-        getVertices(mesh).size(),
-        til::SparseVector<double>(getVertices(mesh).size()));
+    Connectivities *conn_ptr = new Connectivities( nv, Connectivity( nv ) );
     Connectivities &conn  = *conn_ptr;
     int countRemoved = 0;
     size_t fiberCount = 0;
@@ -111,23 +98,28 @@ namespace constel {
       {
         conn[A][B] += 1.;
         conn[B][A] += 1.;
-      } else {
+      }
+      else
+      {
         double wtotal = 0;
         list<pair<pair<size_t, size_t>, double> > weights;
-        for (QuickMap::const_iterator B_neigh = res[B].begin();
-             B_neigh != res[B].end(); ++B_neigh) {
-          for (QuickMap::const_iterator A_neigh = res[A].begin();
-               A_neigh != res[A].end(); ++A_neigh) {
+        for (map<size_t, float>::const_iterator B_neigh = res[B].begin();
+             B_neigh != res[B].end(); ++B_neigh)
+        {
+          for (map<size_t, float>::const_iterator A_neigh = res[A].begin();
+               A_neigh != res[A].end(); ++A_neigh)
+          {
             double square_sigma = distthresh*distthresh;
-            double e1 = til::square(A_neigh->second);
-            double e2 = til::square(B_neigh->second);
+            double e1 = square(A_neigh->second);
+            double e2 = square(B_neigh->second);
             // "smoothing coefficient"
             double w1 = exp(-e1 / (2*square_sigma))/(square_sigma * two_pi);
             double w2 = exp(-e2 / (2*square_sigma))/(square_sigma * two_pi);
             if (w1 < G_THRESH) w1 = 0;
             if (w2 < G_THRESH) w2 = 0;
             double w = w1 + w2;
-            if (w > 0) {
+            if (w > 0)
+            {
               wtotal += w;
               weights.push_back(
                   make_pair(make_pair(A_neigh->first, B_neigh->first), w));
@@ -137,7 +129,8 @@ namespace constel {
         
         list<pair<pair<size_t, size_t>, double> >::iterator iw, ew
           = weights.end();
-        for (iw=weights.begin(); iw!=ew; ++iw) {
+        for (iw=weights.begin(); iw!=ew; ++iw)
+        {
           double w = iw->second / wtotal;
           conn[iw->first.second][iw->first.first] += w;
           conn[iw->first.first][iw->first.second] += w;
@@ -145,7 +138,8 @@ namespace constel {
         }
       }
     }
-    if (verbose) {
+    if (verbose)
+    {
       cout << "...100%..." << flush;
       cout << "NB: " << countRemoved << " fibers out of " << fibers.size()
         << " have been discarded" << endl;
@@ -156,14 +150,19 @@ namespace constel {
     if (verbose) cout << "Removing weak connections: " << flush;
     int count1 = 0;
     int count2 = 0;
-    for (Connectivities::iterator i = conn.begin(); i != conn.end(); ++i) {
-      for (Connectivity::Map::iterator j = i->getMap().begin();
-           j != i->getMap().end();) {
+    for (Connectivities::iterator i = conn.begin(); i != conn.end(); ++i)
+    {
+      for (Connectivity::iterator j = i->begin();
+           j != i->end();)
+      {
         ++count1;
-        if (j->second <= wthresh) {
+        if (j->second <= wthresh)
+        {
           ++count2;
-          i->getMap().erase(j++);
-        } else {
+          i->erase(j++);
+        }
+        else
+        {
           ++j;
           ++nonzero_count;
         }
@@ -190,89 +189,55 @@ namespace constel {
   Connectivities * connMatrixSeedMeshToTargetMesh(
     const Fibers & fibers, const AimsSurfaceTriangle & aimsSeedMesh,
     const AimsSurfaceTriangle & aimsTargetMesh, float distthresh,
-    float wthresh, Motion motion, bool verbose) {
+    float wthresh, Motion motion, bool verbose)
+  {
     
     const double G_THRESH = 0.001; //threshold for connectivity contributions
     
-    //Convert inAimsMesh to Mesh mesh (Pascal Cathier Format)
-    Mesh seedMesh;
-    til::Mesh1 seedMesh0;
-    til::convert(seedMesh0, aimsSeedMesh);
-    seedMesh = addNeighborsToMesh(seedMesh0);
-    Mesh targetMesh;
-    til::Mesh1 targetMesh0;
-    til::convert(targetMesh0, aimsTargetMesh);
-    targetMesh = addNeighborsToMesh(targetMesh0);
     // Computing geomap : neighborhood map
     
     // For seedMesh
     if (verbose) cout << "Computing geomap seedMesh..." << flush;
     if (verbose) cout << "step 1..." << flush;
-    vector<QuickMap> res_seedMesh(getVertices(seedMesh).size());
-    
-    if (distthresh != 0) {
-      til::ghost::GMapStop_AboveThreshold<double> stopGhost(distthresh);
-      boost::shared_ptr<CNeighborhoods> pneighc_seedMesh
-        = til::circular_neighborhoods(getVertices(seedMesh), 
-                                      getFaceIndices(seedMesh));
-      til::Triangle_mesh_geodesic_map<
-          Mesh::VertexCollection, CNeighborhoods,
-          double, til::ghost::GMapStop_AboveThreshold<double>,
-          til::policy::GMap_DefaultStorage_sparse_vect_dbl>
-          geomap_seedMesh(getVertices(seedMesh), *pneighc_seedMesh, stopGhost);
-      vector<size_t> startPoints(1);
-      vector<double> dist(1, 0.0);
-      vector<size_t> nneigh_seedMesh(til::size(getVertices(seedMesh)));
-      
-      for (size_t i = 0; i < til::size(getVertices(seedMesh)); ++i) {
-        startPoints[0] = i;
-        geomap_seedMesh.init(startPoints, dist);
-        geomap_seedMesh.process();
-        boost::shared_ptr<til::sparse_vector<double> > tmp
-          = geomap_seedMesh.distanceMap();
-        res_seedMesh[i].resize(tmp->getMap().size());
-        using namespace til::expr;
-        til::detail::loop_xx(castTo(*_1, *_2), res_seedMesh[i], tmp->getMap()); 
-        nneigh_seedMesh[i] = res_seedMesh[i].size();
-        }
+
+    size_t nv = aimsSeedMesh.vertex().size();
+
+    std::vector< std::map<size_t, float> > res_seedMesh(nv);
+
+    if (distthresh != 0)
+    {
+      Texture<int16_t> start( nv, 0 );
+      for (std::size_t i = 0; i < nv; ++i)
+      {
+        start[i] = 1;
+        toMap( meshdistance::MeshDistance( aimsSeedMesh.begin()->second, start,
+                                           false, distthresh ).data(),
+              res_seedMesh[i], meshdistance::MESHDISTANCE_UNREACHED );
+        start[i] = 0;
+      }
     }
-    
+
     //For targetMesh
     if (verbose) cout << "Computing geomap targetMesh..." << flush;
     if (verbose) cout << "step 1..." << flush;
-    vector<QuickMap> res_targetMesh(getVertices(targetMesh).size());
-    
-    if (distthresh!=0) {
-      til::ghost::GMapStop_AboveThreshold<double> stopGhost(distthresh);
-      boost::shared_ptr<CNeighborhoods> pneighc_targetMesh
-        = til::circular_neighborhoods(getVertices(targetMesh),
-                                      getFaceIndices(targetMesh));
-      til::Triangle_mesh_geodesic_map<
-          Mesh::VertexCollection, CNeighborhoods,
-          double, til::ghost::GMapStop_AboveThreshold<double>,
-          til::policy::GMap_DefaultStorage_sparse_vect_dbl>
-          geomap_targetMesh(getVertices(targetMesh),
-                            *pneighc_targetMesh,
-                            stopGhost);
-      vector<size_t> startPoints(1);
-      vector<double> dist(1, 0.0);
-      vector<size_t> nneigh_targetMesh(til::size(getVertices(targetMesh)));
 
-      for (size_t i = 0; i < til::size(getVertices(targetMesh)); ++i) {
-        startPoints[0] = i;
-        geomap_targetMesh.init(startPoints, dist);
-        geomap_targetMesh.process();
-        boost::shared_ptr<til::sparse_vector<double> > tmp
-          = geomap_targetMesh.distanceMap();
-        res_targetMesh[i].resize(tmp->getMap().size());
-        using namespace til::expr;
-        til::detail::loop_xx(castTo(*_1, *_2),
-                             res_targetMesh[i],
-                             tmp->getMap());  
-        nneigh_targetMesh[i] = res_targetMesh[i].size();
-        }
+    size_t nvt = aimsTargetMesh.vertex().size();
+
+    std::vector< std::map<size_t, float> > res_targetMesh(nvt);
+
+    if (distthresh != 0)
+    {
+      Texture<int16_t> start( nvt, 0 );
+      for (std::size_t i = 0; i < nvt; ++i)
+      {
+        start[i] = 1;
+        toMap( meshdistance::MeshDistance( aimsSeedMesh.begin()->second, start,
+                                           false, distthresh ).data(),
+              res_targetMesh[i], meshdistance::MESHDISTANCE_UNREACHED );
+        start[i] = 0;
+      }
     }
-  
+
     if (verbose) cout << "Number of fibers: " << fibers.size() << endl;
 
     // Generating kdtree
@@ -288,7 +253,7 @@ namespace constel {
     if (verbose) cout << "Computing connectivity matrix" << endl;
     Connectivities * conn_ptr = new Connectivities(
         aimsSeedMesh.vertex().size(),
-        til::SparseVector<double>(aimsTargetMesh.vertex().size()));
+        Connectivity(aimsTargetMesh.vertex().size()));
     Connectivities & conn  = *conn_ptr;
     int countRemoved = 0;
     size_t fiberCount = 0;
@@ -340,19 +305,22 @@ namespace constel {
           }
           else
           {
-            for (QuickMap::const_iterator A_seedMesh_neigh
+            for (map<size_t, float>::const_iterator A_seedMesh_neigh
                  = res_seedMesh[A_seedMesh].begin();
                  A_seedMesh_neigh != res_seedMesh[A_seedMesh].end();
-                 ++A_seedMesh_neigh) {
-              for (QuickMap::const_iterator B_targetMesh_neigh
+                 ++A_seedMesh_neigh)
+            {
+              for (map<size_t, float>::const_iterator B_targetMesh_neigh
                   = res_targetMesh[B_targetMesh].begin();
                   B_targetMesh_neigh != res_targetMesh[B_targetMesh].end();
-                  ++B_targetMesh_neigh) {
+                  ++B_targetMesh_neigh)
+              {
                 double e1 = til::square(A_seedMesh_neigh->second);
                 double e2 = til::square(B_targetMesh_neigh->second);
                 // "smoothing coefficient"
                 double w = exp( -(e1 + e2)  / ( 2*distthresh*distthresh ));
-                if (w > G_THRESH) {
+                if (w > G_THRESH)
+                {
                   conn[A_seedMesh_neigh->first][B_targetMesh_neigh->first]
                     += w;
                   total_conn += w;
@@ -380,19 +348,22 @@ namespace constel {
             }
             else
             {
-              for (QuickMap::const_iterator A_targetMesh_neigh
+              for (map<size_t, float>::const_iterator A_targetMesh_neigh
                    = res_targetMesh[A_targetMesh].begin();
                    A_targetMesh_neigh != res_targetMesh[A_targetMesh].end();
-                   ++A_targetMesh_neigh) {
-                for (QuickMap::const_iterator B_seedMesh_neigh
+                   ++A_targetMesh_neigh)
+              {
+                for (map<size_t, float>::const_iterator B_seedMesh_neigh
                      = res_seedMesh[B_seedMesh].begin();
                      B_seedMesh_neigh != res_seedMesh[B_seedMesh].end();
-                     ++B_seedMesh_neigh) {
+                     ++B_seedMesh_neigh)
+                {
                   double e1 = til::square(A_targetMesh_neigh->second);
                   double e2 = til::square(B_seedMesh_neigh->second);
                   // "smoothing coefficient"
                   double w = exp( -(e1 + e2)  / ( 2*distthresh*distthresh ));
-                  if (w > G_THRESH) {
+                  if (w > G_THRESH)
+                  {
                     conn[B_seedMesh_neigh->first][A_targetMesh_neigh->first]
                       += w;
                     total_conn += w;
@@ -423,13 +394,17 @@ namespace constel {
     int count1 = 0;
     int count2 = 0;
     for (Connectivities::iterator i = conn.begin(); i != conn.end(); ++i) {
-      for (Connectivity::Map::iterator j = i->getMap().begin();
-           j != i->getMap().end(); ) {
+      for (Connectivity::iterator j = i->begin();
+           j != i->end(); )
+      {
         ++count1;
-        if (j->second <= wthresh) {
+        if (j->second <= wthresh)
+        {
           ++count2;
-          i->getMap().erase(j++);
-        } else {
+          i->erase(j++);
+        }
+        else
+        {
           ++j;
           ++nonzero_count;
         }
@@ -457,40 +432,25 @@ namespace constel {
     */
     const double G_THRESH = 0.001; //threshold for connectivity contributions
     
-    //Convert inAimsMesh to Mesh mesh (Pascal Cathier Format)
-    Mesh mesh;
-    til::Mesh1 mesh0;
-    til::convert(mesh0, inAimsMesh);
-    mesh = addNeighborsToMesh(mesh0);
-    
     // Comuting geomap : neighborhood map
     if (verbose) cout << "Computing geomap..." << flush;
-    til::ghost::GMapStop_AboveThreshold<double> stopGhost(distthresh);
-    boost::shared_ptr<CNeighborhoods> pneighc = til::circular_neighborhoods(
-        getVertices(mesh), getFaceIndices(mesh));
-    til::Triangle_mesh_geodesic_map<
-        Mesh::VertexCollection, CNeighborhoods, double,
-        til::ghost::GMapStop_AboveThreshold<double>,
-        til::policy::GMap_DefaultStorage_sparse_vect_dbl>
-        geomap(getVertices(mesh), *pneighc, stopGhost);
-    vector<size_t> startPoints(1);
-    vector<double> dist(1, 0.0);
-    vector<QuickMap> res( inAimsMesh.vertex().size() );
-    vector<size_t> nneigh( inAimsMesh.vertex().size() );
 
-    for (size_t i = 0; i < inAimsMesh.vertex().size(); ++i)
+    size_t nv = inAimsMesh.vertex().size();
+    std::vector< std::map<size_t, float> > res(nv);
+
+    if (distthresh != 0)
     {
-      startPoints[0] = i;
-      geomap.init(startPoints, dist);
-      geomap.process();
-      boost::shared_ptr<til::sparse_vector<double> > tmp
-        = geomap.distanceMap();
-      res[i].resize(tmp->getMap().size());
-      using namespace til::expr;
-      til::detail::loop_xx(castTo(*_1, *_2), res[i], tmp->getMap());
-      nneigh[i] = res[i].size();
+      Texture<int16_t> start( nv, 0 );
+      for (std::size_t i = 0; i < nv; ++i)
+      {
+        start[i] = 1;
+        toMap( meshdistance::MeshDistance( inAimsMesh.begin()->second, start,
+                                           false, distthresh ).data(),
+              res[i], meshdistance::MESHDISTANCE_UNREACHED );
+        start[i] = 0;
+      }
     }
-    
+
     if (verbose) cout << "Number of fibers: " << fibers.size() << endl;
 
     // Generating kdtree
@@ -506,8 +466,10 @@ namespace constel {
     size_t five_count = nFibers / 20.0;
     Point3df p1, p2;
     for (Fibers::const_iterator iFiber = fibers.begin();
-         iFiber != fibers.end(); ++iFiber, ++fiberCount) {
-      if (fiberCount % five_count == 0) {
+         iFiber != fibers.end(); ++iFiber, ++fiberCount)
+    {
+      if (fiberCount % five_count == 0)
+      {
         cout << 5 * int(fiberCount / five_count) << "%..." << flush;
       }
       //Looking for closest points
@@ -538,12 +500,14 @@ namespace constel {
         }
         else
         {
-          for (QuickMap::const_iterator A_neigh = res[A].begin();
-               A_neigh != res[A].end(); ++A_neigh) {
+          for (map<size_t, float>::const_iterator A_neigh = res[A].begin();
+               A_neigh != res[A].end(); ++A_neigh)
+          {
             double e = til::square(A_neigh->second);
             // "smoothing coefficient"
             double w = exp(-e  / (2*distthresh*distthresh));
-            if (w > G_THRESH) {
+            if (w > G_THRESH)
+            {
               conn[A_neigh->first] += w;
             }
           }
@@ -557,12 +521,14 @@ namespace constel {
         }
         else
         {
-          for (QuickMap::const_iterator B_neigh = res[B].begin();
-               B_neigh != res[B].end(); ++B_neigh) {
+          for (map<size_t, float>::const_iterator B_neigh = res[B].begin();
+               B_neigh != res[B].end(); ++B_neigh)
+          {
             double e = til::square(B_neigh->second);
             // smoothing coefficient
             double w = exp(-e  / (2*distthresh*distthresh));
-            if (w > G_THRESH) {
+            if (w > G_THRESH)
+            {
               conn[B_neigh->first] += w;
             }
           }
@@ -579,13 +545,15 @@ namespace constel {
   //  connMatrixRow_TO_TimeTexture_FLOAT
   //--------------------------------------
   TimeTexture<float> *connMatrixRow_TO_TimeTexture_FLOAT(
-      Connectivity *conn_ptr) {
+      Connectivity *conn_ptr)
+  {
     Connectivity &conn = *conn_ptr;
     TimeTexture<float> *connTex_ptr = new TimeTexture<float>;
     TimeTexture<float> &connTex = *connTex_ptr;
     size_t conn_size = conn.size();
     connTex.reserve(conn_size);
-    for (size_t i = 0; i < conn_size; i++) {
+    for (size_t i = 0; i < conn_size; i++)
+    {
       connTex[0].push_back(conn[i]);
     }
     return connTex_ptr;
@@ -599,7 +567,8 @@ namespace constel {
   input: Connectivities matrix_ptr, shape = (r,l)
   output: Connectivity matrixSumRows, shape = (1,l)
   */
-  Connectivity *connMatrixSumRows(Connectivities *matrix_ptr, bool verbose) {
+  Connectivity *connMatrixSumRows(Connectivities *matrix_ptr, bool verbose)
+  {
     Connectivities &matrix = *matrix_ptr;
     size_t colNb = matrix[0].size();
     size_t rowsNb = matrix.size();
@@ -607,13 +576,16 @@ namespace constel {
     Connectivity sparseVectorIdentity = Connectivity(colNb);
     Connectivity * matrixSumRows_ptr = new Connectivity(colNb);
     Connectivity & matrixSumRows  = *matrixSumRows_ptr;
-    for (size_t j = 0; j < colNb; ++j) {
+    for (size_t j = 0; j < colNb; ++j)
+    {
       sparseVectorIdentity[j]=1.;
       matrixSumRows[j]=0;
     }
-    for (size_t i = 0; i < rowsNb; ++i) {
-      Connectivity line_i = matrix[i];
-      if (line_i.is_null() != 1) {
+    for (size_t i = 0; i < rowsNb; ++i)
+    {
+      Connectivity &line_i = matrix[i];
+      if( !line_i.empty() )
+      {
         matrixSumRows += line_i;
       }
     }
@@ -629,18 +601,22 @@ namespace constel {
   output: Connectivity matrixSumRows, shape = (1,l)
   */
   vector<double> *connMatrixSumRows(
-      const SparseOrDenseMatrix & matrix, bool verbose) {
+      const SparseOrDenseMatrix & matrix, bool verbose)
+  {
     size_t colNb = matrix.getSize2();
     size_t rowsNb = matrix.getSize1();
     if (verbose) cout << "(" <<rowsNb << "," << colNb << ") : " << flush;
     vector<double> * matrixSumRows_ptr = new vector<double>(colNb);
     vector<double> & matrixSumRows  = *matrixSumRows_ptr;
-    for(size_t j = 0; j < colNb; ++j) {
+    for(size_t j = 0; j < colNb; ++j)
+    {
       matrixSumRows[j]=0;
     }
-    for (size_t i = 0; i < rowsNb; ++i) {
+    for (size_t i = 0; i < rowsNb; ++i)
+    {
       vector<double> line_i = matrix.getRow(i);
-      for( size_t j=0; j<colNb; ++j ) {
+      for( size_t j=0; j<colNb; ++j )
+      {
         matrixSumRows[j] += line_i[j];
       }
     }
@@ -673,7 +649,7 @@ namespace constel {
       if (verbose) cout << "error in matrix dimensions" << endl;
     }
     Connectivities *regroupConn_ptr = new Connectivities(
-        targetRegionsNb, til::SparseVector<double>(targetRegionsNb));
+        targetRegionsNb, Connectivity(targetRegionsNb));
     Connectivities &regroupConnMatrix  = *regroupConn_ptr;
     
     if (verbose)
@@ -728,7 +704,7 @@ namespace constel {
     if (verbose) cout << "seedRegionLabelVertexNb:"
       << seedRegionLabelVertexNb << endl;
     Connectivities * extractConn_ptr = new Connectivities(
-        seedRegionLabelVertexNb, til::SparseVector<double>(meshVertexNb));
+        seedRegionLabelVertexNb, Connectivity(meshVertexNb));
     * seedVertexIndex = new vector<size_t>;
     (** seedVertexIndex).resize(seedRegionLabelVertexNb);
     size_t vertexCount = 0;
@@ -764,7 +740,8 @@ namespace constel {
     Connectivities * AllMeshconnMatrixToAllMesh_ptr,
     const TimeTexture<short> & seedRegionsTex, int seedRegionLabel,
     int seedRegionLabelVertexNb,
-    vector<size_t> ** seedVertexIndex, bool verbose) {
+    vector<size_t> ** seedVertexIndex, bool verbose)
+  {
     if (verbose) cout << "Start connMatrixReducedFromRegion" << endl;
     Connectivities &AllMeshconnMatrixToAllMesh
       = *AllMeshconnMatrixToAllMesh_ptr;
@@ -778,7 +755,7 @@ namespace constel {
     if (verbose)
       cout << "seedRegionLabelVertexNb:" << seedRegionLabelVertexNb << endl;
     Connectivities * extractConn_ptr = new Connectivities(
-        seedRegionLabelVertexNb, til::SparseVector<double>(meshVertexNb));
+        seedRegionLabelVertexNb, Connectivity(meshVertexNb));
     Connectivities & extractConnMatrix  = *extractConn_ptr;
     * seedVertexIndex = new vector<size_t>;
     (** seedVertexIndex).resize(seedRegionLabelVertexNb);
@@ -803,9 +780,10 @@ namespace constel {
         (** seedVertexIndex)[vertexCount]=rows_count;
         vertexCount++;
       }
-      for (Connectivity::Map::iterator j = i->getMap().begin();
-           j != i->getMap().end();) {
-        i->getMap().erase(j++);
+      for (Connectivity::iterator j = i->begin();
+           j != i->end();)
+      {
+        i->erase(j++);
       }
     rows_count++;
     }
@@ -845,7 +823,7 @@ namespace constel {
       throw runtime_error("error in matrix dimensions");
     }
     Connectivities *extractConn_ptr = new Connectivities(
-        seedRegionLabelVertexNb, til::SparseVector<double>(targetRegionsNb));
+        seedRegionLabelVertexNb, Connectivity(targetRegionsNb));
     Connectivities & extractConnMatrix  = *extractConn_ptr;
     * seedVertexIndex = new vector<size_t>;
     (** seedVertexIndex).resize(seedRegionLabelVertexNb);
@@ -900,7 +878,7 @@ namespace constel {
       throw runtime_error( "error in matrix dimensions" );
     Connectivities *connMatrixSeedMeshToTargetMeshTargets_ptr
       = new Connectivities(seedMeshVertexNb,
-                           til::SparseVector<double>(targetRegionsNb));
+                           Connectivity(targetRegionsNb));
     Connectivities &connMatrixSeedMeshToTargetMeshTargets
       = *connMatrixSeedMeshToTargetMeshTargets_ptr;
     int targetLabel;
@@ -950,7 +928,7 @@ namespace constel {
       throw runtime_error("error in matrix dimensions");
     Connectivities *connMatrixSeedMeshRegionsToTargetMeshTargets_ptr
       = new Connectivities(seedRegionsNb,
-                           til::SparseVector<double>(targetRegionsNb));
+                           Connectivity(targetRegionsNb));
     Connectivities &connMatrixSeedMeshRegionsToTargetMeshTargets
       = *connMatrixSeedMeshRegionsToTargetMeshTargets_ptr;
     int targetLabel;
@@ -1062,9 +1040,10 @@ namespace constel {
         if (verbose) cout << 5 * int(i / five_count) << "%..." << flush;
       }
       outputDensityTex[0][currentVertexIndex] = 0;
-      Connectivity line_i = connMatrixToAllMesh[i];
-      if (line_i.is_null() != 1) {
-        currentSum = til::dot<float>(line_i, sparseVectorIdentity);
+      Connectivity & line_i = connMatrixToAllMesh[i];
+      if( !line_i.empty() )
+      {
+        currentSum = line_i.dot( sparseVectorIdentity );
         if (currentSum == -1 and verbose) cout << "-1," << flush;
         if (isnan(currentSum) and verbose)
           cout << "currentSum is nan!!" << flush;
@@ -1191,6 +1170,18 @@ namespace constel {
   }
 
 
+  template <typename T>
+  double get_item( const T& container, size_t item )
+  {
+    return container[item];
+  }
+
+  template <>
+  double get_item( const Connectivity & container, size_t item )
+  {
+    return container.get( item );
+  }
+
   //-------------------------------------------
   //  oneTargetDensityTargetsRegroupTexture_T
   //-------------------------------------------
@@ -1220,11 +1211,16 @@ namespace constel {
     for (size_t v = 0; v < meshVertexNb; ++v)
       outputDensityTex[0].push_back(-1);
     
-    for (size_t i = 0; i < meshVertexNb; i++) {
+    for (size_t i = 0; i < meshVertexNb; i++)
+    {
       int label = targetTex0[i];//equivalent to targetRegionsTex[0].item(i)
-      if (( 1 <= label ) && ( label <= int(targetRegionsNb) )) {
-        outputDensityTex[0][i] = (float) lineMatrixToTargetRegions[label-1];
-      } else {
+      if (( 1 <= label ) && ( label <= int(targetRegionsNb) ))
+      {
+        outputDensityTex[0][i]
+          = (float) get_item( lineMatrixToTargetRegions, label-1 );
+      }
+      else
+      {
         outputDensityTex[0][i] = -1;
       }
     }
@@ -1236,7 +1232,8 @@ namespace constel {
   //-----------------------------------------
   TimeTexture<float> *oneTargetDensityTargetsRegroupTexture(
       const Connectivity *lineMatrixToTargetRegions_ptr,
-      const TimeTexture<short> &targetRegionsTex, int timestep) {
+      const TimeTexture<short> &targetRegionsTex, int timestep)
+  {
     return oneTargetDensityTargetsRegroupTexture_T(
       lineMatrixToTargetRegions_ptr, targetRegionsTex, timestep);
   }
@@ -1246,7 +1243,8 @@ namespace constel {
   //-----------------------------------------
   TimeTexture<float> *oneTargetDensityTargetsRegroupTexture(
       const vector<double> *lineMatrixToTargetRegions_ptr,
-      const TimeTexture<short> &targetRegionsTex, int timestep) {
+      const TimeTexture<short> &targetRegionsTex, int timestep)
+  {
     return oneTargetDensityTargetsRegroupTexture_T(
       lineMatrixToTargetRegions_ptr, targetRegionsTex, timestep);
   }
@@ -1263,16 +1261,19 @@ namespace constel {
 
     if (!conn.empty()) ncol = conn.begin()->size();
     SparseOrDenseMatrix *mat = new SparseOrDenseMatrix(conn.size(), ncol);
-    for (line = 0; line < nline; ++line) count += conn[line].getMap().size();
+    for (line = 0; line < nline; ++line) count += conn[line].size();
     if (count >= mat->optimalShapeThreshold()) mat->muteToDense();
 
-    Connectivity::sparse_const_iterator ic, ec;
+    Connectivity::const_iterator ic, ec;
 
-    for (line = 0; line < nline; ++line) {
+    for (line = 0; line < nline; ++line)
+    {
       const Connectivity & cline = conn[line];
-      if (!cline.empty()) {
-        for (ic = cline.sparse_begin(), ec = cline.sparse_end();
-             ic != ec; ++ic) {
+      if (!cline.empty())
+      {
+        for (ic = cline.begin(), ec = cline.end();
+             ic != ec; ++ic)
+        {
           mat->set_element(line, ic->first, ic->second);
         }
       }

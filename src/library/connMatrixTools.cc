@@ -54,8 +54,8 @@ namespace constel {
       for (QuickMap::const_iterator neigh_1
              = fiberExtremity1NeighMeshVertex.begin();
            neigh_1 != fiberExtremity1NeighMeshVertex.end(); ++neigh_1) {
-        double e1 = til::square(neigh_1->second);
-        double e2 = til::square(neigh_2->second);
+        double e1 = square(neigh_1->second);
+        double e2 = square(neigh_2->second);
         double w1 = exp( -e1 * exp_coef ) * sm_coef;
         double w2 = exp( -e2 * exp_coef ) * sm_coef;
         if (w1 < connectivityThreshold) w1 = 0;
@@ -145,8 +145,8 @@ namespace constel {
       for (QuickMap::const_iterator neigh_1
              = fiberExtremity1NeighMeshVertex.begin();
            neigh_1 != fiberExtremity1NeighMeshVertex.end(); ++neigh_1) {
-        double e1 = til::square(neigh_1->second);
-        double e2 = til::square(neigh_2->second);
+        double e1 = square(neigh_1->second);
+        double e2 = square(neigh_2->second);
         double square_sigma = distanceThreshold*distanceThreshold;
         double w = exp( -(e1 + e2)
                    / ( 2*square_sigma ))/(square_sigma*two_pi);
@@ -195,8 +195,8 @@ namespace constel {
       for (QuickMap::const_iterator neigh_1
              = fiberExtremity1NeighMeshVertex.begin();
            neigh_1 != fiberExtremity1NeighMeshVertex.end(); ++neigh_1) {
-        double e1 = til::square(neigh_1->second);
-        double e2 = til::square(neigh_2->second);
+        double e1 = square(neigh_1->second);
+        double e2 = square(neigh_2->second);
         double square_sigma = distanceThreshold*distanceThreshold;
         double w = exp( -(e1 + e2)  / ( 2*square_sigma ))
                    /(square_sigma*two_pi);//"smoothing coefficient"
@@ -260,8 +260,8 @@ namespace constel {
       for (QuickMap::const_iterator neigh_1
              = fiberExtremity1NeighMeshVertex.begin();
            neigh_1 != fiberExtremity1NeighMeshVertex.end(); ++neigh_1) {
-        double e1 = til::square(neigh_1->second);
-        double e2 = til::square(neigh_2->second);
+        double e1 = square(neigh_1->second);
+        double e2 = square(neigh_2->second);
         double w = exp( -(e1 + e2)
                     / ( 2*distanceThreshold*distanceThreshold ));
         if (w > connectivityThreshold) {
@@ -306,8 +306,8 @@ namespace constel {
       for (QuickMap::const_iterator neigh_1
              = fiberExtremity1NeighMeshVertex_rows.begin();
            neigh_1 != fiberExtremity1NeighMeshVertex_rows.end(); ++neigh_1) {
-        double e1 = til::square(neigh_1->second);
-        double e2 = til::square(neigh_2->second);
+        double e1 = square(neigh_1->second);
+        double e2 = square(neigh_2->second);
         double w = exp( -(e1 + e2)
                    / ( 2*distanceThreshold*distanceThreshold ));
         if (w > connectivityThreshold) {
