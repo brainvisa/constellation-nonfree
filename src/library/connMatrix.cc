@@ -1,10 +1,7 @@
 #include <constellation/connMatrix.h>
-#include <cathier/aims_wrap.h>
-#include <cathier/triangle_mesh_geodesic_map.h>
 #include <aims/sparsematrix/sparseordensematrix.h>
 #include <aims/io/writer.h>
 #include <aims/distancemap/meshdistance.h>
-#include <aims/distancemap/meshvoronoi.h>
 #include <aims/utility/stl_conversion.h>
 
 

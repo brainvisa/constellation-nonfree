@@ -3,6 +3,13 @@
 
 #include <kdtree++/kdtree.hpp>
 
+/* This file, named "tildefs" is a remain of the former dependecy on the
+   obsolete aims-til library. It was used mainly for distance maps and KDTree.
+   These algorithms also exist in aims, so we have finally replaced them and do
+   not depend on "til" any longer.
+
+*/
+
 namespace constel
 {
 

@@ -26,10 +26,11 @@ namespace constel {
     void setAntFiberPoint(aims::FiberPoint antFiberPoint);
     aims::FiberPoint getAntFiberPoint() const {return _antFiberPoint;}
     void pushBackMeshIntersectionNeighbourhood(
-        constel::QuickMap fiberIntersectionNeighDistMap,
+        const constel::QuickMap & fiberIntersectionNeighDistMap,
         int meshIntersectionMeshId);
-    std::vector<constel::QuickMap > getFiberIntersectionNeighDistMapVector()
-        const {return _fiberIntersectionNeighDistMapVector;}
+    const std::vector<constel::QuickMap> &
+      getFiberIntersectionNeighDistMapVector() const
+    {return _fiberIntersectionNeighDistMapVector;}
     std::vector<float> getFiberMeshIntersectionCurvilinearAbscissaVector()
         const {return _fiberMeshIntersectionCurvilinearAbscissaVector;}
     std::vector<int> getFiberMeshIntersectionMeshIdentityVector()
@@ -48,7 +49,7 @@ namespace constel {
     aims::FiberPoint _antFiberPoint;
     bool _antFiberPoint_ExistingMeshIntersection;
     std::size_t _antFiberPointMeshClosestPoint_index;
-    std::vector<constel::QuickMap > _fiberIntersectionNeighDistMapVector;
+    std::vector<QuickMap> _fiberIntersectionNeighDistMapVector;
     std::vector<float> _fiberMeshIntersectionCurvilinearAbscissaVector;
     std::vector<int> _fiberMeshIntersectionMeshIdentityVector;
     /* nb of intersection per mesh
@@ -185,7 +186,8 @@ namespace constel {
     PolygonsByVertexIndex _meshPolygonsByVertex_Index;
     //For computing closest point to meshes in a fast computation time:
     constel::KDTree * _mesh_kdt_ptr;
-    std::vector<constel::QuickMap> _meshDistanceThresholdNeighborhoodByVertex;
+    std::vector<QuickMap>
+      _meshDistanceThresholdNeighborhoodByVertex;
 
     //For intersection computing:
     bool _antFiberPoint_ExistingMeshIntersection;

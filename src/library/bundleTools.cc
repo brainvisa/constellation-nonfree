@@ -37,8 +37,9 @@ namespace constel {
   }
   
   void ListenedFiberInfo::pushBackMeshIntersectionNeighbourhood(
-      constel::QuickMap fiberIntersectionNeighDistMap,
-      int meshIntersectionMeshId) {
+      const constel::QuickMap & fiberIntersectionNeighDistMap,
+      int meshIntersectionMeshId)
+  {
     _fiberIntersectionNeighDistMapVector.push_back(
         fiberIntersectionNeighDistMap);
     _fiberMeshIntersectionCurvilinearAbscissaVector.push_back(

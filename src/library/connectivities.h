@@ -66,6 +66,7 @@ namespace constel
   typedef std::vector<Connectivity> Connectivities;
   typedef std::vector<std::vector<std::size_t> > CNeighborhoods;
   typedef std::vector<std::pair<std::size_t, double> > QuickMap;
+  typedef std::map<std::size_t, float> DistMap;
   typedef std::vector<QuickMap> Connection;
   typedef std::vector<Connection> BundleConnections;
   typedef boost::shared_ptr<BundleConnections> BundleConnections_shared_ptr;

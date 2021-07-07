@@ -12,7 +12,6 @@
 #include <boost/numeric/ublas/operation_sparse.hpp>
 #include <aims/utility/stl_conversion.h>
 #include <aims/distancemap/meshdistance.h>
-#include <aims/distancemap/meshvoronoi.h>
 #include <aims/utility/converter_texture.h>
 #include <float.h>
 

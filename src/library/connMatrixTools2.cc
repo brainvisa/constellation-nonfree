@@ -1,9 +1,8 @@
 #include <constellation/connMatrixTools.h>
 #include <constellation/tildefs.h>
 #include <constellation/connectivities.h>
-#include <cathier/aims_wrap.h> // used for Cast<Point3df, numeric_array<> >
-#include <cathier/triangle_mesh_geodesic_map.h>
 #include <aims/io/writer.h>
+#include <aims/distancemap/meshdistance.h>
 
 using namespace aims;
 using namespace carto;
@@ -13,7 +12,6 @@ namespace constel
 {
 
   typedef AimsData<float> Matrix;
-  typedef til::Mesh_N Mesh;
 
   //------------------------------
   //  connMatrixTargetsToTargets
@@ -230,12 +228,6 @@ namespace constel
     int32_t size2 = meshVertexNb;
     SparseMatrix matrix(size1,size2);
 
-    //Convert inAimsMesh to Mesh mesh (Pascal Cathier Format)
-    til::Mesh_N mesh;
-    til::Mesh1 mesh0;
-    til::convert(mesh0, inAimsMesh);
-    mesh = addNeighborsToMesh(mesh0);
-
     // Generating kdtree
     cout << "Generating kdtree" << endl;
     KDTreeVertices m = kdt_vertices( inAimsMesh );
@@ -247,30 +239,11 @@ namespace constel
     const double G_THRESH = 0.001; //threshold for connectivity
     double square_sigma = distthresh*distthresh;
     cout << "Computing geomap..." << flush;
-    vector<QuickMap> res(getVertices(mesh).size());
-    til::ghost::GMapStop_AboveThreshold<double> stopGhost(distthresh);
-    boost::shared_ptr<CNeighborhoods> pneighc
-      = til::circular_neighborhoods(getVertices(mesh), getFaceIndices(mesh));
-    til::Triangle_mesh_geodesic_map<
-        til::Mesh_N::VertexCollection, CNeighborhoods, double,
-        til::ghost::GMapStop_AboveThreshold<double>,
-        til::policy::GMap_DefaultStorage_sparse_vect_dbl>
-        geomap(getVertices(mesh), *pneighc, stopGhost);
-    vector<size_t> startPoints(1);
-    vector<double> dist(1, 0.0);
-    vector<size_t> nneigh( inAimsMesh.vertex().size() );
-    for ( size_t i = 0; i < inAimsMesh.vertex().size(); ++i)
-    {
-      startPoints[0] = i;
-      geomap.init(startPoints, dist);
-      geomap.process();
-      boost::shared_ptr<til::sparse_vector<double> > tmp
-        = geomap.distanceMap();
-      res[i].resize(tmp->getMap().size());
-      using namespace til::expr;
-      til::detail::loop_xx(castTo(*_1, *_2), res[i], tmp->getMap());
-      nneigh[i] = res[i].size();
-    }
+
+    vector<map<size_t, float> > res;
+
+    meshdistance::pairwiseDistanceMaps( inAimsMesh.begin()->second, res,
+                                        distthresh );
 
     //Connectivity matrix filling:
     int countRemoved = 0;
@@ -311,10 +284,10 @@ namespace constel
         continue;
       }
       // Filling the connectivity matrix
-      for (QuickMap::const_iterator B_neigh = res[B].begin();
+      for (map<size_t, float>::const_iterator B_neigh = res[B].begin();
            B_neigh != res[B].end(); ++B_neigh)
       {
-        for (QuickMap::const_iterator A_neigh = res[A].begin();
+        for (map<size_t, float>::const_iterator A_neigh = res[A].begin();
              A_neigh != res[A].end(); ++A_neigh)
         {
           size_t labelA = seedTex0[A_neigh->first];
@@ -385,14 +358,6 @@ namespace constel
             neighbourhood polygons of A_neigh_v: A_neigh_v_area
         - Compute the total area of the neigbourhood: A_neigh_total_area
     */
-    //Convert inAimsMesh to Mesh mesh (Pascal Cathier Format)
-    Mesh mesh;
-    til::Mesh1 mesh0;
-    til::convert(mesh0, inAimsMesh);
-    mesh = addNeighborsToMesh(mesh0);
-
-    cout << "getVertices(mesh):" << getVertices(mesh)[0] << ", "
-      << getVertices(mesh)[1]  << endl;
 
     // Comuting geomap : neighborhood map
     //if distthresh!= 0
@@ -400,31 +365,13 @@ namespace constel
     const double G_THRESH = 0.001; //threshold for connectivity
     double square_sigma = distthresh*distthresh;
     cout << "Computing geomap..." << flush;
-    vector<QuickMap> res(getVertices(mesh).size());
-    til::ghost::GMapStop_AboveThreshold<double> stopGhost(distthresh);
-    boost::shared_ptr<CNeighborhoods> pneighc
-      = til::circular_neighborhoods(getVertices(mesh), getFaceIndices(mesh));
-    til::Triangle_mesh_geodesic_map<
-        Mesh::VertexCollection, CNeighborhoods, double,
-        til::ghost::GMapStop_AboveThreshold<double>,
-        til::policy::GMap_DefaultStorage_sparse_vect_dbl>
-        geomap(getVertices(mesh), *pneighc, stopGhost);
-    vector<size_t> startPoints(1);
-    vector<double> dist(1, 0.0);
-    vector<size_t> nneigh(til::size(getVertices(mesh)));
-    for (size_t i = 0; i < til::size(getVertices(mesh)); ++i)
-    {
-      startPoints[0] = i;
-      geomap.init(startPoints, dist);
-      geomap.process();
-      boost::shared_ptr<til::sparse_vector<double> > tmp
-        = geomap.distanceMap();
-      res[i].resize(tmp->getMap().size());
-      using namespace til::expr;
-      til::detail::loop_xx(castTo(*_1, *_2), res[i], tmp->getMap());
-      nneigh[i] = res[i].size();
-    }
-    
+
+    size_t nv = inAimsMesh.vertex().size();
+    vector<map<size_t, float> > res;
+
+    meshdistance::pairwiseDistanceMaps( inAimsMesh.begin()->second, res,
+                                        distthresh );
+
     //Sparse matrix smoothing
     SparseMatrix & matrix = *matrix_ptr;
     SparseMatrix * smoothed_matrix_ptr
@@ -432,8 +379,8 @@ namespace constel
     SparseMatrix & smoothed_matrix = *smoothed_matrix_ptr;
     SparseMatrix::iterator1 s1;
     SparseMatrix::iterator2 s2;
-    if (( (int32_t)getVertices(mesh).size() == matrix.getSize1() )
-        && ((int32_t)getVertices(mesh).size()==matrix.getSize2()))
+    if (( (int32_t) nv == matrix.getSize1() )
+        && ((int32_t) nv ==matrix.getSize2()))
     {
       for (s1 = matrix.begin1(); s1 != matrix.end1(); s1++)
       {
@@ -442,10 +389,10 @@ namespace constel
         {
           size_t B = s2.index2();
           double w = 0;
-          for (QuickMap::const_iterator B_neigh = res[B].begin();
+          for (map<size_t, float>::const_iterator B_neigh = res[B].begin();
                B_neigh != res[B].end(); ++B_neigh)
           {
-            for (QuickMap::const_iterator A_neigh = res[A].begin();
+            for (map<size_t, float>::const_iterator A_neigh = res[A].begin();
                  A_neigh != res[A].end(); ++A_neigh)
             {
               double e1 = square(A_neigh->second);
@@ -461,12 +408,12 @@ namespace constel
         }
       }
     }
-    else if ((int32_t)getVertices(mesh).size()==matrix.getSize2())
+    else if ((int32_t) nv ==matrix.getSize2())
     {
       for ( s2 = matrix.begin2(); s2 != matrix.end2(); s2++ )
       {
         size_t A = s2.index2(); 
-        for (QuickMap::const_iterator A_neigh = res[A].begin();
+        for (map<size_t, float>::const_iterator A_neigh = res[A].begin();
              A_neigh != res[A].end(); ++A_neigh)
         {
           double e1 = square(A_neigh->second);

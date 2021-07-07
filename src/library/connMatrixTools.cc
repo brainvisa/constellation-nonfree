@@ -39,7 +39,8 @@ namespace constel {
   void fillconnMatrix(
       Connectivities *conn_ptr, QuickMap &fiberExtremity1NeighMeshVertex,
       QuickMap &fiberExtremity2NeighMeshVertex, double connectivityThreshold,
-      double distanceThreshold, unsigned connectionLength) {
+      double distanceThreshold, unsigned connectionLength)
+  {
     double two_pi = 2*3.1415926535897931;
     double wtotal = 0;
     Connectivities &conn = *conn_ptr;

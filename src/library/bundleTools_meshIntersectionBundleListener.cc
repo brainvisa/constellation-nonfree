@@ -1,13 +1,45 @@
 #include <constellation/bundleTools.h>
 #include <constellation/connMatrixTools.h>
 #include <constellation/textureAndMeshTools.h>
-// includes from CATHIER
-#include <cathier/triangle_mesh_geodesic_map.h>
-#include <cathier/aims_wrap.h> // used for Cast<Point3df, numeric_array<> >
+#include <aims/distancemap/meshdistance_d.h>
 
 using namespace constel;
 using namespace aims;
 using namespace std;
+
+
+namespace aims
+{
+  namespace meshdistance
+  {
+
+    // implement DistMapMatrixTraits for vector<QuickMap>
+    // and instantiate pairwiseDistanceMaps for this type
+
+    template <>
+    class DistMapMatrixTraits<QuickMap>
+    {
+    public:
+      static void resize( QuickMap & mat, size_t size1, size_t size2 = 0 )
+      {
+      }
+
+      static void storeElement( QuickMap & map, size_t i, float value )
+      {
+        if( value != FLT_MAX )
+          map.push_back( make_pair( i, double( value ) ) );
+      }
+    };
+
+    template
+    void
+    pairwiseDistanceMaps( const AimsSurface<3,Void> & mesh,
+                          std::vector<QuickMap> & distmaps,
+                          const Texture<int16_t> & inittex
+                            = Texture<int16_t>(),
+                          float max_dist = FLT_MAX );
+  }
+}
 
 
 namespace constel
@@ -20,61 +52,37 @@ namespace constel
       bool verbose) : _meshDistanceThreshold(meshDistanceThreshold),
                       _meshClosestPointMaxDistance(meshClosestPointMaxDistance),
                       _verbose(verbose),
-                      _aimsMesh(aimsMesh) {
+                      _aimsMesh(aimsMesh)
+  {
     _bundleInteractionReader = &bundleInteractionReader;
     _meshPolygonsByVertex_Index  = constel::surfacePolygonsIndex(_aimsMesh);
-    til::Mesh1 mesh0;
-    til::convert(mesh0, _aimsMesh);
-    til::Mesh_N mesh = addNeighborsToMesh(mesh0);
     // Comuting geomap : neighborhood map
     if (_verbose)
         cout << "meshClosestPoint_minDistance:" << _meshClosestPointMaxDistance
           << endl;
     if (_verbose) cout << "Computing geomap..." << flush;
     if (_verbose) cout << "step 1..." << flush;
-    _meshDistanceThresholdNeighborhoodByVertex.reserve(
-        aimsMesh.vertex().size() );
-    for(uint v = 0; v < aimsMesh.vertex().size(); ++v)
-    {
-      _meshDistanceThresholdNeighborhoodByVertex.push_back(QuickMap());
-    }
-    if (_meshDistanceThreshold > 0)
-    {
-      til::ghost::GMapStop_AboveThreshold<double> stopGhost(
-          _meshDistanceThreshold);
-      boost::shared_ptr<CNeighborhoods> pneighc = til::circular_neighborhoods(
-          getVertices(mesh), getFaceIndices(mesh));
-      til::Triangle_mesh_geodesic_map<
-          til::Mesh_N::VertexCollection, CNeighborhoods, double,
-          til::ghost::GMapStop_AboveThreshold<double>,
-          til::policy::GMap_DefaultStorage_sparse_vect_dbl>
-            geomap(getVertices(mesh), *pneighc, stopGhost);
-      vector<size_t> startPoints(1);
-      vector<double> dist(1, 0.0);
-      for (size_t i = 0; i < aimsMesh.vertex().size(); ++i)
-      {
-        startPoints[0] = i;
-        geomap.init(startPoints, dist);
-        geomap.process();
-        boost::shared_ptr<til::sparse_vector<double> > tmp
-          = geomap.distanceMap();
-        _meshDistanceThresholdNeighborhoodByVertex[i].resize(
-            tmp->getMap().size());
-        using namespace til::expr;
-        til::detail::loop_xx(
-            castTo(*_1, *_2),
-            _meshDistanceThresholdNeighborhoodByVertex[i], tmp->getMap());
-      }
-    }
+
+    size_t nv = aimsMesh.vertex().size();
+
+    if( _meshDistanceThreshold > 0 )
+      meshdistance::pairwiseDistanceMaps(
+        aimsMesh.begin()->second, _meshDistanceThresholdNeighborhoodByVertex,
+        _meshDistanceThreshold );
+    else
+      _meshDistanceThresholdNeighborhoodByVertex.resize( nv );
+
     //KDTREE creation:
     KDTreeVertices vert = kdt_vertices( _aimsMesh );
     _mesh_kdt_ptr = new KDTree( vert.begin(), vert.end() );
   }
   
-  MeshIntersectionBundleListener::~MeshIntersectionBundleListener() {}
+  MeshIntersectionBundleListener::~MeshIntersectionBundleListener()
+  {}
 
   void MeshIntersectionBundleListener::fiberStarted(
-      const BundleProducer &, const BundleInfo &, const FiberInfo &) {
+      const BundleProducer &, const BundleInfo &, const FiberInfo &)
+  {
     _fiberPointCount = 0;
     _antFiberPoint_ExistingMeshIntersection = false;
     _bundleInteractionReader
@@ -83,7 +91,8 @@ namespace constel
 
   void MeshIntersectionBundleListener::newFiberPoint(
       const BundleProducer &, const BundleInfo &, const FiberInfo &,
-      const FiberPoint &fiberPoint) {
+      const FiberPoint &fiberPoint)
+  {
     ++_fiberPointCount;
     FiberPoint antFiberPoint
       = _bundleInteractionReader->_listenedFiberInfo.getAntFiberPoint();
@@ -97,14 +106,18 @@ namespace constel
       make_pair( 0U, fiberPoint ) ).first->first;
     meshClosestPoint_dist = dist2(
       fiberPoint, _aimsMesh.vertex()[meshClosestPoint_index] );
-    if (fiberCurvilinearAbscissa > 1) {
+    if (fiberCurvilinearAbscissa > 1)
+    {
       constel::QuickMap * meshPolygonVerticesDistMap_ptr;
       bool intersectMesh;
-      if (_meshDistanceThreshold == 0) {
+      if (_meshDistanceThreshold == 0)
+      {
         intersectMesh = constel::computeIntersectionPointFiberSegmentAndMesh(
             _aimsMesh, _meshPolygonsByVertex_Index, antFiberPoint, fiberPoint,
             meshClosestPoint_index, & meshPolygonVerticesDistMap_ptr);
-      } else { // >0: add neighboorhood to cortexPolygonVerticesDistMap
+      }
+      else
+      { // >0: add neighboorhood to cortexPolygonVerticesDistMap
         intersectMesh
           = constel::computeIntersectionPointNeighborhoodFiberSegmentAndMesh(
               _aimsMesh, _meshPolygonsByVertex_Index, antFiberPoint,
@@ -112,7 +125,8 @@ namespace constel
               _meshDistanceThresholdNeighborhoodByVertex,
               &meshPolygonVerticesDistMap_ptr);
       }
-      if (intersectMesh) {
+      if (intersectMesh)
+      {
         _bundleInteractionReader
           ->_listenedFiberInfo.pushBackMeshIntersectionNeighbourhood(
               *meshPolygonVerticesDistMap_ptr, _meshIdentity);
@@ -120,7 +134,8 @@ namespace constel
         fiberPoint_ExistingMeshIntersection =  true;
         _antFiberPoint_ExistingMeshIntersection = true;
       } else if (_antFiberPoint_ExistingMeshIntersection == false
-                 and _fiberPointCount == 2) {
+                 and _fiberPointCount == 2)
+      {
         // if no intersection with cortex, test if
         // dist(fiberPoint, meshClosestPoint) < dist_min, if it is the case,
         // add polygones around the meshClosestPoint, according to
@@ -128,12 +143,16 @@ namespace constel
         // part of an (nearly or not) intersection
         float meshClosestPoint_min = min(
             meshClosestPoint_dist, _antFiberPointMeshClosestPoint_dist);
-        if (meshClosestPoint_min <= _meshClosestPointMaxDistance) {
+        if (meshClosestPoint_min <= _meshClosestPointMaxDistance)
+        {
           size_t closestPoint_index;
-          if (meshClosestPoint_dist == meshClosestPoint_min) {
+          if (meshClosestPoint_dist == meshClosestPoint_min)
+          {
             closestPoint_index = meshClosestPoint_index;
             fiberPoint_ExistingMeshIntersection = true;
-          } else { // _antFiberPointMeshClosestPoint_dist==meshClosestPoint_min
+          }
+          else
+          { // _antFiberPointMeshClosestPoint_dist==meshClosestPoint_min
             closestPoint_index = _antFiberPointMeshClosestPoint_index;
             _antFiberPoint_ExistingMeshIntersection = true;
           }
@@ -149,7 +168,8 @@ namespace constel
         }
       }
     }
-    if (_antFiberPoint_ExistingMeshIntersection) {
+    if (_antFiberPoint_ExistingMeshIntersection)
+    {
       _bundleInteractionReader
         ->_listenedFiberInfo.setAntFiberPointExistingMeshIntersection(
             _antFiberPoint_ExistingMeshIntersection);
@@ -164,7 +184,8 @@ namespace constel
   }
   
   void MeshIntersectionBundleListener::fiberTerminated(
-      const BundleProducer &, const BundleInfo &, const FiberInfo &) {
+      const BundleProducer &, const BundleInfo &, const FiberInfo &)
+  {
     // if no intersection with cortex, test if 
     // dist(fiberPoint, cortexMeshClosestPoint) < dist_min, if it is the case,
     // add polygones around the meshClosestPoint, according to
