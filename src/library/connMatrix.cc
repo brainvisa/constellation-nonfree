@@ -32,21 +32,11 @@ namespace constel {
     if (verbose) cout << "step 1..." << flush;
     size_t nv = inAimsMesh.vertex().size();
 
-    Texture<int16_t> start( nv, 0 );
-    std::vector< std::map<size_t, float> > res(nv);
+    std::vector< std::map<size_t, float> > res;
 
     if (distthresh != 0)
-    {
-      for (std::size_t i = 0; i < nv; ++i)
-      {
-        start[i] = 1;
-        toMap( meshdistance::MeshDistance( inAimsMesh.begin()->second, start,
-                                           false, distthresh ).data(),
-              res[i], meshdistance::MESHDISTANCE_UNREACHED );
-        start[i] = 0;
-      }
-      std::cout << "OK" << std::endl;
-    }
+      meshdistance::pairwiseDistanceMaps( inAimsMesh.begin()->second, res,
+                                          distthresh );
 
     if (verbose) cout << "Number of fibers: " << fibers.size() << endl;
 
@@ -65,9 +55,12 @@ namespace constel {
     double total_conn = 0;
     Point3df p1, p2;
     for (Fibers::const_iterator iFiber = fibers.begin();
-         iFiber != fibers.end(); ++iFiber, ++fiberCount) {
-      if (five_count != 0) {
-        if (fiberCount % five_count == 0) {
+         iFiber != fibers.end(); ++iFiber, ++fiberCount)
+    {
+      if (five_count != 0)
+      {
+        if (fiberCount % five_count == 0)
+        {
           if (verbose)
             cout << 5 * int(fiberCount / five_count) << "%..." << flush;
         }
@@ -202,20 +195,11 @@ namespace constel {
 
     size_t nv = aimsSeedMesh.vertex().size();
 
-    std::vector< std::map<size_t, float> > res_seedMesh(nv);
+    std::vector< std::map<size_t, float> > res_seedMesh;
 
     if (distthresh != 0)
-    {
-      Texture<int16_t> start( nv, 0 );
-      for (std::size_t i = 0; i < nv; ++i)
-      {
-        start[i] = 1;
-        toMap( meshdistance::MeshDistance( aimsSeedMesh.begin()->second, start,
-                                           false, distthresh ).data(),
-              res_seedMesh[i], meshdistance::MESHDISTANCE_UNREACHED );
-        start[i] = 0;
-      }
-    }
+      meshdistance::pairwiseDistanceMaps( aimsSeedMesh.begin()->second,
+                                          res_seedMesh, distthresh );
 
     //For targetMesh
     if (verbose) cout << "Computing geomap targetMesh..." << flush;
@@ -223,20 +207,11 @@ namespace constel {
 
     size_t nvt = aimsTargetMesh.vertex().size();
 
-    std::vector< std::map<size_t, float> > res_targetMesh(nvt);
+    std::vector< std::map<size_t, float> > res_targetMesh;
 
     if (distthresh != 0)
-    {
-      Texture<int16_t> start( nvt, 0 );
-      for (std::size_t i = 0; i < nvt; ++i)
-      {
-        start[i] = 1;
-        toMap( meshdistance::MeshDistance( aimsSeedMesh.begin()->second, start,
-                                           false, distthresh ).data(),
-              res_targetMesh[i], meshdistance::MESHDISTANCE_UNREACHED );
-        start[i] = 0;
-      }
-    }
+      meshdistance::pairwiseDistanceMaps( aimsTargetMesh.begin()->second,
+                                          res_targetMesh, distthresh );
 
     if (verbose) cout << "Number of fibers: " << fibers.size() << endl;
 
@@ -436,20 +411,11 @@ namespace constel {
     if (verbose) cout << "Computing geomap..." << flush;
 
     size_t nv = inAimsMesh.vertex().size();
-    std::vector< std::map<size_t, float> > res(nv);
+    std::vector< std::map<size_t, float> > res;
 
     if (distthresh != 0)
-    {
-      Texture<int16_t> start( nv, 0 );
-      for (std::size_t i = 0; i < nv; ++i)
-      {
-        start[i] = 1;
-        toMap( meshdistance::MeshDistance( inAimsMesh.begin()->second, start,
-                                           false, distthresh ).data(),
-              res[i], meshdistance::MESHDISTANCE_UNREACHED );
-        start[i] = 0;
-      }
-    }
+      meshdistance::pairwiseDistanceMaps( inAimsMesh.begin()->second, res,
+                                          distthresh );
 
     if (verbose) cout << "Number of fibers: " << fibers.size() << endl;
 

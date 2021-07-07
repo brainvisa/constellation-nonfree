@@ -23,7 +23,8 @@ using namespace constel;
 using namespace boost;
 
 
-namespace {
+namespace
+{
 
   /* MatrixTraits and MatrixProxy: allows common API for SparseMatrix and
      Connectivities
@@ -467,12 +468,14 @@ namespace {
 }
 
 
-namespace constel {
+namespace constel
+{
 
   void sparseMatrixDiffusionSmoothing(
       rc_ptr<SparseMatrix> matrix,
       const AimsTimeSurface<3,Void> & mesh, double wthresh, double sigma,
-      const TimeTexture<int32_t> & patches, int32_t patch) {
+      const TimeTexture<int32_t> & patches, int32_t patch)
+  {
     _sparseMatrixDiffusionSmoothing(matrix, mesh, wthresh, sigma, patches,
                                     patch);
   }
@@ -480,7 +483,8 @@ namespace constel {
   void sparseMatrixDiffusionSmoothing(
       rc_ptr<SparseMatrix> matrix,
       const AimsTimeSurface<3,Void> & mesh, double wthresh, double sigma,
-      const TimeTexture<int16_t> & patches, int32_t patch) {
+      const TimeTexture<int16_t> & patches, int32_t patch)
+  {
     TimeTexture<int32_t> t32;
     Converter<TimeTexture<int16_t>, TimeTexture<int32_t> > c;
     c.convert(patches, t32);
@@ -491,7 +495,8 @@ namespace constel {
   void sparseMatrixDiffusionSmoothing(
       rc_ptr<SparseOrDenseMatrix> matrix,
       const AimsTimeSurface<3,Void> & mesh, double wthresh, double sigma,
-      const TimeTexture<int32_t> & patches, int32_t patch) {
+      const TimeTexture<int32_t> & patches, int32_t patch)
+  {
     _sparseMatrixDiffusionSmoothing( matrix, mesh, wthresh, sigma, patches,
                                      patch );
   }
@@ -499,7 +504,8 @@ namespace constel {
   void sparseMatrixDiffusionSmoothing(
       rc_ptr<SparseOrDenseMatrix> matrix,
       const AimsTimeSurface<3,Void> & mesh, double wthresh, double sigma,
-      const TimeTexture<int16_t> & patches, int32_t patch) {
+      const TimeTexture<int16_t> & patches, int32_t patch)
+  {
     TimeTexture<int32_t> t32;
     Converter<TimeTexture<int16_t>, TimeTexture<int32_t> > c;
     c.convert(patches, t32);
@@ -510,7 +516,8 @@ namespace constel {
   void sparseMatrixDiffusionSmoothing(
       rc_ptr<Connectivities> conn_ptr,
       const AimsTimeSurface<3,Void> & mesh, double wthresh, double sigma,
-      const TimeTexture<int32_t> & patches, int32_t patch) {
+      const TimeTexture<int32_t> & patches, int32_t patch)
+  {
     _sparseMatrixDiffusionSmoothing(conn_ptr, mesh, wthresh, sigma,
                                     patches, patch);
   }
@@ -518,7 +525,8 @@ namespace constel {
   void sparseMatrixDiffusionSmoothing(
       rc_ptr<Connectivities> conn_ptr,
       const AimsTimeSurface<3,Void> & mesh, double wthresh, double sigma,
-      const TimeTexture<int16_t> & patches, int32_t patch) {
+      const TimeTexture<int16_t> & patches, int32_t patch)
+  {
     TimeTexture<int32_t> t32;
     Converter<TimeTexture<int16_t>, TimeTexture<int32_t> > c;
     c.convert(patches, t32);
@@ -528,7 +536,8 @@ namespace constel {
 
   void sparseMatrixGaussianSmoothing(
       SparseMatrix & matrix, const AimsSurfaceTriangle & inAimsMesh,
-      float distthresh, float /* wthresh */) {
+      float distthresh, float /* wthresh */)
+  {
     /*
     Smoothing of a connectivity matrix according to the aims mesh and to the
     neighbourhood distance (distthresh), threshold of the resulting matrix by
@@ -543,17 +552,10 @@ namespace constel {
     std::cout << "Computing geomap..." << std::flush;
     size_t nv = inAimsMesh.vertex().size();
 
-    Texture<int16_t> start( nv, 0 );
-    std::vector< std::map<size_t, float> > res(nv);
+    std::vector< std::map<size_t, float> > res;
 
-    for (std::size_t i = 0; i < nv; ++i)
-    {
-      start[i] = 1;
-      toMap( meshdistance::MeshDistance( inAimsMesh.begin()->second, start,
-                                         false, distthresh ).data(),
-             res[i], meshdistance::MESHDISTANCE_UNREACHED );
-      start[i] = 0;
-    }
+    meshdistance::pairwiseDistanceMaps( inAimsMesh.begin()->second, res,
+                                        distthresh );
     std::cout << "OK" << std::endl;
     
     //Sparse matrix smoothing
@@ -639,17 +641,10 @@ namespace constel {
     std::cout << "Computing geomap..." << std::flush;
     size_t nv = inAimsMesh.vertex().size();
 
-    Texture<int16_t> start( nv, 0 );
-    std::vector< std::map<size_t, float> > res(nv);
+    std::vector< std::map<size_t, float> > res;
 
-    for (std::size_t i = 0; i < nv; ++i)
-    {
-      start[i] = 1;
-      toMap( meshdistance::MeshDistance( inAimsMesh.begin()->second, start,
-                                         false, distthresh ).data(),
-             res[i], meshdistance::MESHDISTANCE_UNREACHED );
-      start[i] = 0;
-    }
+    meshdistance::pairwiseDistanceMaps( inAimsMesh.begin()->second, res,
+                                          distthresh );
     std::cout << "OK" << std::endl;
     
     //Sparse matrix smoothing
