@@ -27,6 +27,10 @@ include( "${AIMS-FREE_USE_FILE}" )
 
 #set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall" )
 
+# don't warn on obsolete classes within this library: we still provide obsolete
+# features so we have to build them without warnings
+add_definitions( "-DAIMSDATA_CLASS_NO_DEPREC_WARNING=1" )
+
 add_subdirectory( src/library )
 add_subdirectory( src/commands )
 if( SIP_FOUND AND PYTHON_FOUND AND NUMPY_FOUND AND SIP_FOUND )
