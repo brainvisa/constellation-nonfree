@@ -6,6 +6,7 @@
 #include <constellation/tildefs.h>
 #include <constellation/connectivities.h>
 #include <aims/mesh/texture.h>
+#include <aims/data/data.h>
 
 
 //---------------------
