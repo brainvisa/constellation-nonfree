@@ -3,6 +3,7 @@
 #include <aims/mesh/texturetools.h>
 #include <aims/getopt/getopt2.h>
 #include <aims/sparsematrix/sparseordensematrix.h>
+#include <aims/data/data.h>
 
 using namespace aims;
 using namespace carto;
