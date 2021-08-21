@@ -445,7 +445,7 @@ Num of clusters (K): <b>%d</b><br/>
             pos = 0
         elif pos > 1:
             pos = 1
-        color = colors.value(int(pos * (colors.dimX() - 0.0001)))
+        color = colors.value(int(pos * (colors.getSizeX() - 0.0001)))
         color = (color[0], color[1], color[2], color[3])
         return color
 
