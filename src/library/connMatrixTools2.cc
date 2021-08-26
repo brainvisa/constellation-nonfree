@@ -11,7 +11,7 @@ using namespace std;
 namespace constel
 {
 
-  typedef AimsData<float> Matrix;
+  typedef Volume<float> Matrix;
 
   //------------------------------
   //  connMatrixTargetsToTargets
@@ -36,7 +36,7 @@ namespace constel
     size_t colNb = targetRegionsNb;
     size_t rowsNb = targetRegionsNb;
     Matrix matrix(rowsNb, colNb, 1);
-    matrix.setSizeXYZT(100.0/rowsNb , 80.0/colNb);
+    matrix.setVoxelSize(100.0/rowsNb , 80.0/colNb);
 
     // Generating kdtree
     KDTreeVertices m = kdt_vertices( inAimsMesh );
@@ -128,7 +128,7 @@ namespace constel
     size_t colNb = meshVertexNb;
     size_t rowsNb = seedRegionVertexNb;
     Matrix matrix(rowsNb, colNb, 1);
-    matrix.setSizeXYZT(100.0/rowsNb , 80.0/colNb);
+    matrix.setVoxelSize(100.0/rowsNb , 80.0/colNb);
 
     // Generating kdtree
     cout << "Generating kdtree" << endl;

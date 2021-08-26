@@ -921,13 +921,13 @@ namespace constel {
   void writeAimsFmtConnMatrix(
       Connectivities *connMatrix_ptr, string file_name, bool verbose) {
     if (verbose) cout << "Writing connectivity matrix ";
-    typedef AimsData< float > Matrix;
+    typedef Volume< float > Matrix;
     Connectivities &connMatrix  = *connMatrix_ptr;
     size_t colNb = connMatrix[0].size();
     size_t rowsNb = connMatrix.size();
     if (verbose) cout << "("<< rowsNb << ", " << colNb <<") in Aims Format...";
     Matrix matrix(rowsNb, colNb, 1);
-    matrix.setSizeXYZT(100.0/rowsNb , 80.0/colNb);
+    matrix.setVoxelSize(100.0/rowsNb , 80.0/colNb);
     for (size_t i = 0; i < rowsNb; ++i)
     {
       for (size_t j = 0; j < colNb; ++j)
