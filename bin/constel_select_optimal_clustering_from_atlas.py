@@ -41,9 +41,9 @@ def parse_args(argv):
         type=str,
         help='Region of interest')
     parser.add_argument(
-        'silhouette',
+        'optimal_cluster_numbers',
         type=str,
-        help='The silhouette width for the considered number of clusters')
+        help='The optimal numbers of clusters to apply')
     parser.add_argument(
         'optimal_clustering',
         type=str,
@@ -63,11 +63,10 @@ def main():
     arguments = sys.argv[1:]
     parser, args = parse_args(arguments)
 
-    with open(args.silhouette, 'r') as f:
-        dict_silhouette = json.load(f)
+    with open(args.optimal_cluster_numbers, 'r') as f:
+        dict_optimal = json.load(f)
 
-
-    opt_nb_clusters = int(max(dict_silhouette, key=dict_silhouette.get))
+    opt_nb_clusters = int(dict_optimal[args.region])
 
     ind_clustering = aims.read(args.individual_clustering)
     individual_clustering = np.asarray(ind_clustering)
