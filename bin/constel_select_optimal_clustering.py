@@ -20,7 +20,7 @@ from soma import aims
 
 # ---------------------------Command-line--------------------------------------
 
-doc = """Select the optimal number of clusters according to a reference
+doc = """Select the optimal number of clusters according to a silhouette
 file"""
 
 
@@ -36,10 +36,6 @@ def parse_args(argv):
         'individual_clustering',
         type=str,
         help='List of clustering with different numbers of clusters')
-    parser.add_argument(
-        'region',
-        type=str,
-        help='Region of interest')
     parser.add_argument(
         'silhouette',
         type=str,
@@ -65,7 +61,6 @@ def main():
 
     with open(args.silhouette, 'r') as f:
         dict_silhouette = json.load(f)
-
 
     opt_nb_clusters = int(max(dict_silhouette, key=dict_silhouette.get))
 
