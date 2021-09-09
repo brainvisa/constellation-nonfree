@@ -24,7 +24,7 @@ Connectivity-based parcellation of the cortex.
 SPHINX_MIN_VERSION = '1.0'
 
 # Main setup parameters
-NAME = 'constellation-private'
+NAME = 'constellation-nonfree'
 PROJECT = 'constellation'
 ORGANISATION = "CEA"
 MAINTAINER = "CEA"
