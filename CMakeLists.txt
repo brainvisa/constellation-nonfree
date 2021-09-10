@@ -34,7 +34,7 @@ add_definitions( "-DAIMSDATA_CLASS_NO_DEPREC_WARNING=1" )
 add_subdirectory( src/library )
 add_subdirectory( src/commands )
 if( SIP_FOUND AND PYTHON_FOUND AND NUMPY_FOUND AND SIP_FOUND )
-  set( CONSTELLATION-PRIVATE_RELATIVE_SIP_DIRECTORY
+  set( CONSTELLATION-NONFREE_RELATIVE_SIP_DIRECTORY
     "share/constellation-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}/sip" )
   add_subdirectory( src/sip )
 endif()
