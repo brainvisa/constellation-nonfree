@@ -2,7 +2,7 @@ IF ( DOXYGEN_FOUND )
   set(component_name "constellation")
   SET( DOXYFILE_HTML_HEADER "\"${CMAKE_CURRENT_SOURCE_DIR}/head_${component_name}.html\"" )
   set( _doxygenInput ${CONSTELLATION_HEADERS} )
-  set( DOXYFILE_PREDEFINED "${CONSTELLATION-PRIVATE_DEFINITIONS}")
+  set( DOXYFILE_PREDEFINED "${CONSTELLATION-NONFREE_DEFINITIONS}")
   set(aims-free_version "${aims-free_VERSION_MAJOR}.${aims-free_VERSION_MINOR}")
   set(aims_version "${aims-free_VERSION_MAJOR}.${aims-free_VERSION_MINOR}")
   set( DOXYFILE_TAGFILES
