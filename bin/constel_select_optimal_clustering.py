@@ -44,6 +44,11 @@ def parse_args(argv):
         'optimal_clustering',
         type=str,
         help='Single optimal clustering')
+    parser.add_argument(
+        'exclude_2_clusters',
+        type=bool,
+        help='Exclude 2 clusters for optimal clustering selection'
+    )
 
     args = parser.parse_args(argv)
 
@@ -62,7 +67,11 @@ def main():
     with open(args.silhouette, 'r') as f:
         dict_silhouette = json.load(f)
 
-    opt_nb_clusters = int(max(dict_silhouette, key=dict_silhouette.get))
+    if args.exclude_2_clusters:
+        del dict_silhouette['2']
+        opt_nb_clusters = int(max(dict_silhouette, key=dict_silhouette.get))
+    else:
+        opt_nb_clusters = int(max(dict_silhouette, key=dict_silhouette.get))
 
     ind_clustering = aims.read(args.individual_clustering)
     individual_clustering = np.asarray(ind_clustering)
