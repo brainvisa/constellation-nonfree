@@ -18,7 +18,7 @@ Texture utilities.
 from __future__ import print_function
 from __future__ import absolute_import
 import logging
-import numpy
+import numpy as np
 import re
 import six
 
@@ -68,21 +68,21 @@ def management_internal_connections(patch, mask, profile, list_regions=[]):
     ----------
     patch: str (mandatory)
         the number of ROI
-    mask: numpy.ndarray (mandatory)
+    mask: np.ndarray (mandatory)
         a labeling of gyri cortical segmentation
-    profile: numpy.ndarray (mandatory)
+    profile: np.ndarray (mandatory)
         a cortical connectivity profile
     list_regions: list of int (mandatory)
         list of labels (int values) corresponding to gyri
 
     Return
     ------
-    aims_profile: numpy.ndarray
+    aims_profile: np.ndarray
         a cortical connectivity profile
         with or without the path internal connections
     """
 
-    name_labels = list(numpy.unique(mask))
+    name_labels = list(np.unique(mask))
     for element in list(list_regions):
         if element in name_labels:
             name_labels.remove(element)
@@ -120,7 +120,7 @@ def remove_labels(tex, labels):
         otex_ar[otex_ar == l] = 0
 
     # keep only the labels different of zero
-    otex_kept_labels = numpy.unique(otex_ar)
+    otex_kept_labels = np.unique(otex_ar)
     otex_kept_labels_list = otex_kept_labels.tolist()
     if otex_kept_labels_list.count(0) != 0:
         otex_kept_labels_list.remove(0)
@@ -161,10 +161,10 @@ def texture_time(k_max, clusters_id, vertices_patch, vertices_mesh, mode,
         tex[k].resize(vertices_mesh, 0)
         if mode == 1:
             tex[k].arraydata()[vertices_patch] = \
-                clusters_id[k].astype(numpy.int16)
+                clusters_id[k].astype(np.int16)
         if mode == 2:
             tex[k].arraydata()[vertices_patch] = \
-                clusters_id[k][minid:maxid].astype(numpy.int16)
+                clusters_id[k][minid:maxid].astype(np.int16)
 
     return tex
 
@@ -207,12 +207,12 @@ def normalize_profile(profile):
 
     Parameter
     ---------
-    profile: numpy.ndarray (mandatory)
+    profile: np.ndarray (mandatory)
        a cortical connectivity profile
 
     Return
     ------
-    profile: numpy.ndarray
+    profile: np.ndarray
        normalized profile
     """
     sum_values = profile.sum()
@@ -254,7 +254,7 @@ def geodesic_gravity_center(mesh, parcellated_texture, region_name,
     texture[0].resize(number_of_vertices, 1)
 
     # get a list of vertices linked to the given region, not the entire mesh
-    vertices_index = numpy.where(
+    vertices_index = np.where(
         parcellated_texture[time_step].arraydata() == region_name)[0]
 
     # each elements of vertices_index is remplaced by 0,
@@ -292,12 +292,12 @@ def concatenate_texture(cortical_parcellations, time_step):
     for idx, filename in enumerate(cortical_parcellations):
         print(filename)
         roiseg = aims.read(filename)
-        rseg = numpy.array(roiseg[time_step[idx]].arraydata())
+        rseg = np.array(roiseg[time_step[idx]].arraydata())
         if idx == 0:
             tmp_rseg = rseg
             max_time_step = max(rseg)
         else:
-            l = numpy.unique(rseg)
+            l = np.unique(rseg)
             if l[0] == 0:
                 labels = l.nonzero()[0][::-1]
             else:
@@ -327,11 +327,11 @@ def concatenate_texture_new(cortical_parcellations, offset=10):
     """
     for idx, filename in enumerate(cortical_parcellations):
         roiseg = aims.read(filename)
-        rseg = numpy.array(roiseg[0].arraydata())
+        rseg = np.array(roiseg[0].arraydata())
         if idx == 0:
             tmp_rseg = rseg
         else:
-            x = numpy.unique(rseg)
+            x = np.unique(rseg)
             labels = x[x != 0]
             for label in labels[::-1]:
                 rseg[rseg == label] = label + offset*idx
@@ -350,30 +350,30 @@ def create_relationship_region2neighbors(meshname, segname):
     mesh = aims.read(meshname)
     tex = aims.read(segname)
 
-    # create a numpy array from gyri segmentation (aims to numpy)
+    # create a np array from gyri segmentation (aims to np)
     texar = tex[0].arraydata()
 
-    # load the polygons of the mesh (numpy array)
-    triangles = numpy.asarray([tri.arraydata() for tri in mesh.polygon()])
+    # load the polygons of the mesh (np array)
+    triangles = np.asarray([tri.arraydata() for tri in mesh.polygon()])
 
     dict_neighboors = {}
     for search in six.moves.xrange(len(texar)):
         neighboors = []
 
         # give the polygons having the nodes "search"
-        idx = numpy.where(triangles == search)
+        idx = np.where(triangles == search)
 
         # give the index of the nodes
         for d in idx[0]:
             neighboors.extend(triangles[d])
 
         # list of the neighboors and give the labels
-        neighboors = numpy.unique(numpy.asarray(neighboors))
+        neighboors = np.unique(np.asarray(neighboors))
         neighboors = neighboors[neighboors != search]
         labels = []
         for n in neighboors:
             labels.append(texar[n])
-        labels = numpy.unique(labels)
+        labels = np.unique(labels)
         labels = labels[labels != texar[search]]
 
         # complete the dictionnaire with the new labels
