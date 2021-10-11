@@ -66,7 +66,8 @@ def main():
 
     # write as volume
     arr = np.asarray(RGBA_colors, dtype='uint8').reshape(int(len(RGBA_colors)/4), 1, 1, 1, 4)
-    vol = aims.Volume_RGBA(arr)
+    vol = aims.Volume_RGBA(arr.shape[0])
+    vol['v'] = arr
     aims.write(vol, args.palette)
 
 
