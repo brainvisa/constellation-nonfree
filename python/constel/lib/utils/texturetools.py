@@ -399,3 +399,34 @@ def create_relationship_region2neighbors(meshname, segname):
                 dict_neighboors[i] = []
 
     return dict_neighboors
+
+
+def clean_array(array):
+    """
+    """
+    # create the conversion dictionnary
+    dict = {}
+    c = 0
+    for label in np.unique(array):
+        dict[label] = c
+        c += 1
+
+    # rename labels
+    for i in range(array.size):
+        array[i] = dict[array[i]]
+
+    return array
+
+
+def cut_region_from_array(label, array):
+    """
+    """
+    # create array for cut region
+    cut_region_array = np.zeros(array.size, dtype=array.dtype)
+
+    for i in range(array.size):
+        if array[i] == label:
+            cut_region_array[i] = label
+            array[i] = 0
+
+    return cut_region_array, array
