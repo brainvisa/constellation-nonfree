@@ -31,6 +31,7 @@ namespace constel
         (*this)[ i->first ] = i->second;
       else
         j->second += i->second;
+      return *this;
     }
 
     double dot( const Connectivity & c ) const
