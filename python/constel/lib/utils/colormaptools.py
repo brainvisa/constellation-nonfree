@@ -8,6 +8,7 @@
 # CEA, CNRS and INRIA at the following URL "http://www.cecill.info".
 ###############################################################################
 import numpy as np
+import random
 
 
 def roi_graph(mesh, texture):
@@ -70,26 +71,34 @@ def max_saturation(graph, node_colors):
     return max
 
 
-def available_color(node, graph, node_colors):
+def available_color(node, graph, node_colors, nb_colors="minimal"):
     colors = [1, 2, 3, 4, 5, 6, 7, 8]
+    if nb_colors != "minimal":
+        colors = colors[:int(nb_colors)]
+
     for label in graph[node]:
         if node_colors[label] in colors:
             colors.remove(node_colors[label])
-    return colors[0]
+
+    if nb_colors == "minimal":
+        return colors[0]
+    else:
+        random_color = random.randint(0, len(colors)-1)
+        return colors[random_color]
 
 
-def dsatur(graph):
+def dsatur(graph, nb_colors="minimal"):
     node_colors = dict.fromkeys(graph.keys(), 0)
     while 0 in node_colors.values():
         node = max_saturation(graph, node_colors)
-        color = available_color(node, graph, node_colors)
+        color = available_color(node, graph, node_colors, nb_colors)
         node_colors[node] = color
         del graph[node]
 
     return node_colors
 
 
-def get_colormap_colors(mesh, texture):
+def get_colormap_colors(mesh, texture, nb_colors="minimal"):
 
     # list of colors : Default, Red, Green, Blue, Yellow, Purple
     colors = {0: [255, 255, 255, 255],
@@ -100,13 +109,13 @@ def get_colormap_colors(mesh, texture):
               5: [186, 85, 211, 255],
               6: [203, 80, 90, 255],
               7: [60, 100, 20, 255],
-              8: [10, 10, 10, 255]}
+              8: [100, 100, 100, 255]}
 
     # Create the graph of the parcellation on the mesh
     graph = roi_graph(mesh, texture)
 
     # Get color of labels with DSATUR algorithm
-    node_colors = dsatur(graph)
+    node_colors = dsatur(graph, nb_colors)
 
     sorted_nodes = sorted(node_colors.keys())
     last_node = sorted_nodes[0]

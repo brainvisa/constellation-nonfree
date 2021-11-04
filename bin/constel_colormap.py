@@ -12,7 +12,6 @@ import sys
 import numpy as np
 
 # brainvisa import
-from brainvisa import anatomist as ana
 from soma import aims
 
 # constel import
@@ -41,6 +40,11 @@ def parse_args(argv):
         type=str,
         help='Mesh associated with the texture')
     parser.add_argument(
+        'nb_colors',
+        type=str,
+        help='Number of colors to use during the dsatur algorithm'
+    )
+    parser.add_argument(
         'palette',
         type=str,
         help='Output palette')
@@ -62,10 +66,11 @@ def main():
     mesh = aims.read(args.mesh)
     texture = aims.read(args.texture)
 
-    RGBA_colors = get_colormap_colors(mesh, texture)
+    RGBA_colors = get_colormap_colors(mesh, texture, args.nb_colors)
 
     # write as volume
-    arr = np.asarray(RGBA_colors, dtype='uint8').reshape(int(len(RGBA_colors)/4), 1, 1, 1, 4)
+    arr = np.asarray(RGBA_colors, dtype='uint8').reshape(
+        int(len(RGBA_colors)/4), 1, 1, 1, 4)
     vol = aims.Volume_RGBA(arr.shape[0])
     vol['v'] = arr
     aims.write(vol, args.palette)
