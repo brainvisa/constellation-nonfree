@@ -42,12 +42,13 @@ def read_nomenclature_file(filename, mode=0):
         ls = inf.readlines()
         if mode == 0:
             nomenclature = {}
-            for l in ls:
-                nomenclature[l.split()[0]] = l.split()[1]
+            for line in ls:
+                idx, area = line.split(" ", 1)
+                nomenclature[idx] = area
         else:
             nomenclature = []
-            for l in ls:
-                nomenclature.append(l.split()[mode - 1])
+            for line in ls:
+                nomenclature.append(line.split()[mode - 1])
     return nomenclature
 
 
