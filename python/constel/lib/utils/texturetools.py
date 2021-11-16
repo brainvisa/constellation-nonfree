@@ -418,15 +418,15 @@ def clean_array(array):
     return array
 
 
-def cut_region_from_array(label, array):
+def cut_regions_from_array(labels, array):
     """
     """
     # create array for cut region
-    cut_region_array = np.zeros(array.size, dtype=array.dtype)
+    cut_regions_array = np.zeros(array.size, dtype=array.dtype)
 
     for i in range(array.size):
-        if array[i] == label:
-            cut_region_array[i] = label
+        if array[i] in labels:
+            cut_regions_array[i] = array[i]
             array[i] = 0
 
-    return cut_region_array, array
+    return cut_regions_array, array
