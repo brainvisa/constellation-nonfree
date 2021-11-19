@@ -10,6 +10,7 @@ import argparse
 import textwrap
 import sys
 import numpy as np
+import json
 
 # brainvisa import
 from soma import aims
@@ -21,6 +22,10 @@ from constel.lib.utils.colormaptools import get_colormap_colors
 # ---------------------------Command-line--------------------------------------
 
 doc = """Color a parcellation with a few colors"""
+
+
+def mylist(string):
+    return json.loads(string)
 
 
 def parse_args(argv):
@@ -45,6 +50,11 @@ def parse_args(argv):
         help='Number of colors to use during the dsatur algorithm'
     )
     parser.add_argument(
+        'default_labels',
+        type=mylist,
+        help='Labels for which the palette will be set to default color'
+    )
+    parser.add_argument(
         'palette',
         type=str,
         help='Output palette')
@@ -66,7 +76,14 @@ def main():
     mesh = aims.read(args.mesh)
     texture = aims.read(args.texture)
 
-    RGBA_colors = get_colormap_colors(mesh, texture, args.nb_colors)
+    default_labels = []
+    for label in args.default_labels:
+        default_labels.append(int(label))
+
+    RGBA_colors = get_colormap_colors(mesh,
+                                      texture,
+                                      args.nb_colors,
+                                      default_labels)
 
     # write as volume
     arr = np.asarray(RGBA_colors, dtype='uint8').reshape(

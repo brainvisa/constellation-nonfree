@@ -98,9 +98,10 @@ def dsatur(graph, nb_colors="minimal"):
     return node_colors
 
 
-def get_colormap_colors(mesh, texture, nb_colors="minimal"):
+def get_colormap_colors(mesh, texture, nb_colors="minimal", default_nodes=[]):
 
-    # list of colors : Default, Red, Green, Blue, Yellow, Purple
+    # list of colors : Default, Red, Green, Blue, Yellow, Purple, light Red,
+    # light Green, Grey
     colors = {0: [255, 255, 255, 255],
               1: [203, 0, 0, 255],
               2: [64, 173, 38, 255],
@@ -121,8 +122,13 @@ def get_colormap_colors(mesh, texture, nb_colors="minimal"):
     last_node = sorted_nodes[0]
     RGBA_colors = []
     for node in sorted_nodes:
+
         RGBA_colors.extend(colors[0]*(node - last_node - 1))
-        RGBA_colors.extend(colors[node_colors[node]])
+
+        if node in default_nodes:
+            RGBA_colors.extend(colors[0])
+        else:
+            RGBA_colors.extend(colors[node_colors[node]])
         last_node = node
 
     return RGBA_colors
