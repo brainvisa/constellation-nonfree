@@ -44,11 +44,11 @@ def read_nomenclature_file(filename, mode=0):
             nomenclature = {}
             for line in ls:
                 idx, area = line.split(" ", 1)
-                nomenclature[idx] = area
+                nomenclature[idx] = area.strip('\n')
         else:
             nomenclature = []
             for line in ls:
-                nomenclature.append(line.split()[mode - 1])
+                nomenclature.append(line.split()[mode - 1].strip('\n'))
     return nomenclature
 
 
