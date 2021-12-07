@@ -45,6 +45,11 @@ def parse_args(argv):
         type=str,
         help='Mesh associated with the texture')
     parser.add_argument(
+        'colors_dict',
+        type=str,
+        help='Optional dictionary of colors'
+    )
+    parser.add_argument(
         'nb_colors',
         type=str,
         help='Number of colors to use during the dsatur algorithm'
@@ -69,6 +74,18 @@ def main():
     """
     """
 
+    #  default list of colors : Default, Red, Green, Blue, Yellow, Purple,
+    # light Red, light Green, Grey
+    default_colors = {0: [255, 255, 255, 255],
+                      1: [203, 0, 0, 255],
+                      2: [64, 173, 38, 255],
+                      3: [0, 0, 142, 255],
+                      4: [255, 217, 0, 255],
+                      5: [186, 85, 211, 255],
+                      6: [203, 80, 90, 255],
+                      7: [60, 100, 20, 255],
+                      8: [100, 100, 100, 255]}
+
     arguments = sys.argv[1:]
     parser, args = parse_args(arguments)
 
@@ -80,15 +97,36 @@ def main():
     for label in args.default_labels:
         default_labels.append(int(label))
 
+    try:
+        aims_colors_dict = aims.read(args.colors_dict)
+        colors_dict = {}
+        for key in aims_colors_dict.keys():
+            colors_dict[int(key)] = [int(x) for x in aims_colors_dict[key]]
+    except:
+        colors_dict = default_colors
+
+    mode = len(colors_dict[list(colors_dict.keys())[0]])
+
+    if 0 not in colors_dict.keys():
+        if mode == 3:
+            colors_dict[0] = [255, 255, 255]
+        elif mode == 4:
+            colors_dict[0] = [255, 255, 255, 255]
+
+    # Support RGB
     RGBA_colors = get_colormap_colors(mesh,
                                       texture,
+                                      colors_dict,
                                       args.nb_colors,
                                       default_labels)
-
+    print(RGBA_colors)
     # write as volume
     arr = np.asarray(RGBA_colors, dtype='uint8').reshape(
-        int(len(RGBA_colors)/4), 1, 1, 1, 4)
-    vol = aims.Volume_RGBA(arr.shape[0])
+        int(len(RGBA_colors)/4), 1, 1, 1, mode)
+    if mode == 3:
+        vol = aims.Volume('RGB', arr.shape[0])
+    elif mode == 4:
+        vol = aims.Volume('RGBA', arr.shape[0])
     vol['v'] = arr
     aims.write(vol, args.palette)
 

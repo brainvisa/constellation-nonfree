@@ -10,6 +10,18 @@
 import numpy as np
 import random
 
+#  default list of colors : Default, Red, Green, Blue, Yellow, Purple,
+# light Red, light Green, Grey
+default_colors = {0: [255, 255, 255, 255],
+                  1: [203, 0, 0, 255],
+                  2: [64, 173, 38, 255],
+                  3: [0, 0, 142, 255],
+                  4: [255, 217, 0, 255],
+                  5: [186, 85, 211, 255],
+                  6: [203, 80, 90, 255],
+                  7: [60, 100, 20, 255],
+                  8: [100, 100, 100, 255]}
+
 
 def roi_graph(mesh, texture):
 
@@ -71,8 +83,9 @@ def max_saturation(graph, node_colors):
     return max
 
 
-def available_color(node, graph, node_colors, nb_colors="minimal"):
-    colors = [1, 2, 3, 4, 5, 6, 7, 8]
+def available_color(node, graph, node_colors,
+                    colors_dict=default_colors, nb_colors="minimal"):
+    colors = list(range(1, len(colors_dict)))
     if nb_colors != "minimal":
         colors = colors[:int(nb_colors)]
 
@@ -87,48 +100,40 @@ def available_color(node, graph, node_colors, nb_colors="minimal"):
         return colors[random_color]
 
 
-def dsatur(graph, nb_colors="minimal"):
+def dsatur(graph, colors_dict=default_colors, nb_colors="minimal"):
     node_colors = dict.fromkeys(graph.keys(), 0)
     while 0 in node_colors.values():
         node = max_saturation(graph, node_colors)
-        color = available_color(node, graph, node_colors, nb_colors)
+        color = available_color(node, graph, node_colors,
+                                colors_dict, nb_colors)
         node_colors[node] = color
         del graph[node]
 
     return node_colors
 
 
-def get_colormap_colors(mesh, texture, nb_colors="minimal", default_nodes=[]):
-
-    # list of colors : Default, Red, Green, Blue, Yellow, Purple, light Red,
-    # light Green, Grey
-    colors = {0: [255, 255, 255, 255],
-              1: [203, 0, 0, 255],
-              2: [64, 173, 38, 255],
-              3: [0, 0, 142, 255],
-              4: [255, 217, 0, 255],
-              5: [186, 85, 211, 255],
-              6: [203, 80, 90, 255],
-              7: [60, 100, 20, 255],
-              8: [100, 100, 100, 255]}
+def get_colormap_colors(mesh,
+                        texture,
+                        colors_dict=default_colors,
+                        nb_colors="minimal",
+                        default_nodes=[]):
 
     # Create the graph of the parcellation on the mesh
     graph = roi_graph(mesh, texture)
 
     # Get color of labels with DSATUR algorithm
-    node_colors = dsatur(graph, nb_colors)
+    node_colors = dsatur(graph, colors_dict, nb_colors)
 
     sorted_nodes = sorted(node_colors.keys())
     last_node = sorted_nodes[0]
     RGBA_colors = []
     for node in sorted_nodes:
-
-        RGBA_colors.extend(colors[0]*(node - last_node - 1))
+        RGBA_colors.extend(colors_dict[0]*(node - last_node - 1))
 
         if node in default_nodes:
-            RGBA_colors.extend(colors[0])
+            RGBA_colors.extend(colors_dict[0])
         else:
-            RGBA_colors.extend(colors[node_colors[node]])
+            RGBA_colors.extend(colors_dict[node_colors[node]])
         last_node = node
 
     return RGBA_colors
