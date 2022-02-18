@@ -29,10 +29,6 @@ def parse_args(argv):
                              "Size if (nb_vertex_in_gyrus, nb_basins)"
                              "Format: nii.gz")
 
-    parser.add_argument("regions",
-                        type=str,
-                        help="List of gyrus corresponding to the matrices")
-
     parser.add_argument('reduced_matrix_out',
                         type=str,
                         help="Path of the output reduced matrix"
@@ -50,7 +46,6 @@ def main():
     parser, args = parse_args(arguments)
 
     reduced_matrices = eval(args.reduced_matrices)
-    regions = eval(args.regions)
 
     gyrus_reduced_matrices = []
 
