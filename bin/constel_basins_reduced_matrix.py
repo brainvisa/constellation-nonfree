@@ -1,8 +1,10 @@
 # python system module
 from __future__ import absolute_import
 from __future__ import print_function
-import numpy
+import numpy as np
 import argparse
+import sys
+import textwrap
 
 # aims module
 from soma import aims
@@ -25,14 +27,14 @@ def parse_args(argv):
     # adding arguments
     parser.add_argument("reduced_matrices",
                         type=str,
-                        help="List of gyrus reduced matrices of a subject."
-                             "Size if (nb_vertex_in_gyrus, nb_basins)"
+                        help="List of gyrus reduced matrices of a subject. "
+                             "Size of (nb_vertex_in_gyrus, nb_basins). "
                              "Format: nii.gz")
 
     parser.add_argument('reduced_matrix_out',
                         type=str,
-                        help="Path of the output reduced matrix"
-                             "Order of previous matrices will be kept")
+                        help="Path of the output reduced matrix. "
+                             "Order of previous matrices will be kept.")
 
     # parsing arguments
     return parser, parser.parse_args(argv)
@@ -65,15 +67,20 @@ def main():
     for mat in gyrus_reduced_matrices:
         s += mat.size
 
-    reduced_matrix = np.zeros((len(gyrus_reduced_matrix), s))
+    reduced_matrix = np.zeros((len(gyrus_reduced_matrices), s))
 
     row = 0
     column_offset = 0
     for mat in gyrus_reduced_matrices:
         for i in range(mat.size):
             reduced_matrix[row][i + column_offset] = mat[i]
-        column_offset += rmat.size
+        column_offset += mat.size
         row += 1
 
     # Write reduced matrix on disk
-    aims.write(reduced_matrix, args.reduced_matrix_out)
+    vol = aims.Volume(reduced_matrix.astype(float))
+    aims.write(vol, args.reduced_matrix_out)
+
+
+if __name__ == "__main__":
+    main()
