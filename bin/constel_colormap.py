@@ -119,7 +119,6 @@ def main():
                                       colors_dict,
                                       args.nb_colors,
                                       default_labels)
-    print(RGBA_colors)
     # write as volume
     arr = np.asarray(RGBA_colors, dtype='uint8').reshape(
         int(len(RGBA_colors)/4), 1, 1, 1, mode)
