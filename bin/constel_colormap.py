@@ -75,15 +75,15 @@ def main():
     """
 
     #  default list of colors : Default, Red, Green, Blue, Yellow, Purple,
-    # light Red, light Green, Grey
+    #  Cyan, Orange, Grey
     default_colors = {0: [255, 255, 255, 255],
                       1: [203, 0, 0, 255],
                       2: [64, 173, 38, 255],
                       3: [0, 0, 142, 255],
                       4: [255, 217, 0, 255],
                       5: [186, 85, 211, 255],
-                      6: [203, 80, 90, 255],
-                      7: [60, 100, 20, 255],
+                      6: [0, 255, 255, 255],
+                      7: [255, 165, 0, 255],
                       8: [100, 100, 100, 255]}
 
     arguments = sys.argv[1:]
