@@ -68,7 +68,7 @@ def nearest_neighbour_profiles(profile, atlas, atlas_classes, indices,
     ntex = itex_len
     if ntex == 0:
         if iindices is not None:
-            ntex = np.max(iindices) + 1
+            ntex = numpy.max(iindices) + 1
         else:
             ntex = len(atlas_classes)
     if iindices is None:
