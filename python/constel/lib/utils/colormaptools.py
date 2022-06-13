@@ -11,7 +11,7 @@ import numpy as np
 import random
 
 #  default list of colors : Default, Red, Green, Blue, Yellow, Purple,
-#  Cyan, Orange, Grey
+#  Cyan, Orange, Grey,
 default_colors = {0: [255, 255, 255, 255],
                   1: [203, 0, 0, 255],
                   2: [64, 173, 38, 255],
@@ -20,7 +20,10 @@ default_colors = {0: [255, 255, 255, 255],
                   5: [186, 85, 211, 255],
                   6: [0, 255, 255, 255],
                   7: [255, 165, 0, 255],
-                  8: [100, 100, 100, 255]}
+                  8: [100, 100, 100, 255],
+                  9: [102, 0, 51, 255],
+                  10: [204, 255, 153, 255],
+                  11: [255, 204, 229, 255]}
 
 
 def roi_graph(mesh, texture):
@@ -83,29 +86,43 @@ def max_saturation(graph, node_colors):
     return max
 
 
-def available_color(node, graph, node_colors,
-                    colors_dict=default_colors, nb_colors="minimal"):
+def available_color(node, graph, node_colors, colors_dict=default_colors,
+                    nb_colors="minimal", used_colors=[]):
     colors = list(range(1, len(colors_dict)))
-    if nb_colors != "minimal":
+    if nb_colors != "minimal" and nb_colors != "exclusive":
         colors = colors[:int(nb_colors)]
 
     for label in graph[node]:
         if node_colors[label] in colors:
             colors.remove(node_colors[label])
 
+    # try to remove colors already in use in exclusive mode
+    if nb_colors == "exclusive":
+        for color in used_colors:
+            if color in colors:
+                colors.remove(color)
+
     if nb_colors == "minimal":
-        return colors[0]
+        return colors[0], used_colors
     else:
-        random_color = random.randint(0, len(colors)-1)
-        return colors[random_color]
+        try:
+            random_color = random.randint(0, len(colors)-1)
+            selected_color = colors[random_color]
+            used_colors.append(selected_color)
+            return selected_color, used_colors
+        except ValueError:
+            print("Not enough colors for this mode")
 
 
 def dsatur(graph, colors_dict=default_colors, nb_colors="minimal"):
     node_colors = dict.fromkeys(graph.keys(), 0)
+    used_colors = []
     while 0 in node_colors.values():
         node = max_saturation(graph, node_colors)
-        color = available_color(node, graph, node_colors,
-                                colors_dict, nb_colors)
+        color, used_colors = available_color(node, graph, node_colors,
+                                             colors_dict, nb_colors,
+                                             used_colors)
+
         node_colors[node] = color
         del graph[node]
 
