@@ -23,13 +23,15 @@ default_colors = {0: [255, 255, 255, 255],
                   8: [100, 100, 100, 255],
                   9: [102, 0, 51, 255],
                   10: [204, 255, 153, 255],
-                  11: [255, 204, 229, 255]}
+                  11: [0, 153, 153, 255],
+                  12: [255, 153, 153, 255],
+                  13: [255, 255, 204, 255]}
 
 
 def roi_graph(mesh, texture):
 
     # create a np array from gyri segmentation (aims to np)
-    tex = texture[0].arraydata()
+    tex = texture[texture.size()-1].arraydata()
 
     triangles = np.asarray([tri.arraydata() for tri in mesh.polygon()])
 
@@ -91,7 +93,6 @@ def available_color(node, graph, node_colors, colors_dict=default_colors,
     colors = list(range(1, len(colors_dict)))
     if nb_colors != "minimal" and nb_colors != "exclusive":
         colors = colors[:int(nb_colors)]
-
     for label in graph[node]:
         if node_colors[label] in colors:
             colors.remove(node_colors[label])
@@ -104,14 +105,17 @@ def available_color(node, graph, node_colors, colors_dict=default_colors,
 
     if nb_colors == "minimal":
         return colors[0], used_colors
-    else:
+    elif nb_colors == "exclusive":
         try:
-            random_color = random.randint(0, len(colors)-1)
-            selected_color = colors[random_color]
+            selected_color = colors[0]
             used_colors.append(selected_color)
             return selected_color, used_colors
         except ValueError:
             print("Not enough colors for this mode")
+    else:
+        random_color = random.randint(0, len(colors)-1)
+        selected_color = colors[random_color]
+        return selected_color, used_colors
 
 
 def dsatur(graph, colors_dict=default_colors, nb_colors="minimal"):
@@ -137,7 +141,6 @@ def get_colormap_colors(mesh,
 
     # Create the graph of the parcellation on the mesh
     graph = roi_graph(mesh, texture)
-
     # Get color of labels with DSATUR algorithm
     node_colors = dsatur(graph, colors_dict, nb_colors)
 
