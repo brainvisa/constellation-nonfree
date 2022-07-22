@@ -25,11 +25,11 @@ Connectivities* makeConnMatrix_intersection(
 
   Connectivities* connMatrixToAllMesh_ptr = new Connectivities(
       cortexMeshVertexNb, Connectivity(cortexMeshVertexNb));
-  
+
   if (verbose) cout << "Loading fibers." << endl;
   BundleInteractionReader bundleInteractionReader(bundleFilename);
   BundleProducer *finalProducer = &bundleInteractionReader;
-  
+
   rc_ptr<BundleMotion> bundleMotion;
   if (motionName.size()) {
     if (verbose) cout << "Creating motion filter." << endl;
@@ -183,7 +183,7 @@ void makeConnectivityTexture_seedConnectionDensity(
 
 void makeConnectivityTexture_seedMeanConnectivityProfile(
     Connectivities* connMatrixToAllMesh_ptr,
-    // const SparseOrDenseMatrix & connMatrixToAllMesh                  
+    // const SparseOrDenseMatrix & connMatrixToAllMesh
     const string & connTextureFileName,
     const TimeTexture<short> & seedRegionsTex,
     int seedRegionLabel,
@@ -218,10 +218,10 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
   int seedRegionLabelVertexNb = labels[seedRegionLabel];
 
   rc_ptr<Connectivities> extractConnMatrix_ptr(
-    connMatrixReducedFromRegion(connMatrixToAllMesh_ptr, seedRegionsTex, 
-                                seedRegionLabel, seedRegionLabelVertexNb, 
+    connMatrixReducedFromRegion(connMatrixToAllMesh_ptr, seedRegionsTex,
+                                seedRegionLabel, seedRegionLabelVertexNb,
                                 & seedVertexIndex));
-  
+
   if (distthresh != 0)
     sparseMatrixDiffusionSmoothing(extractConnMatrix_ptr, inAimsMesh,
                                    wthresh, distthresh,
@@ -232,10 +232,10 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
   SparseOrDenseMatrix *mat = connectivitiesToSparseOrDenseMatrix(
       *extractConnMatrix_ptr);
   //  AllMeshConnMatrix = *mat;
-  
+
   if (normalize)
     connMatrixNormalize(*mat);
-  
+
   if (connMatrixFileName != "")
   {
     Writer<SparseOrDenseMatrix> w(connMatrixFileName);
@@ -245,19 +245,19 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
       if (verbose)
         cout << "Computing ln(1+matrix) and storing resulting file in " <<
         connMatrixFileName << "..." << endl;
-      
+
       //size_t colNb = extractConnMatrix[0].size();
       //size_t rowsNb = extractConnMatrix.size();
-      
+
       Connectivities::iterator il, el = extractConnMatrix.end();
       Connectivity::iterator ic, ec;
-      
+
       for (il=extractConnMatrix.begin(); il!=el; ++il)
       {
         for (ic=il->begin(), ec=il->end(); ic!=ec; ++ic)
         {
           float connval = ic->second;
-          
+
           if (connval > 0)
           {
             float new_connval = log(1 + connval);
@@ -271,7 +271,7 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
         if (verbose)
           cout << "Writing log seed region connMatrix ima:" <<
           connMatrixFileName << endl;
-        
+
         writeConnectivities(*extractConnMatrix_ptr, logFile,
                             connMatrixFormat=="ascii");
       }
@@ -280,7 +280,7 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
         writeAimsFmtConnMatrix(extractConnMatrix_ptr.get(),logFile);
       }
     }
-    
+
     //  Write region vertex indexes (ascii format only)
     size_t seedVertexIndex_size = (*seedVertexIndex).size();
     if ((*seedVertexIndex).size() != 0)
@@ -292,7 +292,7 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
         ostringstream s;
         s << seedRegionVertexIndexFileName << ".txt";
         findex.open(s.str().c_str(), fstream::out);
-        
+
         for (size_t i = 0; i < labels[seedRegionLabel]; ++i)
         {
           findex << (*seedVertexIndex)[i] << endl;
@@ -302,12 +302,12 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
                || seedRegionVertexIndexType == "both" )
       {
         TimeTexture< unsigned int > seedRegionVertexIndexTex;
-        
+
         if (verbose)
           cout << "seedVertexIndex_size:" << seedVertexIndex_size << endl;
-        
+
         seedRegionVertexIndexTex[0].reserve(seedVertexIndex_size);
-        
+
         for (size_t vertex = 0; vertex < seedVertexIndex_size; vertex++)
         {
           seedRegionVertexIndexTex[0].push_back((*seedVertexIndex)[vertex]);
@@ -317,7 +317,7 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
           cout << "seedRegionVertexIndexTex0.nItem():" <<
           seedRegionVertexIndexTex.nItem() << ", " <<
           seedRegionVertexIndexTex[0].nItem() << endl;
-        
+
         ostringstream s;
         s << seedRegionVertexIndexFileName << ".tex";
         Writer<TimeTexture<unsigned int > > w(s.str());
@@ -340,8 +340,7 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
   - outputTargetDensityTex: texture of the connection density of the entire
     mesh towards the seed region
   */
-  TimeTexture<float> outputTargetDensityTex = meshDensityTexture(
-    extractConnMatrix_ptr.get());
+  TimeTexture<float> outputTargetDensityTex = meshDensityTexture(*mat)
 
   if (verbose)
     cout << "Writing mean connectivity profile texture:" <<
@@ -572,7 +571,7 @@ int main(int argc, const char* argv[])
     {
       seedRegionsTexR.read(seedRegionsTex);
       maxLabel = textureMax(seedRegionsTex);
-      
+
       if (verbose)
       {
         cout << "Initial cortical parcellation: " << flush;
@@ -636,4 +635,3 @@ int main(int argc, const char* argv[])
     cerr << e.what() << endl;
   }
 }
-
