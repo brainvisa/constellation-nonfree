@@ -340,7 +340,7 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
   - outputTargetDensityTex: texture of the connection density of the entire
     mesh towards the seed region
   */
-  TimeTexture<float> outputTargetDensityTex = meshDensityTexture(*mat)
+  TimeTexture<float> outputTargetDensityTex = meshDensityTexture(*mat);
 
   if (verbose)
     cout << "Writing mean connectivity profile texture:" <<
