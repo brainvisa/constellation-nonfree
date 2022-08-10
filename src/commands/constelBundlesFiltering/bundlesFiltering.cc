@@ -4,6 +4,7 @@
 #include <constellation/selectFiberListenerFromMesh.h>
 #include <constellation/selectBundlesFromNames.h>
 #include <constellation/selectBundlesFromLength.h>
+#include <constellation/fibersWeightsListener.h>
 
 using namespace aims;
 using namespace carto;
@@ -17,6 +18,7 @@ int main(int argc, const char* argv[]) {
     vector<string> fileNameIn;
     string fileNameOut;
     string fileNameOut_notinmesh;
+    string weights;
     string mode = "Name1_Name2orNotInMesh";
     string mname;
     string gyrus;
@@ -50,6 +52,9 @@ int main(int argc, const char* argv[]) {
         texR, "--tex",
         "labels input texture" );
     app.addOption(
+        weights, "--weights",
+        "Weights text file matching bundle file input", true);
+    app.addOption(
         gyrus, "-g",
         "gyrus name for distant fibers filtering");
     app.addOption(
@@ -69,10 +74,10 @@ int main(int argc, const char* argv[]) {
         as_regex, "-r",
         "names are regular expressions", true);
     app.addOption(
-        cortMinlength, "-l", 
+        cortMinlength, "-l",
         "minimum length for a \"near cortex\" fiber (default: 0)", true);
     app.addOption(
-        cortMaxlength, "-L", 
+        cortMaxlength, "-L",
         "maximum length for a \"near cortex\" fiber (default: no max)", true);
     app.addOption(
         nimMinlength, "--nimlmin",
@@ -156,16 +161,35 @@ int main(int argc, const char* argv[]) {
     // regroup "not in mesh" bundles by gyrus name
     rc_ptr<BundlesFusion> nimRegroup( new BundlesFusion((int) n));
 
+    // Create optional weights listener vector
+    if ( weigths ) {
+      vector<rc_ptr<FibersWeightsListener> > fibersWeights(n);
+    }
+
     // duplicate branches for all input files
     for (i=0; i!=n; ++i) {
       // Bundles reader creation
       string fileName = fileNameIn[i];
       bundle[i].reset( new BundleReader( fileName ) );
 
+      // Read fiber weight if file is provided
+      if ( weights ) {
+        fibersWeights[i].reset(
+          new FibersWeightsListener( weights );
+        )
+        bundle[i]->addBundleListener(*fibersWeights[i]);
+
+        // Set names from mesh/label texture
+        gyriFilter[i].reset(
+          new SelectFiberListenerFromMesh(mesh, tex, mode, addInt, motion,""));
+        fibersWeights[i]->addBundleListener(*gyriFilter[i]);
+      }
+      else {
       // Set names from mesh/label texture
       gyriFilter[i].reset(
         new SelectFiberListenerFromMesh(mesh, tex, mode, addInt, motion,""));
       bundle[i]->addBundleListener(*gyriFilter[i]);
+      }
 
       // -- 1st branch: near cortex
       // filter labels
@@ -185,7 +209,7 @@ int main(int argc, const char* argv[]) {
       // filter labels
       vector<string> notinmesh_names;
       notinmesh_names.push_back(gyrus + "_notInMesh");
-      selectNimBundles[i].reset( 
+      selectNimBundles[i].reset(
         new SelectBundlesFromNames(notinmesh_names, verbose, false, true));
       gyriFilter[i]->addBundleListener(*selectNimBundles[i]);
 
