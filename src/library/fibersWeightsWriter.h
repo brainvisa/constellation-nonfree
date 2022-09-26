@@ -43,4 +43,4 @@ namespace constel {
 
 } // namespace constel
 
-#endif // ifndef CONSTELLATION_FIBERSWEIGHTSLISTENER_H
+#endif // ifndef CONSTELLATION_FIBERSWEIGHTSWRITER_H
