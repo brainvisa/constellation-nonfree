@@ -69,14 +69,14 @@ namespace constel {
                                      const FiberInfo &fiberInfo ) {
       string weight;
       getline(_weightsFile, weight, ' ' );
-      fiberInfo.setWeight() = stof(weight);
+      FiberInfo newFiberInfo( fiberInfo.id(), stof(weight) );
 
       if ( _verbose ) {
         cout << "[FibersWeightsReader] Ending fiber terminated (id, weight): "
         << fiberInfo.id() << " , " << weight << endl;
       }
 
-      terminateFiber(bundleInfo, fiberInfo);
+      terminateFiber(bundleInfo, newFiberInfo);
   }
 
 
