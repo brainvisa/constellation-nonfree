@@ -4,7 +4,8 @@
 #include <constellation/selectFiberListenerFromMesh.h>
 #include <constellation/selectBundlesFromNames.h>
 #include <constellation/selectBundlesFromLength.h>
-#include <constellation/fibersWeightsListener.h>
+#include <constellation/fibersWeightsReader.h>
+#include <constellation/fibersWeightsWriter.h>
 
 using namespace aims;
 using namespace carto;
@@ -18,7 +19,7 @@ int main(int argc, const char* argv[]) {
     vector<string> fileNameIn;
     string fileNameOut;
     string fileNameOut_notinmesh;
-    string weights;
+    string weightsFilename;
     string mode = "Name1_Name2orNotInMesh";
     string mname;
     string gyrus;
@@ -52,7 +53,7 @@ int main(int argc, const char* argv[]) {
         texR, "--tex",
         "labels input texture" );
     app.addOption(
-        weights, "--weights",
+        weightsFilename, "--weightsFilename",
         "Weights text file matching bundle file input", true);
     app.addOption(
         gyrus, "-g",
@@ -161,10 +162,8 @@ int main(int argc, const char* argv[]) {
     // regroup "not in mesh" bundles by gyrus name
     rc_ptr<BundlesFusion> nimRegroup( new BundlesFusion((int) n));
 
-    // Create optional weights listener vector
-    if ( weigths ) {
-      vector<rc_ptr<FibersWeightsListener> > fibersWeights(n);
-    }
+    // Create optional weights reader vectors
+    vector<rc_ptr<FibersWeightsReader> > fibersWeightsReader(n);
 
     // duplicate branches for all input files
     for (i=0; i!=n; ++i) {
@@ -173,22 +172,22 @@ int main(int argc, const char* argv[]) {
       bundle[i].reset( new BundleReader( fileName ) );
 
       // Read fiber weight if file is provided
-      if ( weights ) {
-        fibersWeights[i].reset(
-          new FibersWeightsListener( weights );
-        )
-        bundle[i]->addBundleListener(*fibersWeights[i]);
+      if ( !weightsFilename.empty() ) {
+        // TODO: handle multiple files given
+        fibersWeightsReader[i].reset(
+          new FibersWeightsReader( weightsFilename ));
+        bundle[i]->addBundleListener(*fibersWeightsReader[i]);
 
         // Set names from mesh/label texture
         gyriFilter[i].reset(
           new SelectFiberListenerFromMesh(mesh, tex, mode, addInt, motion,""));
-        fibersWeights[i]->addBundleListener(*gyriFilter[i]);
+        fibersWeightsReader[i]->addBundleListener(*gyriFilter[i]);
       }
       else {
-      // Set names from mesh/label texture
-      gyriFilter[i].reset(
-        new SelectFiberListenerFromMesh(mesh, tex, mode, addInt, motion,""));
-      bundle[i]->addBundleListener(*gyriFilter[i]);
+        // Set names from mesh/label texture
+        gyriFilter[i].reset(
+          new SelectFiberListenerFromMesh(mesh, tex, mode, addInt, motion,""));
+        bundle[i]->addBundleListener(*gyriFilter[i]);
       }
 
       // -- 1st branch: near cortex
@@ -222,16 +221,45 @@ int main(int argc, const char* argv[]) {
       selectNBundlesFromLength[i]->addBundleListener(*nimRegroup);
     }
 
-    // cortex bundles writer
-    rc_ptr< BundleWriter > cortexWriter;
-    cortexWriter.reset(new BundleWriter);
-    cortexWriter->setFileString(fileNameOut);
-    cortexRegroup->addBundleListener(*cortexWriter);
+    //  Set writers if weight file provided
+    if ( !weightsFilename.empty() ) {
 
-    // NIM bundles writer
-    rc_ptr< BundleWriter > nimWriter(new BundleWriter);
-    nimWriter->setFileString(fileNameOut_notinmesh);
-    nimRegroup->addBundleListener(*nimWriter);
+      // cortex fibers weights writer
+      rc_ptr< FibersWeightsWriter > cortexWeightsWriter;
+      string cortexWeightsFilename = fileNameOut + "cortexWeigths";
+      cortexWeightsWriter.reset(new FibersWeightsWriter(cortexWeightsFilename));
+      cortexRegroup->addBundleListener(*cortexWeightsWriter);
+
+      // cortex bundles writer
+      rc_ptr< BundleWriter > cortexWriter;
+      cortexWriter.reset(new BundleWriter);
+      cortexWriter->setFileString(fileNameOut);
+      cortexWeightsWriter->addBundleListener(*cortexWriter);
+
+      // NIM fibers weights writer
+      rc_ptr< FibersWeightsWriter > nimWeightsWriter;
+      string nimWeightsFilename = fileNameOut_notinmesh + "nimWeigths.txt";
+      nimWeightsWriter.reset(new FibersWeightsWriter(nimWeightsFilename));
+      nimRegroup->addBundleListener(*nimWeightsWriter);
+
+      // NIM bundles writer
+      rc_ptr< BundleWriter > nimWriter(new BundleWriter);
+      nimWriter->setFileString(fileNameOut_notinmesh);
+      nimWeightsWriter->addBundleListener(*nimWriter);
+    }
+    // Set writers if no weight file provided
+    else {
+      // cortex bundles writer
+      rc_ptr< BundleWriter > cortexWriter;
+      cortexWriter.reset(new BundleWriter);
+      cortexWriter->setFileString(fileNameOut);
+      cortexRegroup->addBundleListener(*cortexWriter);
+
+      // NIM bundles writer
+      rc_ptr< BundleWriter > nimWriter(new BundleWriter);
+      nimWriter->setFileString(fileNameOut_notinmesh);
+      nimRegroup->addBundleListener(*nimWriter);
+    }
 
     // run all those
     for (i = 0; i < n; ++i) {
