@@ -12,8 +12,9 @@ namespace constel {
 
   //---------------------------------------------------------------------------
   FibersWeightsWriter::FibersWeightsWriter(
-    string weightsFilename, bool verbose)
-    : _weightsFilename(weightsFilename), _verbose(verbose) {}
+    string outputWeightsFilename,  bool verbose)
+    : _outputWeightsFilename(outputWeightsFilename),
+      _verbose(verbose) {}
 
 
   //---------------------------------------------------------------------------
@@ -23,24 +24,21 @@ namespace constel {
   //---------------------------------------------------------------------------
   void FibersWeightsWriter::bundleStarted(
       const BundleProducer &, const BundleInfo &bundleInfo) {
-    // string line;
-    _weightsFile.open( _weightsFilename );
-    if ( _weightsFile.fail() ) {
+
+    // Open output weights file
+    _outputWeightsFile.open( _outputWeightsFilename );
+    if ( _outputWeightsFile.fail() ) {
       if ( _verbose ) {
-        cout << "Problem reading file: " << _weightsFilename << endl;
+        cout << "Problem opening file: " << _outputWeightsFilename << endl;
       }
       exit(1);
     }
     else {
       if ( _verbose ) {
-        cout << "Opened file: " << _weightsFilename << endl;
+        cout << "Opened file: " << _outputWeightsFilename << endl;
       }
-      string s;
-      vector<float> weights;
-      getline(_weightsFile, s, ' ' );
-      _weight = stof(s);
-      weights.push_back( _weight );
     }
+
     startBundle(bundleInfo); // needed?
   }
 
@@ -58,12 +56,10 @@ namespace constel {
   void FibersWeightsWriter::fiberStarted(
       const BundleProducer &, const BundleInfo & /* bundleInfo */,
       const FiberInfo &fiberInfo /* fiberInfo */) {
-    // fiberInfo.weight() = _weights[fiberInfo.id()];
     if ( _verbose ) {
-      cout << "Fiber id: " << fiberInfo.id() << endl;
-      // cout << "FiberInfo weight: " << fiberInfo.weight() <<endl;
-      cout << "Fiber weight: " << _weight << endl;
+      cout << "Begin fiber id: " << fiberInfo.id() << endl;
     }
+
     // _fiber.clear();
   }
 
@@ -72,6 +68,14 @@ namespace constel {
   void FibersWeightsWriter::fiberTerminated( const BundleProducer &,
                                      const BundleInfo &bundleInfo,
                                      const FiberInfo &fiberInfo ) {
+      float weight = fiberInfo.weight();
+      _outputWeightsFile << weight << ' ';
+
+      if ( _verbose ) {
+        cout << "[FibersWeightsWriter] Ending fiber terminated (id, weight): "
+        << fiberInfo.id() << " , " << weight << endl;
+      }
+
       terminateFiber(bundleInfo, fiberInfo);
   }
 
@@ -84,7 +88,7 @@ namespace constel {
 
   //---------------------------------------------------------------------------
   void FibersWeightsWriter::noMoreBundle(const BundleProducer &) {
-      _weightsFile.close();
+      _outputWeightsFile.close();
       BundleProducer::noMoreBundle();
       if (_verbose) cout << "end of FibersWeightsWriter filtering."
         << endl << flush;

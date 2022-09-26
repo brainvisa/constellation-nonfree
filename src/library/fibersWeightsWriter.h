@@ -13,7 +13,8 @@ namespace constel {
     : public aims::BundleProducer, public aims::BundleListener {
 
    public:
-    FibersWeightsWriter(std::string weightsFilename, bool verbose = true);
+    FibersWeightsWriter(std::string outputWeightsFilename,
+                        bool verbose = true);
     FibersWeightsWriter();
     virtual ~FibersWeightsWriter();
 
@@ -34,10 +35,10 @@ namespace constel {
                                const aims::FiberPoint &);
     virtual void noMoreBundle(const aims::BundleProducer &);
 
+  private:
     bool _verbose;
-    std::string _weightsFilename;
-    std::ifstream _weightsFile;
-    float _weight;
+    std::string _outputWeightsFilename;
+    std::ofstream _outputWeightsFile;
   };
 
 } // namespace constel
