@@ -37,6 +37,7 @@ namespace constel {
 
   private:
     bool _verbose;
+    aims::FiberInfo _newFiberInfo;
     std::string _weightsFilename;
     std::ifstream _weightsFile;
   };

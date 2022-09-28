@@ -53,12 +53,14 @@ namespace constel {
 
   //---------------------------------------------------------------------------
   void FibersWeightsReader::fiberStarted(
-      const BundleProducer &, const BundleInfo & /* bundleInfo */,
+      const BundleProducer &, const BundleInfo &bundleInfo /* bundleInfo */,
       const FiberInfo &fiberInfo /* fiberInfo */) {
-    if ( _verbose ) {
-      cout << "Begin fiber id: " << fiberInfo.id() << endl;
-    }
 
+    string weight;
+    getline(_weightsFile, weight, ' ' );
+    FiberInfo newFiberInfo( fiberInfo.id(), stof(weight) );
+    _newFiberInfo = newFiberInfo;
+    startFiber(bundleInfo, _newFiberInfo);
     // _fiber.clear();
   }
 
@@ -67,23 +69,16 @@ namespace constel {
   void FibersWeightsReader::fiberTerminated( const BundleProducer &,
                                      const BundleInfo &bundleInfo,
                                      const FiberInfo &fiberInfo ) {
-      string weight;
-      getline(_weightsFile, weight, ' ' );
-      FiberInfo newFiberInfo( fiberInfo.id(), stof(weight) );
-
-      if ( _verbose ) {
-        cout << "[FibersWeightsReader] Ending fiber terminated (id, weight): "
-        << fiberInfo.id() << " , " << weight << endl;
-      }
-
-      terminateFiber(bundleInfo, newFiberInfo);
+      terminateFiber(bundleInfo, _newFiberInfo);
   }
 
 
   //---------------------------------------------------------------------------
   void FibersWeightsReader::newFiberPoint(
-      const BundleProducer &, const BundleInfo & /* bundleInfo */,
-      const FiberInfo & /* fiberInfo */, const FiberPoint &point) {}
+      const BundleProducer &, const BundleInfo &  bundleInfo,
+      const FiberInfo & /* fiberInfo */, const FiberPoint &point) {
+        addFiberPoint(bundleInfo, _newFiberInfo, point);
+      }
 
 
   //---------------------------------------------------------------------------
