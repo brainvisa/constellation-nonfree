@@ -106,8 +106,8 @@ int main(int argc, const char* argv[]) {
 
     if (verbose) {
       cout << "reading texture..." << flush;
-      tex.reset(texR.read());
     }
+    tex.reset(texR.read());
 
     if (verbose) {
       cout << "done" << endl;
@@ -223,7 +223,6 @@ int main(int argc, const char* argv[]) {
 
     //  Set writers if weight file provided
     if ( !weightsFilename.empty() ) {
-
       // cortex fibers weights writer
       rc_ptr< FibersWeightsWriter > cortexWeightsWriter;
       string cortexWeightsFilename = fileNameOut + "cortexWeigths";
