@@ -222,41 +222,48 @@ int main(int argc, const char* argv[]) {
     }
 
     //  Set writers if weight file provided
-    // if ( !weightsFilename.empty() ) {
-    if (false){
+    // rc_ptrs must be allocated outside of any block, otherwise they will
+    // get deleted at the end if the block (if() { }):
+    // bundle producers only keep pointers, not rc_ptrs thus do not maintain
+    // life of their listeners
+
+    rc_ptr< FibersWeightsWriter > cortexWeightsWriter;
+    rc_ptr< BundleWriter > cortexWriter;
+    rc_ptr< FibersWeightsWriter > nimWeightsWriter;
+    rc_ptr< BundleWriter > nimWriter(new BundleWriter);
+
+    if ( !weightsFilename.empty() )
+    {
+    // if (false){
       // cortex fibers weights writer
-      rc_ptr< FibersWeightsWriter > cortexWeightsWriter;
       string cortexWeightsFilename = fileNameOut + "cortexWeigths";
-      cortexWeightsWriter.reset(new FibersWeightsWriter(cortexWeightsFilename));
+      cortexWeightsWriter.reset(
+        new FibersWeightsWriter(cortexWeightsFilename));
       cortexRegroup->addBundleListener(*cortexWeightsWriter);
 
       // cortex bundles writer
-      rc_ptr< BundleWriter > cortexWriter;
       cortexWriter.reset(new BundleWriter);
       cortexWriter->setFileString(fileNameOut);
       cortexWeightsWriter->addBundleListener(*cortexWriter);
 
       // NIM fibers weights writer
-      rc_ptr< FibersWeightsWriter > nimWeightsWriter;
       string nimWeightsFilename = fileNameOut_notinmesh + "nimWeigths.txt";
       nimWeightsWriter.reset(new FibersWeightsWriter(nimWeightsFilename));
       nimRegroup->addBundleListener(*nimWeightsWriter);
 
       // NIM bundles writer
-      rc_ptr< BundleWriter > nimWriter(new BundleWriter);
       nimWriter->setFileString(fileNameOut_notinmesh);
       nimWeightsWriter->addBundleListener(*nimWriter);
     }
     // Set writers if no weight file provided
-    else {
+    else
+    {
       // cortex bundles writer
-      rc_ptr< BundleWriter > cortexWriter;
       cortexWriter.reset(new BundleWriter);
       cortexWriter->setFileString(fileNameOut);
       cortexRegroup->addBundleListener(*cortexWriter);
 
       // NIM bundles writer
-      rc_ptr< BundleWriter > nimWriter(new BundleWriter);
       nimWriter->setFileString(fileNameOut_notinmesh);
       nimRegroup->addBundleListener(*nimWriter);
     }
