@@ -222,7 +222,8 @@ int main(int argc, const char* argv[]) {
     }
 
     //  Set writers if weight file provided
-    if ( !weightsFilename.empty() ) {
+    // if ( !weightsFilename.empty() ) {
+    if (false){
       // cortex fibers weights writer
       rc_ptr< FibersWeightsWriter > cortexWeightsWriter;
       string cortexWeightsFilename = fileNameOut + "cortexWeigths";
