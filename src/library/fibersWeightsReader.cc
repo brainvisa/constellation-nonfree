@@ -38,7 +38,7 @@ namespace constel {
       }
     }
 
-    startBundle(bundleInfo); // needed?
+    startBundle(bundleInfo);
   }
 
   //---------------------------------------------------------------------------
@@ -55,13 +55,11 @@ namespace constel {
   void FibersWeightsReader::fiberStarted(
       const BundleProducer &, const BundleInfo &bundleInfo /* bundleInfo */,
       const FiberInfo &fiberInfo /* fiberInfo */) {
-
     string weight;
     getline(_weightsFile, weight, ' ' );
     FiberInfo newFiberInfo( fiberInfo.id(), stof(weight) );
     _newFiberInfo = newFiberInfo;
     startFiber(bundleInfo, _newFiberInfo);
-    // _fiber.clear();
   }
 
 
