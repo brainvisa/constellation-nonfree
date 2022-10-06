@@ -20,7 +20,6 @@ namespace constel {
         if ( _outputWeightsFile.fail() ) {
           if ( _verbose ) {
             cout << "Problem opening file: " << _outputWeightsFilename << endl;
-            cout << _outputWeightsFile.fail() << endl;
           }
           exit(1);
         }
@@ -34,13 +33,15 @@ namespace constel {
 
   //---------------------------------------------------------------------------
   FibersWeightsWriter::~FibersWeightsWriter() {
-    _outputWeightsFile << flush;
+    _outputWeightsFile.close();
   }
 
 
   //---------------------------------------------------------------------------
   void FibersWeightsWriter::bundleStarted(
-      const BundleProducer &, const BundleInfo &bundleInfo) {}
+      const BundleProducer &, const BundleInfo &bundleInfo) {
+        startBundle(bundleInfo);
+      }
 
   //---------------------------------------------------------------------------
   void FibersWeightsWriter::bundleTerminated(
@@ -54,8 +55,10 @@ namespace constel {
 
   //---------------------------------------------------------------------------
   void FibersWeightsWriter::fiberStarted(
-      const BundleProducer &, const BundleInfo & /* bundleInfo */,
-      const FiberInfo & /* fiberInfo */) {}
+      const BundleProducer &, const BundleInfo &bundleInfo,
+      const FiberInfo &fiberInfo) {
+        startFiber(bundleInfo, fiberInfo);
+      }
 
 
   //---------------------------------------------------------------------------
@@ -69,13 +72,15 @@ namespace constel {
 
   //---------------------------------------------------------------------------
   void FibersWeightsWriter::newFiberPoint(
-      const BundleProducer &, const BundleInfo & /* bundleInfo */,
-      const FiberInfo & /* fiberInfo */, const FiberPoint &point) {}
+      const BundleProducer &, const BundleInfo &bundleInfo,
+      const FiberInfo &fiberInfo , const FiberPoint &point) {
+        addFiberPoint( bundleInfo, fiberInfo, point );
+      }
 
 
   //---------------------------------------------------------------------------
   void FibersWeightsWriter::noMoreBundle(const BundleProducer &) {
-      _outputWeightsFile.close();
+      _outputWeightsFile << flush;
       BundleProducer::noMoreBundle();
       if (_verbose) cout << "end of FibersWeightsWriter filtering."
         << endl << flush;

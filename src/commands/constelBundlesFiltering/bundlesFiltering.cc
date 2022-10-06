@@ -202,7 +202,8 @@ int main(int argc, const char* argv[]) {
         selectCortexBundles->addBundleListener(*selectCBundlesFromLength);
 
         // cortex fibers weights writer
-        string cortexWeightsFilename = fileNameOut.substr(0, fileNameOut.size() - 8) + "_cortex_weigths.txt";
+        string cortexWeightsFilename = fileNameOut.substr(
+          0, fileNameOut.size() - 8) + "_cortex_weigths.txt";
         // cortexWeightsWriter->setFileString( fileNameOut );
         cortexWeightsWriter.reset(
           new FibersWeightsWriter(cortexWeightsFilename));
@@ -212,27 +213,28 @@ int main(int argc, const char* argv[]) {
         cortexWriter->setFileString(fileNameOut);
         cortexWeightsWriter->addBundleListener(*cortexWriter);
 
-        // // -- 2nd branch: not in mesh
-        // // filter labels
-        // vector<string> notinmesh_names;
-        // notinmesh_names.push_back(gyrus + "_notInMesh");
-        // selectNimBundles.reset(
-        //   new SelectBundlesFromNames(notinmesh_names, verbose, false, true));
-        // gyriFilter->addBundleListener(*selectNimBundles);
-        //
-        // // filter from length
-        // selectNBundlesFromLength.reset(
-        //   new SelectBundlesFromLength(nimMinlength, nimMaxlength, verbose));
-        // selectNimBundles->addBundleListener(*selectNBundlesFromLength);
-        //
-        // // NIM fibers weights writer
-        // string nimWeightsFilename = fileNameOut_notinmesh.substr(0,fileNameOut_notinmesh.size() - 8) + "_nim_weigths.txt";
-        // nimWeightsWriter.reset(new FibersWeightsWriter(nimWeightsFilename));
-        // selectNBundlesFromLength->addBundleListener(*nimWeightsWriter);
-        //
-        // // NIM bundles writer
-        // nimWriter->setFileString(fileNameOut_notinmesh);
-        // nimWeightsWriter->addBundleListener(*nimWriter);
+        // -- 2nd branch: not in mesh
+        // filter labels
+        vector<string> notinmesh_names;
+        notinmesh_names.push_back(gyrus + "_notInMesh");
+        selectNimBundles.reset(
+          new SelectBundlesFromNames(notinmesh_names, verbose, false, true));
+        gyriFilter->addBundleListener(*selectNimBundles);
+
+        // filter from length
+        selectNBundlesFromLength.reset(
+          new SelectBundlesFromLength(nimMinlength, nimMaxlength, verbose));
+        selectNimBundles->addBundleListener(*selectNBundlesFromLength);
+
+        // NIM fibers weights writer
+        string nimWeightsFilename = fileNameOut_notinmesh.substr(
+          0, fileNameOut_notinmesh.size() - 8) + "_nim_weigths.txt";
+        nimWeightsWriter.reset(new FibersWeightsWriter(nimWeightsFilename));
+        selectNBundlesFromLength->addBundleListener(*nimWeightsWriter);
+
+        // NIM bundles writer
+        nimWriter->setFileString(fileNameOut_notinmesh);
+        nimWeightsWriter->addBundleListener(*nimWriter);
 
         // Run pipeline
         if (verbose) cout << "process file: " << fileName << endl;
@@ -301,7 +303,7 @@ int main(int argc, const char* argv[]) {
 
         // regroup bundles by gyrus name
         selectNBundlesFromLength[i]->addBundleListener(*nimRegroup);
-
+      }
       // cortex bundles writer
       cortexWriter->setFileString(fileNameOut);
       cortexRegroup->addBundleListener(*cortexWriter);
@@ -309,7 +311,6 @@ int main(int argc, const char* argv[]) {
       // NIM bundles writer
       nimWriter->setFileString(fileNameOut_notinmesh);
       nimRegroup->addBundleListener(*nimWriter);
-      }
 
       // run all those
       for (i = 0; i < n; ++i) {
@@ -320,7 +321,6 @@ int main(int argc, const char* argv[]) {
 
       if (verbose) cout << "Connectomist pipeline done.\n";
     }
-
 
   return EXIT_SUCCESS;
   }
