@@ -14,33 +14,33 @@ namespace constel {
   FibersWeightsWriter::FibersWeightsWriter(
     string outputWeightsFilename,  bool verbose)
     : _outputWeightsFilename(outputWeightsFilename),
-      _verbose(verbose) {}
+      _verbose(verbose) {
+        // Open output weights file
+        _outputWeightsFile.open( _outputWeightsFilename );
+        if ( _outputWeightsFile.fail() ) {
+          if ( _verbose ) {
+            cout << "Problem opening file: " << _outputWeightsFilename << endl;
+            cout << _outputWeightsFile.fail() << endl;
+          }
+          exit(1);
+        }
+        else {
+          if ( _verbose ) {
+            cout << "Opened file: " << _outputWeightsFilename << endl;
+          }
+        }
+      }
 
 
   //---------------------------------------------------------------------------
-  FibersWeightsWriter::~FibersWeightsWriter() {}
+  FibersWeightsWriter::~FibersWeightsWriter() {
+    _outputWeightsFile << flush;
+  }
 
 
   //---------------------------------------------------------------------------
   void FibersWeightsWriter::bundleStarted(
-      const BundleProducer &, const BundleInfo &bundleInfo) {
-
-    // Open output weights file
-    _outputWeightsFile.open( _outputWeightsFilename );
-    if ( _outputWeightsFile.fail() ) {
-      if ( _verbose ) {
-        cout << "Problem opening file: " << _outputWeightsFilename << endl;
-      }
-      exit(1);
-    }
-    else {
-      if ( _verbose ) {
-        cout << "Opened file: " << _outputWeightsFilename << endl;
-      }
-    }
-
-    startBundle(bundleInfo); // needed?
-  }
+      const BundleProducer &, const BundleInfo &bundleInfo) {}
 
   //---------------------------------------------------------------------------
   void FibersWeightsWriter::bundleTerminated(
@@ -55,13 +55,7 @@ namespace constel {
   //---------------------------------------------------------------------------
   void FibersWeightsWriter::fiberStarted(
       const BundleProducer &, const BundleInfo & /* bundleInfo */,
-      const FiberInfo &fiberInfo /* fiberInfo */) {
-    if ( _verbose ) {
-      cout << "Begin fiber id: " << fiberInfo.id() << endl;
-    }
-
-    // _fiber.clear();
-  }
+      const FiberInfo & /* fiberInfo */) {}
 
 
   //---------------------------------------------------------------------------
@@ -70,12 +64,6 @@ namespace constel {
                                      const FiberInfo &fiberInfo ) {
       float weight = fiberInfo.weight();
       _outputWeightsFile << weight << ' ';
-
-      if ( _verbose ) {
-        cout << "[FibersWeightsWriter] Ending fiber terminated (id, weight): "
-        << fiberInfo.id() << " , " << weight << endl;
-      }
-
       terminateFiber(bundleInfo, fiberInfo);
   }
 
@@ -93,6 +81,5 @@ namespace constel {
       if (_verbose) cout << "end of FibersWeightsWriter filtering."
         << endl << flush;
   }
-
 
 }
