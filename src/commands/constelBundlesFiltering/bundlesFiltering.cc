@@ -147,135 +147,180 @@ int main(int argc, const char* argv[]) {
 
     unsigned i, n = fileNameIn.size();
 
-    // create common elements
-
-    vector<rc_ptr<BundleReader> > bundle(n);
-    vector<rc_ptr<SelectFiberListenerFromMesh> > gyriFilter(n);
-
-    vector<rc_ptr<SelectBundlesFromNames> > selectCortexBundles(n);
-    vector<rc_ptr<SelectBundlesFromLength> > selectCBundlesFromLength(n);
-    // regroup cortex bundles by gyrus name
-    rc_ptr<BundlesFusion> cortexRegroup(new BundlesFusion((int) n));
-
-    vector<rc_ptr<SelectBundlesFromNames> > selectNimBundles(n);
-    vector<rc_ptr<SelectBundlesFromLength> > selectNBundlesFromLength(n);
-    // regroup "not in mesh" bundles by gyrus name
-    rc_ptr<BundlesFusion> nimRegroup( new BundlesFusion((int) n));
-
-    // Create optional weights reader vectors
-    vector<rc_ptr<FibersWeightsReader> > fibersWeightsReader(n);
-
-    // duplicate branches for all input files
-    for (i=0; i!=n; ++i) {
-      // Bundles reader creation
-      string fileName = fileNameIn[i];
-      bundle[i].reset( new BundleReader( fileName ) );
-
-      // Read fiber weight if file is provided
-      if ( !weightsFilename.empty() ) {
+    // MRtrix pipeline
+    // Read fiber weight if file is provided
+    if ( !weightsFilename.empty() &&
+         fileNameIn[0].substr(fileNameIn[0].size() - 4) == ".tck") {
         // TODO: handle multiple files given
-        fibersWeightsReader[i].reset(
-          new FibersWeightsReader( weightsFilename ));
-        bundle[i]->addBundleListener(*fibersWeightsReader[i]);
+
+        // create common elements
+        rc_ptr<BundleReader> bundle;
+        rc_ptr<SelectFiberListenerFromMesh> gyriFilter;
+
+        // Cortex
+        rc_ptr<SelectBundlesFromNames> selectCortexBundles;
+        rc_ptr<SelectBundlesFromLength> selectCBundlesFromLength;
+
+        // NIM
+        rc_ptr<SelectBundlesFromNames> selectNimBundles;
+        rc_ptr<SelectBundlesFromLength> selectNBundlesFromLength;
+
+        //  Set writers if weight file provided
+        // rc_ptrs must be allocated outside of any block, otherwise they will
+        // get deleted at the end if the block (if() { }):
+        // bundle producers only keep pointers, not rc_ptrs thus do not maintain
+        // life of their listeners
+
+        rc_ptr<FibersWeightsReader> fibersWeightsReader;
+        rc_ptr< FibersWeightsWriter > cortexWeightsWriter;
+        rc_ptr< BundleWriter > cortexWriter(new BundleWriter);
+        rc_ptr< FibersWeightsWriter > nimWeightsWriter;
+        rc_ptr< BundleWriter > nimWriter(new BundleWriter);
+
+        // Bundles reader creation
+        string fileName = fileNameIn[0];
+        bundle.reset( new BundleReader( fileName ) );
+
+        // Weights reader
+        fibersWeightsReader.reset( new FibersWeightsReader( weightsFilename ));
+        bundle->addBundleListener(*fibersWeightsReader);
 
         // Set names from mesh/label texture
-        gyriFilter[i].reset(
+        gyriFilter.reset(
           new SelectFiberListenerFromMesh(mesh, tex, mode, addInt, motion,""));
-        fibersWeightsReader[i]->addBundleListener(*gyriFilter[i]);
-      }
-      else {
+        fibersWeightsReader->addBundleListener(*gyriFilter);
+
+        // -- 1st branch: near cortex
+        // filter labels
+        selectCortexBundles.reset(
+          new SelectBundlesFromNames(namesList, verbose, as_regex, true));
+        gyriFilter->addBundleListener(*selectCortexBundles);
+
+        // filter from length
+        selectCBundlesFromLength.reset(
+          new SelectBundlesFromLength(cortMinlength, cortMaxlength, verbose));
+        selectCortexBundles->addBundleListener(*selectCBundlesFromLength);
+
+        // cortex fibers weights writer
+        string cortexWeightsFilename = fileNameOut.substr(0, fileNameOut.size() - 8) + "_cortex_weigths.txt";
+        // cortexWeightsWriter->setFileString( fileNameOut );
+        cortexWeightsWriter.reset(
+          new FibersWeightsWriter(cortexWeightsFilename));
+        selectCBundlesFromLength->addBundleListener(*cortexWeightsWriter);
+
+        // cortex bundles writer
+        cortexWriter->setFileString(fileNameOut);
+        cortexWeightsWriter->addBundleListener(*cortexWriter);
+
+        // // -- 2nd branch: not in mesh
+        // // filter labels
+        // vector<string> notinmesh_names;
+        // notinmesh_names.push_back(gyrus + "_notInMesh");
+        // selectNimBundles.reset(
+        //   new SelectBundlesFromNames(notinmesh_names, verbose, false, true));
+        // gyriFilter->addBundleListener(*selectNimBundles);
+        //
+        // // filter from length
+        // selectNBundlesFromLength.reset(
+        //   new SelectBundlesFromLength(nimMinlength, nimMaxlength, verbose));
+        // selectNimBundles->addBundleListener(*selectNBundlesFromLength);
+        //
+        // // NIM fibers weights writer
+        // string nimWeightsFilename = fileNameOut_notinmesh.substr(0,fileNameOut_notinmesh.size() - 8) + "_nim_weigths.txt";
+        // nimWeightsWriter.reset(new FibersWeightsWriter(nimWeightsFilename));
+        // selectNBundlesFromLength->addBundleListener(*nimWeightsWriter);
+        //
+        // // NIM bundles writer
+        // nimWriter->setFileString(fileNameOut_notinmesh);
+        // nimWeightsWriter->addBundleListener(*nimWriter);
+
+        // Run pipeline
+        if (verbose) cout << "process file: " << fileName << endl;
+        bundle->read();
+        if (verbose) cout << "done for " << fileName << endl;
+        if (verbose) cout << "MRtrix pipeline done.\n";
+    }
+    // Connectomist pipeline
+    else
+    {
+      // create common elements
+      vector<rc_ptr<BundleReader> > bundle(n);
+      vector<rc_ptr<SelectFiberListenerFromMesh> > gyriFilter(n);
+
+      // cortex
+      vector<rc_ptr<SelectBundlesFromNames> > selectCortexBundles(n);
+      vector<rc_ptr<SelectBundlesFromLength> > selectCBundlesFromLength(n);
+      // regroup cortex bundles by gyrus name
+      rc_ptr<BundlesFusion> cortexRegroup(new BundlesFusion((int) n));
+      rc_ptr< BundleWriter > cortexWriter(new BundleWriter);
+
+      // nim
+      vector<rc_ptr<SelectBundlesFromNames> > selectNimBundles(n);
+      vector<rc_ptr<SelectBundlesFromLength> > selectNBundlesFromLength(n);
+      // regroup "not in mesh" bundles by gyrus name
+      rc_ptr<BundlesFusion> nimRegroup( new BundlesFusion((int) n));
+      rc_ptr< BundleWriter > nimWriter(new BundleWriter);
+
+      // duplicate branches for all input files
+      for (i=0; i!=n; ++i) {
+        // Bundles reader creation
+        string fileName = fileNameIn[i];
+        bundle[i].reset( new BundleReader( fileName ) );
+
         // Set names from mesh/label texture
         gyriFilter[i].reset(
           new SelectFiberListenerFromMesh(mesh, tex, mode, addInt, motion,""));
         bundle[i]->addBundleListener(*gyriFilter[i]);
-      }
 
-      // -- 1st branch: near cortex
-      // filter labels
-      selectCortexBundles[i].reset(
-        new SelectBundlesFromNames(namesList, verbose, as_regex, true));
-      gyriFilter[i]->addBundleListener(*selectCortexBundles[i]);
+        // -- 1st branch: near cortex
+        // filter labels
+        selectCortexBundles[i].reset(
+          new SelectBundlesFromNames(namesList, verbose, as_regex, true));
+        gyriFilter[i]->addBundleListener(*selectCortexBundles[i]);
 
-      // filter from length
-      selectCBundlesFromLength[i].reset(
-        new SelectBundlesFromLength(cortMinlength, cortMaxlength, verbose));
-      selectCortexBundles[i]->addBundleListener(*selectCBundlesFromLength[i]);
+        // filter from length
+        selectCBundlesFromLength[i].reset(
+          new SelectBundlesFromLength(cortMinlength, cortMaxlength, verbose));
+        selectCortexBundles[i]->addBundleListener(*selectCBundlesFromLength[i]);
 
-      // connect to common cortex fusion element
-      selectCBundlesFromLength[i]->addBundleListener(*cortexRegroup);
+        // connect to common cortex fusion element
+        selectCBundlesFromLength[i]->addBundleListener(*cortexRegroup);
 
-      // -- 2nd branch: not in mesh
-      // filter labels
-      vector<string> notinmesh_names;
-      notinmesh_names.push_back(gyrus + "_notInMesh");
-      selectNimBundles[i].reset(
-        new SelectBundlesFromNames(notinmesh_names, verbose, false, true));
-      gyriFilter[i]->addBundleListener(*selectNimBundles[i]);
+        // -- 2nd branch: not in mesh
+        // filter labels
+        vector<string> notinmesh_names;
+        notinmesh_names.push_back(gyrus + "_notInMesh");
+        selectNimBundles[i].reset(
+          new SelectBundlesFromNames(notinmesh_names, verbose, false, true));
+        gyriFilter[i]->addBundleListener(*selectNimBundles[i]);
 
-      // filter from length
-      selectNBundlesFromLength[i].reset(
-        new SelectBundlesFromLength(nimMinlength, nimMaxlength, verbose));
-      selectNimBundles[i]->addBundleListener(*selectNBundlesFromLength[i]);
+        // filter from length
+        selectNBundlesFromLength[i].reset(
+          new SelectBundlesFromLength(nimMinlength, nimMaxlength, verbose));
+        selectNimBundles[i]->addBundleListener(*selectNBundlesFromLength[i]);
 
-      // regroup bundles by gyrus name
-      selectNBundlesFromLength[i]->addBundleListener(*nimRegroup);
-    }
-
-    //  Set writers if weight file provided
-    // rc_ptrs must be allocated outside of any block, otherwise they will
-    // get deleted at the end if the block (if() { }):
-    // bundle producers only keep pointers, not rc_ptrs thus do not maintain
-    // life of their listeners
-
-    rc_ptr< FibersWeightsWriter > cortexWeightsWriter;
-    rc_ptr< BundleWriter > cortexWriter;
-    rc_ptr< FibersWeightsWriter > nimWeightsWriter;
-    rc_ptr< BundleWriter > nimWriter(new BundleWriter);
-
-    if ( !weightsFilename.empty() )
-    {
-    // if (false){
-      // cortex fibers weights writer
-      string cortexWeightsFilename = fileNameOut + "cortexWeigths";
-      cortexWeightsWriter.reset(
-        new FibersWeightsWriter(cortexWeightsFilename));
-      cortexRegroup->addBundleListener(*cortexWeightsWriter);
+        // regroup bundles by gyrus name
+        selectNBundlesFromLength[i]->addBundleListener(*nimRegroup);
 
       // cortex bundles writer
-      cortexWriter.reset(new BundleWriter);
-      cortexWriter->setFileString(fileNameOut);
-      cortexWeightsWriter->addBundleListener(*cortexWriter);
-
-      // NIM fibers weights writer
-      string nimWeightsFilename = fileNameOut_notinmesh + "nimWeigths.txt";
-      nimWeightsWriter.reset(new FibersWeightsWriter(nimWeightsFilename));
-      nimRegroup->addBundleListener(*nimWeightsWriter);
-
-      // NIM bundles writer
-      nimWriter->setFileString(fileNameOut_notinmesh);
-      nimWeightsWriter->addBundleListener(*nimWriter);
-    }
-    // Set writers if no weight file provided
-    else
-    {
-      // cortex bundles writer
-      cortexWriter.reset(new BundleWriter);
       cortexWriter->setFileString(fileNameOut);
       cortexRegroup->addBundleListener(*cortexWriter);
 
       // NIM bundles writer
       nimWriter->setFileString(fileNameOut_notinmesh);
       nimRegroup->addBundleListener(*nimWriter);
+      }
+
+      // run all those
+      for (i = 0; i < n; ++i) {
+        if (verbose) cout << "process file: " << fileNameIn[i] << endl;
+        bundle[i]->read();
+        if (verbose) cout << "done for " << fileNameIn[i] << endl;
+      }
+
+      if (verbose) cout << "Connectomist pipeline done.\n";
     }
 
-    // run all those
-    for (i = 0; i < n; ++i) {
-      if (verbose) cout << "process file: " << fileNameIn[i] << endl;
-      bundle[i]->read();
-      if (verbose) cout << "done for " << fileNameIn[i] << endl;
-    }
-
-    if (verbose) cout << "All done.\n";
 
   return EXIT_SUCCESS;
   }
