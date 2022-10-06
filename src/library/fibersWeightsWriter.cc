@@ -62,8 +62,7 @@ namespace constel {
   void FibersWeightsWriter::fiberTerminated( const BundleProducer &,
                                      const BundleInfo &bundleInfo,
                                      const FiberInfo &fiberInfo ) {
-      float weight = fiberInfo.weight();
-      _outputWeightsFile << weight << ' ';
+      _outputWeightsFile << std::setprecision(10) << fiberInfo.weight() << ' ';
       terminateFiber(bundleInfo, fiberInfo);
   }
 

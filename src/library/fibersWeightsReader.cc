@@ -57,7 +57,7 @@ namespace constel {
       const FiberInfo &fiberInfo /* fiberInfo */) {
     string weight;
     getline(_weightsFile, weight, ' ' );
-    FiberInfo newFiberInfo( fiberInfo.id(), stof(weight) );
+    FiberInfo newFiberInfo( fiberInfo.id(), stod(weight) );
     _newFiberInfo = newFiberInfo;
     startFiber(bundleInfo, _newFiberInfo);
   }
