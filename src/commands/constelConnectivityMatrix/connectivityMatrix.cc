@@ -4,6 +4,7 @@
 #include <constellation/connMatrixTools.h>
 #include <constellation/sparseMatrixSmoothing.h>
 #include <constellation/connConversion.h>
+#include <constellation/fibersWeightsReader.h>
 #include <aims/mesh/texturetools.h>
 #include <aims/getopt/getopt2.h>
 
@@ -114,25 +115,27 @@ Connectivities* makeConnMatrix_intersection(
 //-----------------Connectivity Matrix: closest point with mesh----------------
 
 Connectivities* makeConnMatrix_closestPoint(
-    const string & bundleFilename,
+    const string & bundleFilename, const string & weightsFilename,
     const AimsSurfaceTriangle & inAimsMesh, const string & motionName,
     bool verbose) {
   BundleLoader loader;
   BundleReader bundleReader(bundleFilename);
-  bundleReader.addBundleListener(loader);
+  FibersWeightsReader fibersWeightsReader(weightsFilename, false);
+  bundleReader.addBundleListener(fibersWeightsReader);
+  fibersWeightsReader.addBundleListener(loader);
 
   if (verbose) cout << "Reading fibers..." << flush;
 
   bundleReader.read();
-  rc_ptr<Fibers> pfibers;
-  pfibers = loader.getFibers();
+  rc_ptr<WeightedFibers> pfibers;
+  pfibers = loader.getWeightedFibers();
   MotionReader mreader(motionName);
   Motion motion;
   mreader.read(motion);
 
   // Computing complete connectivity matrix [meshVertexNb][meshVertexNb]
-  Connectivities* connMatrixToAllMesh_ptr = connMatrix(
-      *pfibers, inAimsMesh, 0, 0, motion);
+  Connectivities* connMatrixToAllMesh_ptr = weightedConnMatrix(
+      *pfibers, inAimsMesh, motion);
 
   return connMatrixToAllMesh_ptr;
 }

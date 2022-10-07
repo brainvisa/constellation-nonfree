@@ -40,22 +40,24 @@
  */
 
 #include <aims/fibers/bundles.h>
+#include <constellation/bundleSet.h>
 
 namespace constel {
 
   class BundleLoader : public aims::BundleListener {
 
    public: // typedefs
-    typedef aims::FiberPoint Point;
-    typedef std::vector<Point> Fiber;
     typedef std::vector<Fiber> Bundle;
 
    public: // constructors & destructor
-    BundleLoader() : m_fibers(new Bundle) {}
+    BundleLoader() : m_fibers(new Bundle), w_fibers(new WeightedFibers) {}
     virtual ~BundleLoader() {}
 
    public: // set & get
     carto::rc_ptr<Bundle> getFibers() const { return m_fibers; }
+    carto::rc_ptr<WeightedFibers> getWeightedFibers() const {
+      return w_fibers;
+    }
 
    private: // functions
     void bundleStarted(
@@ -66,8 +68,9 @@ namespace constel {
 
     void fiberStarted(
         const aims::BundleProducer &, const aims::BundleInfo &,
-        const aims::FiberInfo &) {
+        const aims::FiberInfo &fiberInfo) {
       m_fibers->push_back(Fiber());
+      w_fibers->push_back(WeightedFiber(fiberInfo.weight()));
     }
 
     void fiberTerminated(
@@ -78,6 +81,7 @@ namespace constel {
         const aims::BundleProducer &, const aims::BundleInfo &,
         const aims::FiberInfo &, const aims::FiberPoint & point) {
       m_fibers->back().push_back(point);
+      w_fibers->back().fiber().push_back(point);
     }
 
     void noMoreBundle(const aims::BundleProducer &) {}
@@ -87,4 +91,3 @@ namespace constel {
   };
 }
 #endif
-

@@ -14,6 +14,10 @@ namespace aims {
 }
 
 namespace constel {
+  Connectivities *weightedConnMatrix(
+    const WeightedFibers &fibers, const AimsSurfaceTriangle &inAimsMesh,
+    Motion motion, bool verbose = false);
+
   Connectivities *connMatrix(
     const Fibers &fibers, const AimsSurfaceTriangle &inAimsMesh,
     float distthresh, float wthresh, Motion motion, bool verbose = false);
@@ -25,7 +29,7 @@ namespace constel {
     const aims::SparseOrDenseMatrix & matrix, bool verbose = false);
 
   Connectivities *connMatrixTargetsRegroup(
-    Connectivities *connMatrixToAllMesh, 
+    Connectivities *connMatrixToAllMesh,
     const TimeTexture<short> &targetRegionsTexture, int targetRegionsNb,
     bool verbose = false);
 
