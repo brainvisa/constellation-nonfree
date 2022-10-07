@@ -156,26 +156,26 @@ int main(int argc, const char* argv[]) {
         // create common elements
         rc_ptr<BundleReader> bundle;
         rc_ptr<SelectFiberListenerFromMesh> gyriFilter;
+        rc_ptr<FibersWeightsReader> fibersWeightsReader;
 
         // Cortex
         rc_ptr<SelectBundlesFromNames> selectCortexBundles;
         rc_ptr<SelectBundlesFromLength> selectCBundlesFromLength;
+        rc_ptr<BundlesFusion> cortexRegroup(new BundlesFusion(1));
+        rc_ptr< FibersWeightsWriter > cortexWeightsWriter;
+        rc_ptr< BundleWriter > cortexWriter(new BundleWriter);
 
         // NIM
         rc_ptr<SelectBundlesFromNames> selectNimBundles;
         rc_ptr<SelectBundlesFromLength> selectNBundlesFromLength;
+        rc_ptr<BundlesFusion> nimRegroup(new BundlesFusion(1));
+        rc_ptr< FibersWeightsWriter > nimWeightsWriter;
+        rc_ptr< BundleWriter > nimWriter(new BundleWriter);
 
-        //  Set writers if weight file provided
         // rc_ptrs must be allocated outside of any block, otherwise they will
         // get deleted at the end if the block (if() { }):
         // bundle producers only keep pointers, not rc_ptrs thus do not maintain
         // life of their listeners
-
-        rc_ptr<FibersWeightsReader> fibersWeightsReader;
-        rc_ptr< FibersWeightsWriter > cortexWeightsWriter;
-        rc_ptr< BundleWriter > cortexWriter(new BundleWriter);
-        rc_ptr< FibersWeightsWriter > nimWeightsWriter;
-        rc_ptr< BundleWriter > nimWriter(new BundleWriter);
 
         // Bundles reader creation
         string fileName = fileNameIn[0];
@@ -201,13 +201,15 @@ int main(int argc, const char* argv[]) {
           new SelectBundlesFromLength(cortMinlength, cortMaxlength, verbose));
         selectCortexBundles->addBundleListener(*selectCBundlesFromLength);
 
+        // cortex bundle fusion
+        selectCBundlesFromLength->addBundleListener(*cortexRegroup);
+
         // cortex fibers weights writer
         string cortexWeightsFilename = fileNameOut.substr(
           0, fileNameOut.size() - 8) + "_cortex_weigths.txt";
-        // cortexWeightsWriter->setFileString( fileNameOut );
         cortexWeightsWriter.reset(
           new FibersWeightsWriter(cortexWeightsFilename));
-        selectCBundlesFromLength->addBundleListener(*cortexWeightsWriter);
+        cortexRegroup->addBundleListener(*cortexWeightsWriter);
 
         // cortex bundles writer
         cortexWriter->setFileString(fileNameOut);
@@ -226,11 +228,14 @@ int main(int argc, const char* argv[]) {
           new SelectBundlesFromLength(nimMinlength, nimMaxlength, verbose));
         selectNimBundles->addBundleListener(*selectNBundlesFromLength);
 
+        // nim bundle fusion
+        selectNBundlesFromLength->addBundleListener(*nimRegroup);
+
         // NIM fibers weights writer
         string nimWeightsFilename = fileNameOut_notinmesh.substr(
           0, fileNameOut_notinmesh.size() - 8) + "_nim_weigths.txt";
         nimWeightsWriter.reset(new FibersWeightsWriter(nimWeightsFilename));
-        selectNBundlesFromLength->addBundleListener(*nimWeightsWriter);
+        nimRegroup->addBundleListener(*nimWeightsWriter);
 
         // NIM bundles writer
         nimWriter->setFileString(fileNameOut_notinmesh);
