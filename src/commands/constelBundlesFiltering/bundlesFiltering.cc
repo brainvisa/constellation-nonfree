@@ -206,7 +206,7 @@ int main(int argc, const char* argv[]) {
 
         // cortex fibers weights writer
         string cortexWeightsFilename = fileNameOut.substr(
-          0, fileNameOut.size() - 8) + "_cortex_weigths.txt";
+          0, fileNameOut.size() - 8) + "_weigths.txt";
         cortexWeightsWriter.reset(
           new FibersWeightsWriter(cortexWeightsFilename));
         cortexRegroup->addBundleListener(*cortexWeightsWriter);
@@ -233,7 +233,7 @@ int main(int argc, const char* argv[]) {
 
         // NIM fibers weights writer
         string nimWeightsFilename = fileNameOut_notinmesh.substr(
-          0, fileNameOut_notinmesh.size() - 8) + "_nim_weigths.txt";
+          0, fileNameOut_notinmesh.size() - 8) + "_weigths.txt";
         nimWeightsWriter.reset(new FibersWeightsWriter(nimWeightsFilename));
         nimRegroup->addBundleListener(*nimWeightsWriter);
 
