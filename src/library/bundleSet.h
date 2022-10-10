@@ -18,7 +18,6 @@ namespace constel {
       inline WeightedFiber( Fiber fiber, double weight);
       inline Fiber fiber() const;
       inline double weight() const;
-      //inline WeightedFiber & operator = ( const WeightedFiber & bundle );
 
     protected:
       Fiber _fiber;

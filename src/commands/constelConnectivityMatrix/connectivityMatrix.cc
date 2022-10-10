@@ -114,7 +114,8 @@ Connectivities* makeConnMatrix_intersection(
 
 //-----------------Connectivity Matrix: closest point with mesh----------------
 
-Connectivities* makeConnMatrix_closestPoint(
+// MRtrix version
+Connectivities* makeWeightedConnMatrix_closestPoint(
     const string & bundleFilename, const string & weightsFilename,
     const AimsSurfaceTriangle & inAimsMesh, const string & motionName,
     bool verbose) {
@@ -136,6 +137,31 @@ Connectivities* makeConnMatrix_closestPoint(
   // Computing complete connectivity matrix [meshVertexNb][meshVertexNb]
   Connectivities* connMatrixToAllMesh_ptr = weightedConnMatrix(
       *pfibers, inAimsMesh, motion);
+
+  return connMatrixToAllMesh_ptr;
+}
+
+// Connectomist version
+Connectivities* makeConnMatrix_closestPoint(
+    const string & bundleFilename,
+    const AimsSurfaceTriangle & inAimsMesh, const string & motionName,
+    bool verbose) {
+  BundleLoader loader;
+  BundleReader bundleReader(bundleFilename);
+  bundleReader.addBundleListener(loader);
+
+  if (verbose) cout << "Reading fibers..." << flush;
+
+  bundleReader.read();
+  rc_ptr<Fibers> pfibers;
+  pfibers = loader.getFibers();
+  MotionReader mreader(motionName);
+  Motion motion;
+  mreader.read(motion);
+
+  // Computing complete connectivity matrix [meshVertexNb][meshVertexNb]
+  Connectivities* connMatrixToAllMesh_ptr = connMatrix(
+      *pfibers, inAimsMesh, 0, 0, motion);
 
   return connMatrixToAllMesh_ptr;
 }
@@ -447,6 +473,9 @@ int main(int argc, const char* argv[])
         inTargetMeshesAimsR_files, "-targets",
         "input target meshes");
     app.addOption(
+        weightsFilename, "--weightsFilename",
+        "Weights text file matching bundle file input", true);
+    app.addOption(
         connTextureFileName, "-outconntex",
         "output mean connectivity texture file name");
     app.addOptionSeries(
@@ -602,8 +631,18 @@ int main(int argc, const char* argv[])
           distthresh, meshClosestPoint_maxDistance, roisMask, length_min,
           length_max, verbose);
     else  // connMatrixComputingType == "meshclosestpoint"
-      connMatrixToAllMesh_ptr = makeConnMatrix_closestPoint(
-          bundleFilename, inAimsMesh, motionName, verbose);
+    {
+      if ( weightsFilename.empty() ) // Connectomist
+      {
+        connMatrixToAllMesh_ptr = makeConnMatrix_closestPoint(
+            bundleFilename, inAimsMesh, motionName, verbose);
+      }
+      else // MRtrix
+      {
+        connMatrixToAllMesh_ptr = makeWeightedConnMatrix_closestPoint(
+          bundleFilename, weightsFilename, inAimsMesh, motionName, verbose);
+      }
+    }
 
     if (connectivityTextureType == "seed_connection_density")
       makeConnectivityTexture_seedConnectionDensity(
