@@ -429,6 +429,7 @@ int main(int argc, const char* argv[])
     string bundleFilename;
     Reader<AimsSurfaceTriangle> inMeshAimsR;
     string connMatrixComputingType = "meshclosestpoint";
+    string weightsFilename;
     Reader<TimeTexture<short> > seedRegionsTexR;
     AimsSurfaceTriangle inAimsMesh;
     vector<string> inTargetMeshesAimsR_files;

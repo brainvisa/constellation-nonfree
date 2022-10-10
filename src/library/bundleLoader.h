@@ -70,7 +70,7 @@ namespace constel {
         const aims::BundleProducer &, const aims::BundleInfo &,
         const aims::FiberInfo &fiberInfo) {
       m_fibers->push_back(Fiber());
-      w_fibers->push_back(WeightedFiber(fiberInfo.weight()));
+      w_fibers->push_back(WeightedFiber( Fiber(), fiberInfo.weight() ));
     }
 
     void fiberTerminated(
@@ -88,6 +88,7 @@ namespace constel {
 
    private: // data
     carto::rc_ptr<Bundle> m_fibers;
+    carto::rc_ptr<WeightedFibers> w_fibers;
   };
 }
 #endif
