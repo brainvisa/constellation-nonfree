@@ -36,20 +36,24 @@ namespace constel
     float l1;
     for (uint intersectionPoint1 = 0;
          intersectionPoint1 < fiberMeshIntersectionCurvilinearAbscissaVector.size();
-         ++intersectionPoint1) {
+         ++intersectionPoint1)
+    {
       meshId1 = fiberMeshIntersectionMeshIdentityVector[intersectionPoint1];
       l1 = fiberMeshIntersectionCurvilinearAbscissaVector[intersectionPoint1];
       for (uint intersectionPoint2 = intersectionPoint1 + 1;
            intersectionPoint2 < fiberMeshIntersectionCurvilinearAbscissaVector.size();
-           ++intersectionPoint2) {
+           ++intersectionPoint2)
+      {
         float connection_length
           = fiberMeshIntersectionCurvilinearAbscissaVector[intersectionPoint2]
             - l1;
-        if (connection_length != 0) {
+        if (connection_length != 0)
+        {
           meshId2
             = fiberMeshIntersectionMeshIdentityVector[intersectionPoint2];
           Connection connection(2);
-          if (meshId1 == meshId2 || meshId1 == _meshIdentity) {
+          if (meshId1 == meshId2 || meshId1 == _meshIdentity)
+          {
             _bundleMeshConnectionsCount++;
             connection[0]
               = fiberIntersectionNeighDistMapVector[intersectionPoint1];

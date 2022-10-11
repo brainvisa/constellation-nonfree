@@ -51,10 +51,12 @@ namespace constel {
     double exp_coef = 1. / ( 2*square_sigma );
     for (QuickMap::const_iterator neigh_2
            = fiberExtremity2NeighMeshVertex.begin();
-         neigh_2 != fiberExtremity2NeighMeshVertex.end(); ++neigh_2) {
+         neigh_2 != fiberExtremity2NeighMeshVertex.end(); ++neigh_2)
+    {
       for (QuickMap::const_iterator neigh_1
              = fiberExtremity1NeighMeshVertex.begin();
-           neigh_1 != fiberExtremity1NeighMeshVertex.end(); ++neigh_1) {
+           neigh_1 != fiberExtremity1NeighMeshVertex.end(); ++neigh_1)
+      {
         double e1 = square(neigh_1->second);
         double e2 = square(neigh_2->second);
         double w1 = exp( -e1 * exp_coef ) * sm_coef;
@@ -62,7 +64,8 @@ namespace constel {
         if (w1 < connectivityThreshold) w1 = 0;
         if (w2 < connectivityThreshold) w2 = 0;
         double w = w1 + w2;
-        if (w > 0) {
+        if (w > 0)
+        {
           wtotal += w;
           weights.push_back(
               make_pair(make_pair( neigh_1->first, neigh_2->first), w));
@@ -71,7 +74,8 @@ namespace constel {
     }
     list<pair<pair<size_t, size_t>, double> >::iterator iw, ew
       = weights.end();
-    for (iw=weights.begin(); iw!=ew; ++iw) {
+    for (iw=weights.begin(); iw!=ew; ++iw)
+    {
       double w = connectionLength * iw->second / wtotal;
       conn[iw->first.second][iw->first.first] += w;
       conn[iw->first.first][iw->first.second] += w;
@@ -98,17 +102,20 @@ namespace constel {
   */
   void fillconnMatrixNoSmoothing(
       Connectivities *conn_ptr, QuickMap &fiberExtremity1NeighMeshVertex,
-      QuickMap & fiberExtremity2NeighMeshVertex) {
+      QuickMap & fiberExtremity2NeighMeshVertex)
+  {
     Connectivities &conn = *conn_ptr;
     double isz
       = 1. / (fiberExtremity1NeighMeshVertex.size()
               * fiberExtremity2NeighMeshVertex.size());
     for (QuickMap::const_iterator neigh_2
            = fiberExtremity2NeighMeshVertex.begin();
-         neigh_2 != fiberExtremity2NeighMeshVertex.end(); ++neigh_2) {
+         neigh_2 != fiberExtremity2NeighMeshVertex.end(); ++neigh_2)
+    {
       for (QuickMap::const_iterator neigh_1
              = fiberExtremity1NeighMeshVertex.begin();
-           neigh_1 != fiberExtremity1NeighMeshVertex.end(); ++neigh_1) {
+           neigh_1 != fiberExtremity1NeighMeshVertex.end(); ++neigh_1)
+      {
         conn[neigh_1->first][neigh_2->first] += isz;
         conn[neigh_2->first][neigh_1->first] += isz;
       }
@@ -541,12 +548,15 @@ namespace constel {
   //---------------------------------
   void fillconnMatrixWithConnections(
       Connectivities *conn_ptr, const BundleConnections &connections,
-      double connectivityThreshold, double distanceThreshold) {
+      double connectivityThreshold, double distanceThreshold)
+  {
     size_t connectionsCount = 0;
-    if (distanceThreshold > 0.0) {
+    if (distanceThreshold > 0.0)
+    {
       for (BundleConnections::const_iterator iConnection = connections.begin();
            iConnection != connections.end();
-           ++iConnection, ++connectionsCount) {
+           ++iConnection, ++connectionsCount)
+      {
         constel::QuickMap ConnectionMapFront = iConnection->front();
         constel::QuickMap ConnectionMapBack = iConnection->back();
         fillconnMatrix(conn_ptr,
@@ -555,10 +565,13 @@ namespace constel {
                        connectivityThreshold,
                        distanceThreshold);
       }
-    } else {
+    }
+    else
+    {
       for (BundleConnections::const_iterator iConnection = connections.begin();
            iConnection != connections.end();
-           ++iConnection, ++connectionsCount) {
+           ++iConnection, ++connectionsCount)
+      {
         constel::QuickMap ConnectionMapFront = iConnection->front();
         constel::QuickMap ConnectionMapBack = iConnection->back();
         fillconnMatrixNoSmoothing(conn_ptr,
@@ -635,16 +648,19 @@ namespace constel {
       Connectivities *conn_ptr, const BundleConnections &connections,
       double connectivityThreshold, double distanceThreshold,
       unsigned length_min, unsigned length_max,
-      ConnectionsLength &connectionsLength) {
+      ConnectionsLength &connectionsLength)
+  {
     size_t connectionsCount = 0;
     size_t chosenConnectionsCount = 0;
 
     for (BundleConnections::const_iterator iConnection = connections.begin();
-         iConnection != connections.end(); ++iConnection, ++connectionsCount) {
+         iConnection != connections.end(); ++iConnection, ++connectionsCount)
+    {
       unsigned connection_length = connectionsLength[connectionsCount];
 
       if (connection_length < length_max
-          and connection_length >= length_min) {
+          && connection_length >= length_min)
+      {
         constel::QuickMap ConnectionMapFront = iConnection->front();
         constel::QuickMap ConnectionMapBack = iConnection->back();
         fillconnMatrix(conn_ptr,

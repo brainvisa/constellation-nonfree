@@ -17,7 +17,8 @@ namespace constel {
 
   class MeshIntersectionBundleListener;
 
-  class ListenedFiberInfo {
+  class ListenedFiberInfo
+  {
    public:
     ListenedFiberInfo();
     ListenedFiberInfo(int id);
@@ -63,7 +64,17 @@ namespace constel {
   //---------------------------
   //  BundleInteractionReader  
   //---------------------------
-  class BundleInteractionReader : public aims::BundleReader {
+  /** (2022/10/10 reverse engineering, Denis)
+      This class is a BundleReader with an additional protected variable,
+      _listenedFiberInfo, which is entirely manipulated (filled and used) from
+      foreign classes, which are made friends in order for them to access it.
+      Strange design...
+      Thus, listeners are used in the order they were added to this producer,
+      and all get access to the ListenedFiberInfo structure, modify it in that
+      given order, and use it.
+  */
+  class BundleInteractionReader : public aims::BundleReader
+  {
    public:
     BundleInteractionReader(const std::string &fileName);
     virtual ~BundleInteractionReader();
@@ -86,7 +97,6 @@ namespace constel {
 
   protected:
     ListenedFiberInfo _listenedFiberInfo;
-    int _meshIntersectionBundleListener_nb;
   };
 
 
@@ -95,6 +105,7 @@ namespace constel {
   //------------------------
   // always at the end of the BundleListenerList
   // (of the associated BundleInteractionReader
+  // just records the point as being the previous one for the next one
   class MemAntBundleListener : public aims::BundleListener {
    public:
     MemAntBundleListener(BundleInteractionReader &bundleInteractionReader);
@@ -130,7 +141,8 @@ namespace constel {
   //-------------------------------------
   //  CurvilinearAbscissaBundleListener  
   //-------------------------------------
-  class CurvilinearAbscissaBundleListener : public aims::BundleListener {
+  class CurvilinearAbscissaBundleListener : public aims::BundleListener
+  {
    public:
     CurvilinearAbscissaBundleListener(
         BundleInteractionReader &bundleInteractionReader);
@@ -204,7 +216,8 @@ namespace constel {
   //---------------------------------------------
 
   class MeshIntersectionNoSmoothingBundleListener
-      : public aims::BundleListener {
+      : public aims::BundleListener
+  {
    public:
     MeshIntersectionNoSmoothingBundleListener(
         const AimsSurfaceTriangle &aimsMesh,

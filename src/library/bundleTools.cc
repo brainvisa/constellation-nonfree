@@ -59,9 +59,8 @@ namespace constel {
   //  BundleInteractionReader  
   //---------------------------
   BundleInteractionReader::BundleInteractionReader(const std::string &fileName)
-      : BundleReader(fileName), _listenedFiberInfo(ListenedFiberInfo()),
-        _meshIntersectionBundleListener_nb(0) {
-    _meshIntersectionBundleListener_nb = 0;
+      : BundleReader(fileName), _listenedFiberInfo(ListenedFiberInfo())
+  {
   }
 
   BundleInteractionReader::~BundleInteractionReader() {}
@@ -71,7 +70,8 @@ namespace constel {
   //  MemAntBundleListener  
   //------------------------
   MemAntBundleListener::MemAntBundleListener(
-      BundleInteractionReader &bundleInteractionReader) {
+      BundleInteractionReader &bundleInteractionReader)
+  {
     _bundleInteractionReader = &bundleInteractionReader;
   }
   
@@ -79,7 +79,8 @@ namespace constel {
 
   void MemAntBundleListener::newFiberPoint(
       const BundleProducer &, const BundleInfo &, const FiberInfo &,
-      const FiberPoint & fiberPoint) {
+      const FiberPoint & fiberPoint)
+  {
     _bundleInteractionReader->_listenedFiberInfo.setAntFiberPoint(fiberPoint);
   }
 
@@ -106,12 +107,14 @@ namespace constel {
   //  CurvilinearAbscissaBundleListener  
   //-------------------------------------
   CurvilinearAbscissaBundleListener::CurvilinearAbscissaBundleListener(
-      BundleInteractionReader &bundleInteractionReader) {
+      BundleInteractionReader &bundleInteractionReader)
+  {
     _bundleInteractionReader = &bundleInteractionReader;
   }
 
   void CurvilinearAbscissaBundleListener::fiberStarted(
-      const BundleProducer &, const BundleInfo &, const FiberInfo &) {
+      const BundleProducer &, const BundleInfo &, const FiberInfo &)
+  {
     _fiberPointCount = 0;
     _fiberLength = 0.0;
     _bundleInteractionReader->_listenedFiberInfo.setCurvilinearAbscissa(0.0);

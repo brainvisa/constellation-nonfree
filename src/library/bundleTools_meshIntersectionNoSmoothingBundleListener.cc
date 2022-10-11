@@ -44,7 +44,8 @@ namespace constel {
   //---------------------------------------------------------------------------
   void MeshIntersectionNoSmoothingBundleListener::newFiberPoint(
       const BundleProducer &, const BundleInfo &, const FiberInfo &,
-      const FiberPoint & fiberPoint) {
+      const FiberPoint & fiberPoint)
+  {
     ++_fiberPointCount;
     FiberPoint antFiberPoint
       = _bundleInteractionReader->_listenedFiberInfo.getAntFiberPoint();
@@ -63,21 +64,25 @@ namespace constel {
     meshClosestPoint_dist = dist2(
       fiberPoint, _aimsMesh.vertex()[meshClosestPoint_index] );
     
-    if (fiberCurvilinearAbscissa > 1) {
+    if (fiberCurvilinearAbscissa > 1)
+    {
       constel::QuickMap * meshPolygonVerticesWeightMap_ptr;
       bool intersectMesh;
       intersectMesh = constel::computeIntersectionPointFiberSegmentAndMesh2(
           _aimsMesh, _meshPolygonsByVertex_Index, antFiberPoint, fiberPoint,
           meshClosestPoint_index, & meshPolygonVerticesWeightMap_ptr);
-      if (intersectMesh) {
+      if (intersectMesh)
+      {
         _bundleInteractionReader
           ->_listenedFiberInfo.pushBackMeshIntersectionNeighbourhood(
               *meshPolygonVerticesWeightMap_ptr, _meshIdentity);
         delete meshPolygonVerticesWeightMap_ptr;
         fiberPoint_ExistingMeshIntersection =  true;
         _antFiberPoint_ExistingMeshIntersection = true;
-      } else if (_antFiberPoint_ExistingMeshIntersection == false
-                 and _fiberPointCount == 2) {
+      }
+      else if (_antFiberPoint_ExistingMeshIntersection == false
+                && _fiberPointCount == 2)
+      {
         // if no intersection with cortex,
         // test if dist(fiberPoint, meshClosestPoint) < dist_min, if it is the
         // case, add polygones around the meshClosestPoint, according to
@@ -85,12 +90,16 @@ namespace constel {
         // part of an (nearly or not) intersection
         float meshClosestPoint_min
           = min(meshClosestPoint_dist, _antFiberPointMeshClosestPoint_dist);
-        if (meshClosestPoint_min <= _meshClosestPointMaxDistance) {
+        if (meshClosestPoint_min <= _meshClosestPointMaxDistance)
+        {
           size_t closestPoint_index;
-          if ( meshClosestPoint_dist == meshClosestPoint_min) {
+          if ( meshClosestPoint_dist == meshClosestPoint_min)
+          {
             closestPoint_index = meshClosestPoint_index;
             fiberPoint_ExistingMeshIntersection = true;
-          } else { //_antFiberPointMeshClosestPoint_dist==meshClosestPoint_min
+          }
+          else
+          { //_antFiberPointMeshClosestPoint_dist==meshClosestPoint_min
             closestPoint_index = _antFiberPointMeshClosestPoint_index;
             _antFiberPoint_ExistingMeshIntersection = true;
           }
@@ -108,7 +117,8 @@ namespace constel {
         }
       }
     }
-    if (_antFiberPoint_ExistingMeshIntersection) {
+    if (_antFiberPoint_ExistingMeshIntersection)
+    {
       _bundleInteractionReader
         ->_listenedFiberInfo.setAntFiberPointExistingMeshIntersection(
             _antFiberPoint_ExistingMeshIntersection);
@@ -128,7 +138,8 @@ namespace constel {
     if (_antFiberPoint_ExistingMeshIntersection == false)//if no intersection with cortex, test if dist(fiberPoint, cortexMeshClosestPoint) < dist_min, if it is the case, add polygones around the meshClosestPoint, according to distanceThreshold, if the previous fiber point has not taken part of an (nearly or not) intersection
     {
       if (_antFiberPointMeshClosestPoint_dist
-          <= _meshClosestPointMaxDistance) {
+          <= _meshClosestPointMaxDistance)
+      {
         constel::QuickMap * meshPolygonVerticesWeightMap_ptr = new QuickMap(1);
         constel::QuickMap & meshPolygonVerticesWeightMap
           = *meshPolygonVerticesWeightMap_ptr;
