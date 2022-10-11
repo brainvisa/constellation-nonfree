@@ -29,7 +29,7 @@ namespace constel {
       distance between i1 and first fiber extremity closest vertex in the mesh
       (or intersection between fiber and mesh)>
       fiberExtremity2NeighMeshVertex: idem with the other fiber extremity
-      connectivityThreshold: threshold: connectivity contributions below are 
+      connectivityThreshold: threshold: connectivity contributions below are
       excluded
       distanceThreshold: distance for the smoothing of the connectivity matrix
    output:
@@ -115,6 +115,25 @@ namespace constel {
     }
   }
 
+  void fillWeightedConnMatrixNoSmoothing(
+      Connectivities *conn_ptr, QuickMap &fiberExtremity1NeighMeshVertex,
+      QuickMap & fiberExtremity2NeighMeshVertex, double weight) {
+    Connectivities &conn = *conn_ptr;
+    double isz
+      = weight / (fiberExtremity1NeighMeshVertex.size()
+              * fiberExtremity2NeighMeshVertex.size());
+    for (QuickMap::const_iterator neigh_2
+           = fiberExtremity2NeighMeshVertex.begin();
+         neigh_2 != fiberExtremity2NeighMeshVertex.end(); ++neigh_2) {
+      for (QuickMap::const_iterator neigh_1
+             = fiberExtremity1NeighMeshVertex.begin();
+           neigh_1 != fiberExtremity1NeighMeshVertex.end(); ++neigh_1) {
+        conn[neigh_1->first][neigh_2->first] += isz;
+        conn[neigh_2->first][neigh_1->first] += isz;
+      }
+    }
+  }
+
   //------------------
   //  fillconnMatrix
   //------------------
@@ -129,7 +148,7 @@ namespace constel {
       connectivityThreshold: threshold: connectivity contributions below are
       excluded
       distanceThreshold: distance for the smoothing of the connectivity matrix
-  
+
   output:
       void (*conn_ptr has changed: filled according to input mesh neighborhoods
       (for fiber extrimities))
@@ -156,7 +175,7 @@ namespace constel {
           conn(neigh_1->first,neigh_2->first)
             = conn(neigh_1->first,neigh_2->first) + w;
           conn(neigh_2->first,neigh_1->first)
-            = conn(neigh_2->first,neigh_1->first) + w; 
+            = conn(neigh_2->first,neigh_1->first) + w;
         }
       }
     }
@@ -180,14 +199,14 @@ namespace constel {
   output:
       void (*conn_ptr has changed: filled according to input mesh
       neighborhoods (for fiber extrimities))
-  */  
+  */
   void fillconnMatrix(
       aims::SparseMatrix *conn_ptr, aims::SparseMatrix *conn_ptr2,
       QuickMap &fiberExtremity1NeighMeshVertex,
       QuickMap &fiberExtremity2NeighMeshVertex, double connectivityThreshold,
       double distanceThreshold, size_t rowIndex_min, size_t rowIndex_max,
       unsigned connectionLength) {
-    double two_pi = 2*3.1415926535897931; 
+    double two_pi = 2*3.1415926535897931;
     aims::SparseMatrix & conn = *conn_ptr;
     aims::SparseMatrix & conn2 = *conn_ptr2;
     for (QuickMap::const_iterator neigh_2
@@ -299,7 +318,7 @@ namespace constel {
       Connectivities *conn_ptr, QuickMap &fiberExtremity1NeighMeshVertex_rows,
       QuickMap & fiberExtremity2NeighMeshVertex_cols,
       double connectivityThreshold, double distanceThreshold) {
-    
+
     Connectivities &conn = *conn_ptr;
     for (QuickMap::const_iterator neigh_2
            = fiberExtremity2NeighMeshVertex_cols.begin();
@@ -433,7 +452,7 @@ namespace constel {
             closestVerticeIndex_On_mesh = currentPolygonVerticeIndex;
           }
         }
-        
+
         pair<size_t, double> pair_verticeIndex_distanceToIntersection
           = make_pair(closestVerticeIndex_On_mesh,1.0);
         (**closestPointsTointersectionWeightMap)[0]
@@ -444,7 +463,7 @@ namespace constel {
     delete intersection_point;
     return inter;
   }
-  
+
   //-----------------------------------------------------------
   //  computeIntersectionPointNeighborhoodFiberSegmentAndMesh
   //-----------------------------------------------------------
@@ -548,7 +567,7 @@ namespace constel {
       }
     }
   }
-  
+
   //---------------------------------
   //  fillconnMatrixWithConnections
   //---------------------------------
