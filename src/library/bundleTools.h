@@ -10,7 +10,7 @@
 
 
 //---------------------
-//  ListenedFiberInfo  
+//  ListenedFiberInfo
 //---------------------
 
 namespace constel {
@@ -62,7 +62,7 @@ namespace constel {
 
 
   //---------------------------
-  //  BundleInteractionReader  
+  //  BundleInteractionReader
   //---------------------------
   /** (2022/10/10 reverse engineering, Denis)
       This class is a BundleReader with an additional protected variable,
@@ -101,7 +101,7 @@ namespace constel {
 
 
   //------------------------
-  //  MemAntBundleListener  
+  //  MemAntBundleListener
   //------------------------
   // always at the end of the BundleListenerList
   // (of the associated BundleInteractionReader
@@ -121,7 +121,7 @@ namespace constel {
 
 
   //--------------------------------------
-  //  AfficheAntFiberPointBundleListener  
+  //  AfficheAntFiberPointBundleListener
   //--------------------------------------
   class AfficheAntFiberPointBundleListener : public aims::BundleListener {
    public:
@@ -139,7 +139,7 @@ namespace constel {
 
 
   //-------------------------------------
-  //  CurvilinearAbscissaBundleListener  
+  //  CurvilinearAbscissaBundleListener
   //-------------------------------------
   class CurvilinearAbscissaBundleListener : public aims::BundleListener
   {
@@ -165,7 +165,7 @@ namespace constel {
 
 
   //----------------------------------
-  //  MeshIntersectionBundleListener  
+  //  MeshIntersectionBundleListener
   //----------------------------------
   class MeshIntersectionBundleListener : public aims::BundleListener {
    public:
@@ -212,7 +212,7 @@ namespace constel {
 
 
   //---------------------------------------------
-  //  MeshIntersectionNoSmoothingBundleListener  
+  //  MeshIntersectionNoSmoothingBundleListener
   //---------------------------------------------
 
   class MeshIntersectionNoSmoothingBundleListener
@@ -259,7 +259,7 @@ namespace constel {
 
 
   //---------------------------------------------------
-  //  MeshIntersectionNoSmoothingFasterBundleListener  
+  //  MeshIntersectionNoSmoothingFasterBundleListener
   //---------------------------------------------------
   // idem MeshIntersectionNoSmoothingBundleListener but before looking for an
   // intersection, test if the fiberPoints are in the input rois mask
@@ -293,7 +293,7 @@ namespace constel {
 
 
   //---------------------------------------
-  //  SavingMeshIntersectionBundleListener 
+  //  SavingMeshIntersectionBundleListener
   //---------------------------------------
   class SavingMeshIntersectionBundleListener : public aims::BundleListener
   {
@@ -316,7 +316,7 @@ namespace constel {
 
 
   //---------------------------------------
-  //  MeshIntersectionMatrixBundleListener 
+  //  MeshIntersectionMatrixBundleListener
   //---------------------------------------
   // for one mesh first, of meshId = 0
   class MeshIntersectionMatrixBundleListener : public aims::BundleListener {
@@ -351,7 +351,7 @@ namespace constel {
   //  MeshIntersectionMatrixWithLengthBundleListener
   //--------------------------------------------------
   // for one mesh first, of meshId = 0, and one bundles per region
-  // (basal ganglia for exemple) 
+  // (basal ganglia for exemple)
   // idem MeshIntersectionMatrixBundleListener, but each connectivity value is
   // weighted with the fiber tract length
   class MeshIntersectionMatrixWithLengthBundleListener
@@ -385,7 +385,7 @@ namespace constel {
 
 
   //-------------------------------
-  //  MeshConnectionBundleListener 
+  //  MeshConnectionBundleListener
   //-------------------------------
   // for one mesh first, of meshId = 0
   class MeshConnectionBundleListener : public aims::BundleListener {
@@ -402,6 +402,9 @@ namespace constel {
     boost::shared_ptr<constel::ConnectionsLength>
         getBundleMeshConnectionsLength() const
         {return _bundleMeshConnectionsLength;}
+    std::vector< double >
+        getBundleMeshConnectionsWeights() const
+        {return _bundleMeshConnectionsWeights;}
     virtual ~MeshConnectionBundleListener();
 
 
@@ -411,12 +414,13 @@ namespace constel {
     bool _verbose;
     boost::shared_ptr<constel::BundleConnections> _bundleMeshConnections;
     boost::shared_ptr<constel::ConnectionsLength> _bundleMeshConnectionsLength;
+    std::vector< double > _bundleMeshConnectionsWeights;
     unsigned _bundleMeshConnectionsCount;
   };
 
 
   //------------------------------------------
-  //  MeshHistoLengthConnectionBundleListener 
+  //  MeshHistoLengthConnectionBundleListener
   //------------------------------------------
   //for one mesh first, of meshId = 0
   class MeshHistoLengthConnectionBundleListener
@@ -457,7 +461,7 @@ namespace constel {
 
 
   //------------------------------------------------------
-  //  FiberNameAccordingToMeshIntersectionBundleListener 
+  //  FiberNameAccordingToMeshIntersectionBundleListener
   //------------------------------------------------------
   class FiberNameAccordingToMeshIntersectionBundleListener
       : public aims::BundleListener
@@ -481,7 +485,7 @@ namespace constel {
 
 
   //------------------------------------------------------------
-  //  FiberNameAccordingToMeshTextureIntersectionBundleListener 
+  //  FiberNameAccordingToMeshTextureIntersectionBundleListener
   //------------------------------------------------------------
   class FiberNameAccordingToMeshTextureIntersectionBundleListener
       : public aims::BundleListener {
@@ -513,7 +517,7 @@ namespace constel {
 
 
   //-----------------------------------------------
-  //  SubSamplerFromMeshIntersectionBundleListener 
+  //  SubSamplerFromMeshIntersectionBundleListener
   //-----------------------------------------------
   class SubSamplerFromMeshIntersectionBundleListener
       : public aims::BundleProducer, public aims::BundleListener
@@ -552,4 +556,3 @@ namespace constel {
 
 } //namespace constel
 #endif // ifndef CONSTELLATION_BUNDLETOOLS_H
-

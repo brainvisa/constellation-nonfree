@@ -18,9 +18,10 @@ using namespace constel;
 Connectivities* makeConnMatrix_intersection(
     const string & connMatrixComputingType, const string & bundleFilename,
     const AimsSurfaceTriangle & inAimsMesh, const string & motionName,
-    double distthresh, float meshClosestPoint_maxDistance,
-    AimsData<short> & roisMask, uint length_min, uint length_max,
-    bool verbose) {
+    const string & weightsFilename, double distthresh,
+    float meshClosestPoint_maxDistance, AimsData<short> & roisMask,
+    uint length_min, uint length_max, bool verbose)
+{
   uint cortexMeshVertexNb = uint(inAimsMesh.vertex().size());
   if (verbose) cout << "Mesh vertices number: " << cortexMeshVertexNb << endl;
 
@@ -32,12 +33,23 @@ Connectivities* makeConnMatrix_intersection(
   BundleProducer *finalProducer = &bundleInteractionReader;
 
   rc_ptr<BundleMotion> bundleMotion;
-  if (motionName.size()) {
+  if (motionName.size())
+  {
     if (verbose) cout << "Creating motion filter." << endl;
     bundleMotion.reset(new BundleMotion(motionName));
     finalProducer->addBundleListener(*bundleMotion);
     finalProducer = bundleMotion.get();
   }
+
+  rc_ptr<FibersWeightsReader> fibersWeightsReader;
+  if ( weightsFilename.size() )
+  {
+    if (verbose) cout << "Creating weights reader" << endl;
+    fibersWeightsReader.reset(new FibersWeightsReader(weightsFilename));
+    finalProducer->addBundleListener(*fibersWeightsReader);
+    finalProducer = fibersWeightsReader.get();
+  }
+
 
   MemAntBundleListener memAntBundleListener(bundleInteractionReader);
   CurvilinearAbscissaBundleListener curvilinearAbscissaBundleListener(
@@ -87,12 +99,16 @@ Connectivities* makeConnMatrix_intersection(
 
   boost::shared_ptr<BundleConnections> cortexConnections_ptr;
   boost::shared_ptr<ConnectionsLength> cortexConnectionsLength_ptr;
+  vector< double > cortexConnectionsWeights;
 
   cortexConnections_ptr
     = meshConnectionBundleListener.getBundleMeshConnections();
 
   cortexConnectionsLength_ptr
     = meshConnectionBundleListener.getBundleMeshConnectionsLength();
+
+  cortexConnectionsWeights
+    = meshConnectionBundleListener.getBundleMeshConnectionsWeights();
 
   //fillConnectivity Matrix:
   if (verbose) cout << "- Fill cortex to cortex Connectivity matrix" << endl;
@@ -102,7 +118,8 @@ Connectivities* makeConnMatrix_intersection(
 
   if (length_min == 0 and length_max == 0)
     fillconnMatrixWithConnections(connMatrixToAllMesh_ptr,
-                                  cortexConnections, 0, 0);
+                                  cortexConnections, cortexConnectionsWeights,
+                                  0, 0);
   else
     fillconnMatrixWithConnectionsPlusLengthWeight(
         connMatrixToAllMesh_ptr, cortexConnections, 0, 0, length_min,
@@ -474,7 +491,7 @@ int main(int argc, const char* argv[])
         inTargetMeshesAimsR_files, "-targets",
         "input target meshes");
     app.addOption(
-        weightsFilename, "--weightsFilename",
+        weightsFilename, "-weightsFilename",
         "Weights text file matching bundle file input", true);
     app.addOption(
         connTextureFileName, "-outconntex",
@@ -629,8 +646,8 @@ int main(int argc, const char* argv[])
         connMatrixComputingType == "meshintersectionpointfast")
       connMatrixToAllMesh_ptr = makeConnMatrix_intersection(
           connMatrixComputingType, bundleFilename, inAimsMesh, motionName,
-          distthresh, meshClosestPoint_maxDistance, roisMask, length_min,
-          length_max, verbose);
+          weightsFilename, distthresh, meshClosestPoint_maxDistance,
+          roisMask, length_min, length_max, verbose);
     else  // connMatrixComputingType == "meshclosestpoint"
     {
       if ( weightsFilename.empty() ) // Connectomist

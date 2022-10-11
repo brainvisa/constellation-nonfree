@@ -11,7 +11,8 @@ namespace constel
     : _meshIdentity(meshIdentity),
       _verbose(verbose),
       _bundleMeshConnections(new BundleConnections() ),
-      _bundleMeshConnectionsLength(new ConnectionsLength() )
+      _bundleMeshConnectionsLength(new ConnectionsLength() ),
+      _bundleMeshConnectionsWeights(std::vector< double >() )
   {
     _bundleInteractionReader = &bundleInteractionReader;
     _bundleMeshConnectionsCount = 0;
@@ -22,7 +23,7 @@ namespace constel
 
 
   void MeshConnectionBundleListener::fiberTerminated(
-    const BundleProducer &, const BundleInfo &, const FiberInfo & )
+    const BundleProducer &, const BundleInfo &, const FiberInfo &fiberInfo )
   {
     std::vector<constel::QuickMap> fiberIntersectionNeighDistMapVector
       = _bundleInteractionReader
@@ -61,6 +62,8 @@ namespace constel
               = fiberIntersectionNeighDistMapVector[intersectionPoint2];
             _bundleMeshConnections->push_back(connection);
             _bundleMeshConnectionsLength->push_back(connection_length);
+            std::cout << "_bundleMeshConnectionsWeights " << fiberInfo.id() << fiberInfo.weight() << std::endl;
+            _bundleMeshConnectionsWeights.push_back( fiberInfo.weight() );
           }
         }
       }

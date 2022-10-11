@@ -37,6 +37,7 @@ namespace constel {
 
   void fillconnMatrixWithConnections(
       Connectivities *conn_ptr, const BundleConnections &connections,
+      std::vector< double > cortexConnectionsWeights,
       double connectivityThreshold, double distanceThreshold);
 
   void fillconnMatrixWithConnections(

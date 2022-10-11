@@ -548,6 +548,7 @@ namespace constel {
   //---------------------------------
   void fillconnMatrixWithConnections(
       Connectivities *conn_ptr, const BundleConnections &connections,
+      std::vector< double > cortexConnectionsWeights,
       double connectivityThreshold, double distanceThreshold)
   {
     size_t connectionsCount = 0;
@@ -574,6 +575,7 @@ namespace constel {
       {
         constel::QuickMap ConnectionMapFront = iConnection->front();
         constel::QuickMap ConnectionMapBack = iConnection->back();
+        cout << "fillconnMatrixWithConnections " << connectionsCount << endl;
         fillconnMatrixNoSmoothing(conn_ptr,
                                   ConnectionMapFront,
                                   ConnectionMapBack);
