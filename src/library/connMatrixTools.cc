@@ -575,10 +575,11 @@ namespace constel {
       {
         constel::QuickMap ConnectionMapFront = iConnection->front();
         constel::QuickMap ConnectionMapBack = iConnection->back();
-        cout << "fillconnMatrixWithConnections " << connectionsCount << endl;
-        fillconnMatrixNoSmoothing(conn_ptr,
-                                  ConnectionMapFront,
-                                  ConnectionMapBack);
+        double weight = cortexConnectionsWeights[connectionsCount];
+        fillWeightedConnMatrixNoSmoothing(conn_ptr,
+                                          ConnectionMapFront,
+                                          ConnectionMapBack,
+                                          weight);
       }
     }
   }
