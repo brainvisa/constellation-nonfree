@@ -40,10 +40,10 @@ namespace constel {
          iFiber != fibers.end(); ++iFiber, ++fiberCount)
     {
       // Get fiber informations
-      Fiber fiber = (*iFiber).fiber();
-      double weight = (*iFiber).weight();
+      Fiber fiber = iFiber->first;
+      double weight = iFiber->second;
 
-      // Transform first point and last point of iFiber from t2 to anat space
+      // Transform first point and last point of fiber from t2 to anat space
       // (with motion)
 
       p1 = motion.transform(fiber.front()[0],
@@ -52,6 +52,7 @@ namespace constel {
       p2 = motion.transform(fiber.back()[0],
                             fiber.back()[1],
                             fiber.back()[2]);
+
       size_t A = kdt.find_nearest( make_pair( 0U, p1 ) ).first->first;
       size_t B = kdt.find_nearest( make_pair( 0U, p2 ) ).first->first;
 

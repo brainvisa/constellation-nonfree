@@ -81,7 +81,7 @@ namespace constel {
         const aims::BundleProducer &, const aims::BundleInfo &,
         const aims::FiberInfo &, const aims::FiberPoint & point) {
       m_fibers->back().push_back(point);
-      w_fibers->back().fiber().push_back(point);
+      w_fibers->back().first.push_back(point);
     }
 
     void noMoreBundle(const aims::BundleProducer &) {}

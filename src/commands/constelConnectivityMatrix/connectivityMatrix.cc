@@ -138,11 +138,11 @@ Connectivities* makeWeightedConnMatrix_closestPoint(
     bool verbose) {
   BundleLoader loader;
   BundleReader bundleReader(bundleFilename);
-  FibersWeightsReader fibersWeightsReader(weightsFilename, false);
+  FibersWeightsReader fibersWeightsReader(weightsFilename);
   bundleReader.addBundleListener(fibersWeightsReader);
   fibersWeightsReader.addBundleListener(loader);
 
-  if (verbose) cout << "Reading fibers..." << flush;
+  if (verbose) cout << "Reading fibers..." << endl;
 
   bundleReader.read();
   rc_ptr<WeightedFibers> pfibers;
