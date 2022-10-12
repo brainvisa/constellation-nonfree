@@ -14,29 +14,38 @@ namespace constel {
   FibersWeightsReader::FibersWeightsReader(
     string weightsFilename,  bool verbose)
     : _weightsFilename(weightsFilename),
-      _verbose(verbose) {}
+      _verbose(verbose)
+      {
+        // Open weights file
+        _weightsFile.open( _weightsFilename );
+        if ( _weightsFile.fail() )
+        {
+          if ( _verbose )
+          {
+            cout << "Problem reading file: " << _weightsFilename << endl;
+          }
+          exit(1);
+        }
+        else
+        {
+          if ( _verbose )
+          {
+            cout << "Opened file: " << _weightsFilename << endl;
+          }
+        }
+      }
 
 
   //---------------------------------------------------------------------------
-  FibersWeightsReader::~FibersWeightsReader() {}
+  FibersWeightsReader::~FibersWeightsReader() {
+    _weightsFile.close();
+  }
 
 
   //---------------------------------------------------------------------------
   void FibersWeightsReader::bundleStarted(
       const BundleProducer &, const BundleInfo &bundleInfo) {
-    // Open weights file
-    _weightsFile.open( _weightsFilename );
-    if ( _weightsFile.fail() ) {
-      if ( _verbose ) {
-        cout << "Problem reading file: " << _weightsFilename << endl;
-      }
-      exit(1);
-    }
-    else {
-      if ( _verbose ) {
-        cout << "Opened file: " << _weightsFilename << endl;
-      }
-    }
+
 
     startBundle(bundleInfo);
   }
