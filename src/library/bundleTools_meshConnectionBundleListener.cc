@@ -62,7 +62,6 @@ namespace constel
               = fiberIntersectionNeighDistMapVector[intersectionPoint2];
             _bundleMeshConnections->push_back(connection);
             _bundleMeshConnectionsLength->push_back(connection_length);
-            std::cout << "_bundleMeshConnectionsWeights " << fiberInfo.id() << fiberInfo.weight() << std::endl;
             _bundleMeshConnectionsWeights.push_back( fiberInfo.weight() );
           }
         }
