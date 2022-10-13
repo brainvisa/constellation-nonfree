@@ -4,6 +4,7 @@
 #include <constellation/connMatrixTools.h>
 #include <constellation/sparseMatrixSmoothing.h>
 #include <constellation/connConversion.h>
+#include <constellation/fibersWeightsReader.h>
 #include <aims/mesh/texturetools.h>
 #include <aims/getopt/getopt2.h>
 
@@ -17,26 +18,38 @@ using namespace constel;
 Connectivities* makeConnMatrix_intersection(
     const string & connMatrixComputingType, const string & bundleFilename,
     const AimsSurfaceTriangle & inAimsMesh, const string & motionName,
-    double distthresh, float meshClosestPoint_maxDistance,
-    AimsData<short> & roisMask, uint length_min, uint length_max,
-    bool verbose) {
+    const string & weightsFilename, double distthresh,
+    float meshClosestPoint_maxDistance, AimsData<short> & roisMask,
+    uint length_min, uint length_max, bool verbose)
+{
   uint cortexMeshVertexNb = uint(inAimsMesh.vertex().size());
   if (verbose) cout << "Mesh vertices number: " << cortexMeshVertexNb << endl;
 
   Connectivities* connMatrixToAllMesh_ptr = new Connectivities(
       cortexMeshVertexNb, Connectivity(cortexMeshVertexNb));
-  
+
   if (verbose) cout << "Loading fibers." << endl;
   BundleInteractionReader bundleInteractionReader(bundleFilename);
   BundleProducer *finalProducer = &bundleInteractionReader;
-  
+
   rc_ptr<BundleMotion> bundleMotion;
-  if (motionName.size()) {
+  if (motionName.size())
+  {
     if (verbose) cout << "Creating motion filter." << endl;
     bundleMotion.reset(new BundleMotion(motionName));
     finalProducer->addBundleListener(*bundleMotion);
     finalProducer = bundleMotion.get();
   }
+
+  rc_ptr<FibersWeightsReader> fibersWeightsReader;
+  if ( weightsFilename.size() )
+  {
+    if (verbose) cout << "Creating weights reader" << endl;
+    fibersWeightsReader.reset(new FibersWeightsReader(weightsFilename));
+    finalProducer->addBundleListener(*fibersWeightsReader);
+    finalProducer = fibersWeightsReader.get();
+  }
+
 
   MemAntBundleListener memAntBundleListener(bundleInteractionReader);
   CurvilinearAbscissaBundleListener curvilinearAbscissaBundleListener(
@@ -86,12 +99,16 @@ Connectivities* makeConnMatrix_intersection(
 
   boost::shared_ptr<BundleConnections> cortexConnections_ptr;
   boost::shared_ptr<ConnectionsLength> cortexConnectionsLength_ptr;
+  vector< double > cortexConnectionsWeights;
 
   cortexConnections_ptr
     = meshConnectionBundleListener.getBundleMeshConnections();
 
   cortexConnectionsLength_ptr
     = meshConnectionBundleListener.getBundleMeshConnectionsLength();
+
+  cortexConnectionsWeights
+    = meshConnectionBundleListener.getBundleMeshConnectionsWeights();
 
   //fillConnectivity Matrix:
   if (verbose) cout << "- Fill cortex to cortex Connectivity matrix" << endl;
@@ -101,7 +118,8 @@ Connectivities* makeConnMatrix_intersection(
 
   if (length_min == 0 and length_max == 0)
     fillconnMatrixWithConnections(connMatrixToAllMesh_ptr,
-                                  cortexConnections, 0, 0);
+                                  cortexConnections, cortexConnectionsWeights,
+                                  0, 0);
   else
     fillconnMatrixWithConnectionsPlusLengthWeight(
         connMatrixToAllMesh_ptr, cortexConnections, 0, 0, length_min,
@@ -113,6 +131,34 @@ Connectivities* makeConnMatrix_intersection(
 
 //-----------------Connectivity Matrix: closest point with mesh----------------
 
+// MRtrix version
+Connectivities* makeWeightedConnMatrix_closestPoint(
+    const string & bundleFilename, const string & weightsFilename,
+    const AimsSurfaceTriangle & inAimsMesh, const string & motionName,
+    bool verbose) {
+  BundleLoader loader;
+  BundleReader bundleReader(bundleFilename);
+  FibersWeightsReader fibersWeightsReader(weightsFilename);
+  bundleReader.addBundleListener(fibersWeightsReader);
+  fibersWeightsReader.addBundleListener(loader);
+
+  if (verbose) cout << "Reading fibers..." << endl;
+
+  bundleReader.read();
+  rc_ptr<WeightedFibers> pfibers;
+  pfibers = loader.getWeightedFibers();
+  MotionReader mreader(motionName);
+  Motion motion;
+  mreader.read(motion);
+
+  // Computing complete connectivity matrix [meshVertexNb][meshVertexNb]
+  Connectivities* connMatrixToAllMesh_ptr = weightedConnMatrix(
+      *pfibers, inAimsMesh, motion);
+
+  return connMatrixToAllMesh_ptr;
+}
+
+// Connectomist version
 Connectivities* makeConnMatrix_closestPoint(
     const string & bundleFilename,
     const AimsSurfaceTriangle & inAimsMesh, const string & motionName,
@@ -183,7 +229,7 @@ void makeConnectivityTexture_seedConnectionDensity(
 
 void makeConnectivityTexture_seedMeanConnectivityProfile(
     Connectivities* connMatrixToAllMesh_ptr,
-    // const SparseOrDenseMatrix & connMatrixToAllMesh                  
+    // const SparseOrDenseMatrix & connMatrixToAllMesh
     const string & connTextureFileName,
     const TimeTexture<short> & seedRegionsTex,
     int seedRegionLabel,
@@ -218,10 +264,10 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
   int seedRegionLabelVertexNb = labels[seedRegionLabel];
 
   rc_ptr<Connectivities> extractConnMatrix_ptr(
-    connMatrixReducedFromRegion(connMatrixToAllMesh_ptr, seedRegionsTex, 
-                                seedRegionLabel, seedRegionLabelVertexNb, 
+    connMatrixReducedFromRegion(connMatrixToAllMesh_ptr, seedRegionsTex,
+                                seedRegionLabel, seedRegionLabelVertexNb,
                                 & seedVertexIndex));
-  
+
   if (distthresh != 0)
     sparseMatrixDiffusionSmoothing(extractConnMatrix_ptr, inAimsMesh,
                                    wthresh, distthresh,
@@ -232,10 +278,10 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
   SparseOrDenseMatrix *mat = connectivitiesToSparseOrDenseMatrix(
       *extractConnMatrix_ptr);
   //  AllMeshConnMatrix = *mat;
-  
+
   if (normalize)
     connMatrixNormalize(*mat);
-  
+
   if (connMatrixFileName != "")
   {
     Writer<SparseOrDenseMatrix> w(connMatrixFileName);
@@ -245,19 +291,19 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
       if (verbose)
         cout << "Computing ln(1+matrix) and storing resulting file in " <<
         connMatrixFileName << "..." << endl;
-      
+
       //size_t colNb = extractConnMatrix[0].size();
       //size_t rowsNb = extractConnMatrix.size();
-      
+
       Connectivities::iterator il, el = extractConnMatrix.end();
       Connectivity::iterator ic, ec;
-      
+
       for (il=extractConnMatrix.begin(); il!=el; ++il)
       {
         for (ic=il->begin(), ec=il->end(); ic!=ec; ++ic)
         {
           float connval = ic->second;
-          
+
           if (connval > 0)
           {
             float new_connval = log(1 + connval);
@@ -271,7 +317,7 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
         if (verbose)
           cout << "Writing log seed region connMatrix ima:" <<
           connMatrixFileName << endl;
-        
+
         writeConnectivities(*extractConnMatrix_ptr, logFile,
                             connMatrixFormat=="ascii");
       }
@@ -280,7 +326,7 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
         writeAimsFmtConnMatrix(extractConnMatrix_ptr.get(),logFile);
       }
     }
-    
+
     //  Write region vertex indexes (ascii format only)
     size_t seedVertexIndex_size = (*seedVertexIndex).size();
     if ((*seedVertexIndex).size() != 0)
@@ -292,7 +338,7 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
         ostringstream s;
         s << seedRegionVertexIndexFileName << ".txt";
         findex.open(s.str().c_str(), fstream::out);
-        
+
         for (size_t i = 0; i < labels[seedRegionLabel]; ++i)
         {
           findex << (*seedVertexIndex)[i] << endl;
@@ -302,12 +348,12 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
                || seedRegionVertexIndexType == "both" )
       {
         TimeTexture< unsigned int > seedRegionVertexIndexTex;
-        
+
         if (verbose)
           cout << "seedVertexIndex_size:" << seedVertexIndex_size << endl;
-        
+
         seedRegionVertexIndexTex[0].reserve(seedVertexIndex_size);
-        
+
         for (size_t vertex = 0; vertex < seedVertexIndex_size; vertex++)
         {
           seedRegionVertexIndexTex[0].push_back((*seedVertexIndex)[vertex]);
@@ -317,7 +363,7 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
           cout << "seedRegionVertexIndexTex0.nItem():" <<
           seedRegionVertexIndexTex.nItem() << ", " <<
           seedRegionVertexIndexTex[0].nItem() << endl;
-        
+
         ostringstream s;
         s << seedRegionVertexIndexFileName << ".tex";
         Writer<TimeTexture<unsigned int > > w(s.str());
@@ -340,8 +386,7 @@ void makeConnectivityTexture_seedMeanConnectivityProfile(
   - outputTargetDensityTex: texture of the connection density of the entire
     mesh towards the seed region
   */
-  TimeTexture<float> outputTargetDensityTex = meshDensityTexture(
-    extractConnMatrix_ptr.get());
+  TimeTexture<float> outputTargetDensityTex = meshDensityTexture(*mat);
 
   if (verbose)
     cout << "Writing mean connectivity profile texture:" <<
@@ -401,6 +446,7 @@ int main(int argc, const char* argv[])
     string bundleFilename;
     Reader<AimsSurfaceTriangle> inMeshAimsR;
     string connMatrixComputingType = "meshclosestpoint";
+    string weightsFilename;
     Reader<TimeTexture<short> > seedRegionsTexR;
     AimsSurfaceTriangle inAimsMesh;
     vector<string> inTargetMeshesAimsR_files;
@@ -444,6 +490,9 @@ int main(int argc, const char* argv[])
     app.addOptionSeries(
         inTargetMeshesAimsR_files, "-targets",
         "input target meshes");
+    app.addOption(
+        weightsFilename, "-weightsFilename",
+        "Weights text file matching bundle file input", true);
     app.addOption(
         connTextureFileName, "-outconntex",
         "output mean connectivity texture file name");
@@ -572,7 +621,7 @@ int main(int argc, const char* argv[])
     {
       seedRegionsTexR.read(seedRegionsTex);
       maxLabel = textureMax(seedRegionsTex);
-      
+
       if (verbose)
       {
         cout << "Initial cortical parcellation: " << flush;
@@ -597,11 +646,21 @@ int main(int argc, const char* argv[])
         connMatrixComputingType == "meshintersectionpointfast")
       connMatrixToAllMesh_ptr = makeConnMatrix_intersection(
           connMatrixComputingType, bundleFilename, inAimsMesh, motionName,
-          distthresh, meshClosestPoint_maxDistance, roisMask, length_min,
-          length_max, verbose);
+          weightsFilename, distthresh, meshClosestPoint_maxDistance,
+          roisMask, length_min, length_max, verbose);
     else  // connMatrixComputingType == "meshclosestpoint"
-      connMatrixToAllMesh_ptr = makeConnMatrix_closestPoint(
-          bundleFilename, inAimsMesh, motionName, verbose);
+    {
+      if ( weightsFilename.empty() ) // Connectomist
+      {
+        connMatrixToAllMesh_ptr = makeConnMatrix_closestPoint(
+            bundleFilename, inAimsMesh, motionName, verbose);
+      }
+      else // MRtrix
+      {
+        connMatrixToAllMesh_ptr = makeWeightedConnMatrix_closestPoint(
+          bundleFilename, weightsFilename, inAimsMesh, motionName, verbose);
+      }
+    }
 
     if (connectivityTextureType == "seed_connection_density")
       makeConnectivityTexture_seedConnectionDensity(
@@ -636,4 +695,3 @@ int main(int argc, const char* argv[])
     cerr << e.what() << endl;
   }
 }
-

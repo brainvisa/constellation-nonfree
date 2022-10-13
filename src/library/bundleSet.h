@@ -4,10 +4,12 @@
 #include <aims/fibers/bundles.h>
 
 namespace constel {
-  typedef std::vector<aims::FiberPoint> Fiber;
+  typedef aims::FiberPoint Point;
+  typedef std::vector<Point> Fiber;
   typedef std::vector<Fiber> Fibers;
   typedef std::vector<Fibers> BundlesSet;
+  typedef std::pair<Fiber, double> WeightedFiber;
+  typedef std::vector<WeightedFiber> WeightedFibers;
 }
 
 #endif
-

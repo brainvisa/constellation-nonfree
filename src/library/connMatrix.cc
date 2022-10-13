@@ -12,7 +12,58 @@ using namespace constel;
 using namespace boost;
 
 namespace constel {
-  
+
+  //---------------------
+  //  weightedConnMatrix
+  //---------------------
+  Connectivities * weightedConnMatrix(
+      const WeightedFibers &fibers, const AimsSurfaceTriangle &inAimsMesh,
+      Motion motion, bool verbose)
+  {
+
+    size_t nv = inAimsMesh.vertex().size();
+    if (verbose) cout << "Number of fibers: " << fibers.size() << endl;
+
+    // Generating kdtree
+    KDTreeVertices m = kdt_vertices( inAimsMesh );
+    KDTree kdt( m.begin(), m.end() );
+
+    // Computing connectivity matrix
+    if (verbose) cout << "Computing connectivity matrix" << endl;
+    Connectivities *conn_ptr = new Connectivities( nv, Connectivity( nv ) );
+    Connectivities &conn  = *conn_ptr;
+    size_t fiberCount = 0;
+    size_t nFibers = fibers.size();
+    Point3df p1, p2;
+
+    for (WeightedFibers::const_iterator iFiber = fibers.begin();
+         iFiber != fibers.end(); ++iFiber, ++fiberCount)
+    {
+      // Get fiber informations
+      Fiber fiber = iFiber->first;
+      double weight = iFiber->second;
+
+      // Transform first point and last point of fiber from t2 to anat space
+      // (with motion)
+
+      p1 = motion.transform(fiber.front()[0],
+                            fiber.front()[1],
+                            fiber.front()[2]);
+      p2 = motion.transform(fiber.back()[0],
+                            fiber.back()[1],
+                            fiber.back()[2]);
+
+      size_t A = kdt.find_nearest( make_pair( 0U, p1 ) ).first->first;
+      size_t B = kdt.find_nearest( make_pair( 0U, p2 ) ).first->first;
+
+      // Filling the connectivity matrix with the fiber's weight
+      conn[A][B] += weight;
+      conn[B][A] += weight;
+    }
+
+    return (conn_ptr);
+  }
+
   //--------------
   //  connMatrix
   //--------------
@@ -23,7 +74,7 @@ namespace constel {
 
     double two_pi = 2*3.1415926535897931;
     const double G_THRESH = 0.001; //threshold for connectivity contributions
-    
+
     // Comuting geomap : neighborhood map
     if (verbose) cout << "Computing geomap..." << flush;
     if (verbose) cout << "step 1..." << flush;
@@ -116,7 +167,7 @@ namespace constel {
             }
           }
         }
-        
+
         list<pair<pair<size_t, size_t>, double> >::iterator iw, ew
           = weights.end();
         for (iw=weights.begin(); iw!=ew; ++iw)
@@ -134,32 +185,36 @@ namespace constel {
       cout << "NB: " << countRemoved << " fibers out of " << fibers.size()
         << " have been discarded" << endl;
     }
-  
+
     // To compress a little bit, remove points that are below some threshold
-    double nonzero_count = 0;
-    if (verbose) cout << "Removing weak connections: " << flush;
-    int count1 = 0;
-    int count2 = 0;
-    for (Connectivities::iterator i = conn.begin(); i != conn.end(); ++i)
+    // Don't do this is wthresh is 0
+    if ( wthresh > 0 )
     {
-      for (Connectivity::iterator j = i->begin();
-           j != i->end();)
+      double nonzero_count = 0;
+      if (verbose) cout << "Removing weak connections: " << flush;
+      int count1 = 0;
+      int count2 = 0;
+      for (Connectivities::iterator i = conn.begin(); i != conn.end(); ++i)
       {
-        ++count1;
-        if (j->second <= wthresh)
+        for (Connectivity::iterator j = i->begin();
+             j != i->end();)
         {
-          ++count2;
-          i->erase(j++);
-        }
-        else
-        {
-          ++j;
-          ++nonzero_count;
+          ++count1;
+          if (j->second <= wthresh)
+          {
+            ++count2;
+            i->erase(j++);
+          }
+          else
+          {
+            ++j;
+            ++nonzero_count;
+          }
         }
       }
+      if (verbose)
+        cout << "Removed " << count2 << " elements out of " << count1 << endl;
     }
-    if (verbose)
-      cout << "Removed " << count2 << " elements out of " << count1 << endl;
     return (conn_ptr);
   }
 
@@ -172,20 +227,20 @@ namespace constel {
       wthresh: weight threshold for clean the connectivity matrix
                (values below are removed)
       motion: transformation from t2 (fibers) to anat(meshes)
- 
+
    output:
       conn: sparse matrix of shape = [seedMeshVertex_nb,targetMeshVertex_nb]
-    */  
+    */
   Connectivities * connMatrixSeedMeshToTargetMesh(
     const Fibers & fibers, const AimsSurfaceTriangle & aimsSeedMesh,
     const AimsSurfaceTriangle & aimsTargetMesh, float distthresh,
     float wthresh, Motion motion, bool verbose)
   {
-    
+
     const double G_THRESH = 0.001; //threshold for connectivity contributions
-    
+
     // Computing geomap : neighborhood map
-    
+
     // For seedMesh
     if (verbose) cout << "Computing geomap seedMesh..." << flush;
     if (verbose) cout << "step 1..." << flush;
@@ -258,7 +313,7 @@ namespace constel {
         make_pair( 0U, p1 ) ).first->first;
       size_t B_targetMesh = kdt_targetMesh.find_nearest(
         make_pair( 0U, p2 ) ).first->first;
-      
+
       // Filling the connectivity matrix
       /*
       Two retained cases:
@@ -353,7 +408,7 @@ namespace constel {
         }
       }
     }
-    
+
     if (verbose) {
       cout << "...100%..." << flush;
       cout << "Done." << endl;
@@ -403,7 +458,7 @@ namespace constel {
     du maillage, on compte seulement le nombre de fibres qu'il y a...
     */
     const double G_THRESH = 0.001; //threshold for connectivity contributions
-    
+
     // Comuting geomap : neighborhood map
     if (verbose) cout << "Computing geomap..." << flush;
 
@@ -520,7 +575,7 @@ namespace constel {
     }
     return connTex_ptr;
   }
-  
+
   //---------------------
   //  connMatrixSumRows
   //---------------------
@@ -606,26 +661,26 @@ namespace constel {
     const Texture<short> & targetTex0 = targetRegionsTex.begin()->second;
     size_t meshVertexNb = connMatrixToAllMesh[0].size(); //number of columns
     size_t seedRegionsNb = connMatrixToAllMesh.size(); //number of rows
-    
+
     if (meshVertexNb != seedRegionsNb or targetTex0.nItem() != meshVertexNb) {
       if (verbose) cout << "error in matrix dimensions" << endl;
     }
     Connectivities *regroupConn_ptr = new Connectivities(
         targetRegionsNb, Connectivity(targetRegionsNb));
     Connectivities &regroupConnMatrix  = *regroupConn_ptr;
-    
+
     if (verbose)
       cout << "Writing connectivity matrix between the target regions: ("
         << targetRegionsNb << ","  << targetRegionsNb << ") matrix."<< endl;
     int ten_count = int(meshVertexNb / 10.0);
-    
+
     for (size_t i = 0; i < meshVertexNb; i++) {
       int label = targetTex0[i];//equivalent to targetRegionsTex[0].item(i)
       if (1 <= label && label <= targetRegionsNb) {
         if (i % ten_count == 0) {
           if (verbose) cout << 10 * int(i / ten_count) << "%..." << flush;
         }
-  
+
         for (size_t j = 0; j < i; ++j) {
           int label2 = targetTex0[j];
           if (1 <= label2 && label2 <= targetRegionsNb && i != j) {
@@ -662,7 +717,7 @@ namespace constel {
     if (verbose)
       cout << "seedRegionsMeshVertexNb(rows):" << seedRegionsMeshVertexNb
         << ", meshVertexNb(cols):" << meshVertexNb << endl;
-    
+
     if (verbose) cout << "seedRegionLabelVertexNb:"
       << seedRegionLabelVertexNb << endl;
     Connectivities * extractConn_ptr = new Connectivities(
@@ -695,7 +750,7 @@ namespace constel {
          (meshVertexNb, other_meshVertex_nb)
   output: extractConn_ptr: a connectivity matrix of shape
           (seedRegionVertexNb, other_meshVertexNb) i.e. the connectivity matrix
-          of the vertex of a given seed region 
+          of the vertex of a given seed region
   !: erase the AllMeshconnMatrixToAllMesh_ptr : set all its elements to zero!
   */
   Connectivities * connMatrixReducedFromRegion(
@@ -772,7 +827,7 @@ namespace constel {
       size_t seedRegionLabelVertexNb,
       vector<size_t> ** seedVertexIndex, bool verbose) {
     if (verbose) cout << "Start connMatrixRegionExtractRegroup" << endl;
-    
+
     Connectivities & allMeshConnMatrixToAllMesh
       = *allMeshConnMatrixToAllMesh_ptr;
     const Texture<short> & seedTex0 = seedRegionsTex.begin()->second;
@@ -877,7 +932,7 @@ namespace constel {
       const TimeTexture<short> & seedRegionsTex,
       const TimeTexture<short> & targetRegionsTex, int targetRegionsNb,
       int seedRegionsNb, bool verbose) {
-    
+
     Connectivities & connMatrixSeedMeshToTargetMesh
       = *connMatrixSeedMeshToTargetMesh_ptr;
     const Texture<short> & targetTex0 = targetRegionsTex.begin()->second;
@@ -914,7 +969,7 @@ namespace constel {
     }
     return connMatrixSeedMeshRegionsToTargetMeshTargets_ptr;
   }
-  
+
   //--------------------------
   //  writeAimsFmtConnMatrix
   //--------------------------
@@ -980,7 +1035,7 @@ namespace constel {
       Connectivities *connMatrixToAllMesh_ptr, vector<size_t> vertexIndex,
       bool verbose) {
     if (verbose) cout << "Computing density texture" << flush;
-    
+
     Connectivities & connMatrixToAllMesh = *connMatrixToAllMesh_ptr;
     size_t colNb = connMatrixToAllMesh[0].size();
     size_t rowsNb = connMatrixToAllMesh.size();
@@ -1173,7 +1228,7 @@ namespace constel {
     outputDensityTex[0].reserve(meshVertexNb);
     for (size_t v = 0; v < meshVertexNb; ++v)
       outputDensityTex[0].push_back(-1);
-    
+
     for (size_t i = 0; i < meshVertexNb; i++)
     {
       int label = targetTex0[i];//equivalent to targetRegionsTex[0].item(i)
