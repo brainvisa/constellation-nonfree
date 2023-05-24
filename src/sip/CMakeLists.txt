@@ -1,4 +1,4 @@
-set( _mainSipFile "${CMAKE_BINARY_DIR}/${CONSTELLATION-NONFREE_RELATIVE_SIP_DIRECTORY}/constellation.sip" )
+set( _mainSipFile "${CMAKE_CURRENT_SOURCE_DIR}/constellation.sip" )
 
 file( GLOB _sipSources "${CMAKE_CURRENT_SOURCE_DIR}/*.sip" )
 
