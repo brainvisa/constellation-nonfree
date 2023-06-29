@@ -21,6 +21,7 @@ if( PYTHON_FOUND )
   endif()
 endif()
 find_package( Doxygen )
+cmake_policy( SET CMP0072 NEW )
 find_package( anatomist-free )
 
 include( "${AIMS-FREE_USE_FILE}" )
