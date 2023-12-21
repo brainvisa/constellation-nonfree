@@ -5,16 +5,27 @@ nomenclature = '/volatile/clanglet/constel_utils/nomenclature_desikan_freesurfer
 matrix = '/volatile/clanglet/100206/100206_hcp_lh.bankssts_complete_matrix_smooth0.0_20.0to500.0mm.imas'
 mesh = '/volatile/clanglet/100206/bh.r.aims.white.gii'
 smatrix = '/volatile/clanglet/100206/100206_hcp_lh.bankssts_complete_matrix_smooth3.0_20.0to500.0mm.imas'
-
+profile = '/volatile/clanglet/100206/100206_hcp_lh.bankssts_profile.gii'
 
 capsul = Capsul()
-executable = capsul.executable('constel.capsul.smooth_matrix.SmoothMatrix')
+#executable = capsul.executable('constel.capsul.smooth_matrix.SmoothMatrix')
+#with capsul.engine() as engine:
+    #engine.run(executable,
+               #atlas=atlas,
+               #nomenclature=nomenclature,
+               #region='lh.bankssts',
+               #individual_matrix=matrix,
+               #individual_white_mesh=mesh,
+               #smoothing_value=3.0,
+               #smoothed_matrix=smatrix)
+
+executable = capsul.executable('constel.capsul.regional_profile.RegionalProfile')
 with capsul.engine() as engine:
     engine.run(executable,
                atlas=atlas,
                nomenclature=nomenclature,
                region='lh.bankssts',
-               individual_matrix=matrix,
-               individual_white_mesh=mesh,
-               smoothing_value=3.0,
-               smoothed_matrix=smatrix)
+               matrix=smatrix,
+               erase_matrix=False,
+               profile=profile)
+

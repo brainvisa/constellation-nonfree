@@ -7,13 +7,18 @@
 # CEA, CNRS and INRIA at the following URL "http://www.cecill.info".
 ###############################################################################
 
+import subprocess
 from capsul.api import Process
 from soma.controller import File, field
+from constel.lib.utils.filetools import select_ROI_number
+from constel.lib.utils.matrixtools import replace_negative_values
 
 
 class SmoothMatrix(Process):
-    """Run the command 'AimsSparseMatrixSmoothing'.
-       Smoothing of the individual connectivity matrix."""
+    """
+    Run the command 'AimsSparseMatrixSmoothing'.
+    Smooths the individual connectivity matrix.
+    """
     atlas: field(type_=File,
                  doc="Surface atlas used as base parcellation. Number of vertices of the choosen surface referential.")
     nomenclature: field(type_=File,
@@ -32,21 +37,17 @@ class SmoothMatrix(Process):
                            doc="Smoothed individual connectivity matrix. Shape: (n, n) with n being the size of the choosen surface referential.")
 
     def execute(self, context=None):
-        import subprocess
-        from constel.lib.utils.filetools import select_ROI_number
-        from constel.lib.utils.matrixtools import replace_negative_values
-
-        # selects the label number corresponding to label name
-        label_number = select_ROI_number(self.nomenclature,
-                                         self.region)
-
-        # matrix smoothing: -s in millimetres
+        # default
+        self.smoothing_value = 3.0
+        # selects the label corresponding to region name
+        label = select_ROI_number(self.nomenclature,
+                                  self.region)
         cmd = ["AimsSparseMatrixSmoothing",
                "-i", self.individual_matrix,
                "-m", self.individual_white_mesh,
                "-o", str(self.smoothed_matrix),
                "-s", str(self.smoothing_value),
                "-l", self.atlas,
-               "-p", str(label_number)]
+               "-p", str(label)]
         subprocess.check_call(cmd)
         replace_negative_values(self.individual_matrix)
