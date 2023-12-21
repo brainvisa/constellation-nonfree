@@ -8,7 +8,7 @@
 ###############################################################################
 
 from capsul.api import Process
-from soma.controller import File, Directory, Literal, field
+from soma.controller import File, field
 
 
 class SmoothMatrix(Process):
@@ -48,7 +48,5 @@ class SmoothMatrix(Process):
                "-s", str(self.smoothing_value),
                "-l", self.atlas,
                "-p", str(label_number)]
-        print('call')
         subprocess.check_call(cmd)
-        print('done')
-        #replace_negative_values(self.individual_matrix)
+        replace_negative_values(self.individual_matrix)

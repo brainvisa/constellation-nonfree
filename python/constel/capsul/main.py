@@ -8,7 +8,7 @@ smatrix = '/volatile/clanglet/100206/100206_hcp_lh.bankssts_complete_matrix_smoo
 
 
 capsul = Capsul()
-executable = capsul.executable('constel.capsul.constel_smooth_matrix.SmoothMatrix')
+executable = capsul.executable('constel.capsul.smooth_matrix.SmoothMatrix')
 with capsul.engine() as engine:
     engine.run(executable,
                atlas=atlas,
