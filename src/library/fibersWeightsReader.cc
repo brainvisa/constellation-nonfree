@@ -66,6 +66,12 @@ namespace constel {
       const FiberInfo &fiberInfo /* fiberInfo */) {
     string weight;
     getline(_weightsFile, weight, ' ' );
+    if (weight == "#") {
+      /* command history in weight file */
+      getline(_weightsFile, weight, '\n');
+      getline(_weightsFile, weight, ' ');
+
+    }
     FiberInfo newFiberInfo( fiberInfo.id(), stod(weight) );
     _newFiberInfo = newFiberInfo;
     startFiber(bundleInfo, _newFiberInfo);
