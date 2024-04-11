@@ -147,8 +147,8 @@ Connectivities* makeWeightedConnMatrix_closestPoint(
   bundleReader.read();
   rc_ptr<WeightedFibers> pfibers;
   pfibers = loader.getWeightedFibers();
-  MotionReader mreader(motionName);
-  Motion motion;
+  Reader<AffineTransformation3d> mreader(motionName);
+  AffineTransformation3d motion;
   mreader.read(motion);
 
   // Computing complete connectivity matrix [meshVertexNb][meshVertexNb]
@@ -172,8 +172,8 @@ Connectivities* makeConnMatrix_closestPoint(
   bundleReader.read();
   rc_ptr<Fibers> pfibers;
   pfibers = loader.getFibers();
-  MotionReader mreader(motionName);
-  Motion motion;
+  Reader<AffineTransformation3d> mreader(motionName);
+  AffineTransformation3d motion;
   mreader.read(motion);
 
   // Computing complete connectivity matrix [meshVertexNb][meshVertexNb]
