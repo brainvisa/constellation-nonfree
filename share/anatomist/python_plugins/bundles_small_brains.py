@@ -548,12 +548,12 @@ class SmallBrainsControl(anatomist.cpp.Control3D):
         # unplug the left mouse button action (normally used for linked cursor)
         # so that we can reuse the left button
         self.mouseLongEventUnsubscribe(
-            QtCore.Qt.LeftButton, QtCore.Qt.NoModifier)
+            QtCore.Qt.LeftButton, QtCore.Qt.KeyboardModifiers.NoModifier)
         self.mouseLongEventUnsubscribe(
             QtCore.Qt.RightButton, QtCore.Qt.ControlModifier)
         # now plug our new actions
         self.mousePressButtonEventSubscribe(
-            QtCore.Qt.LeftButton, QtCore.Qt.NoModifier,
+            QtCore.Qt.LeftButton, QtCore.Qt.KeyboardModifiers.NoModifier,
             pool.action('SmallBrainSelectionAction').smallBrainClick)
         self.mousePressButtonEventSubscribe(
             QtCore.Qt.LeftButton, QtCore.Qt.ShiftModifier,
